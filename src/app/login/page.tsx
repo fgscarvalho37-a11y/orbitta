@@ -1,0 +1,365 @@
+"use client";
+
+import Link from "next/link";
+import { FormEvent, useState } from "react";
+import { motion } from "motion/react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  Mail,
+  Orbit,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
+
+export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    setLoading(true);
+
+    // Login visual por enquanto.
+    // A autenticação real será conectada depois.
+    setTimeout(() => {
+      setLoading(false);
+    }, 900);
+  }
+
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-[#050914] text-white">
+      {/* BACKGROUND */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-[-20%] top-[-30%] h-[700px] w-[700px] rounded-full bg-violet-500/[0.08] blur-[140px]" />
+
+        <div className="absolute bottom-[-30%] right-[-15%] h-[700px] w-[700px] rounded-full bg-cyan-400/[0.08] blur-[140px]" />
+
+        <div className="orbitta-grid absolute inset-0 opacity-20" />
+      </div>
+
+      {/* HEADER */}
+      <header className="relative z-20">
+        <div className="mx-auto flex h-20 max-w-[1500px] items-center justify-between px-6 lg:px-10">
+          <Link
+            href="/"
+            className="group flex items-center gap-3 text-sm text-white/45 transition hover:text-white"
+          >
+            <ArrowLeft
+              size={16}
+              className="transition-transform group-hover:-translate-x-1"
+            />
+
+            Voltar para Orbitta
+          </Link>
+
+          <div className="hidden items-center gap-2 text-xs text-white/25 sm:flex">
+            <ShieldCheck size={14} />
+            Ambiente Orbitta
+          </div>
+        </div>
+      </header>
+
+      {/* CONTENT */}
+      <section className="relative z-10 mx-auto grid min-h-[calc(100vh-80px)] max-w-[1500px] items-center gap-16 px-6 pb-12 lg:grid-cols-[1.05fr_0.95fr] lg:px-10">
+        {/* LEFT */}
+        <motion.div
+          initial={{
+            opacity: 0,
+            x: -35,
+          }}
+          animate={{
+            opacity: 1,
+            x: 0,
+          }}
+          transition={{
+            duration: 0.8,
+          }}
+          className="hidden lg:block"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] text-cyan-200">
+              <Orbit size={22} />
+            </div>
+
+            <div>
+              <div className="text-lg font-semibold tracking-[-0.03em]">
+                orbitta
+              </div>
+
+              <div className="text-[9px] uppercase tracking-[0.35em] text-white/25">
+                space
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-14 max-w-[650px]">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-cyan-300/55">
+              <Sparkles size={13} />
+              Orbitta Client Space
+            </div>
+
+            <h1 className="mt-7 text-[clamp(4rem,6vw,6.5rem)] font-semibold leading-[0.88] tracking-[-0.07em]">
+              Seu espaço.
+              <span className="block bg-gradient-to-r from-cyan-300 via-cyan-200 to-violet-400 bg-clip-text text-transparent">
+                Seus produtos.
+              </span>
+            </h1>
+
+            <p className="mt-8 max-w-lg text-lg leading-8 text-white/40">
+              Gerencie os produtos e serviços da Orbitta vinculados à sua
+              empresa em um único ambiente.
+            </p>
+          </div>
+
+          {/* FEATURES */}
+          <div className="mt-14 grid max-w-[620px] grid-cols-2 gap-3">
+            {[
+              "Produtos contratados",
+              "Assinaturas e renovações",
+              "Pagamentos e faturas",
+              "Domínios e serviços",
+            ].map((feature, index) => (
+              <motion.div
+                key={feature}
+                initial={{
+                  opacity: 0,
+                  y: 15,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  delay: 0.25 + index * 0.08,
+                }}
+                className="flex items-center gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.02] px-4 py-4 text-sm text-white/40"
+              >
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-300/[0.07] text-cyan-200/60">
+                  <Check size={12} />
+                </div>
+
+                {feature}
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* LOGIN SIDE */}
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 25,
+            scale: 0.985,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            scale: 1,
+          }}
+          transition={{
+            duration: 0.7,
+            delay: 0.1,
+          }}
+          className="mx-auto w-full max-w-[520px] lg:mx-0 lg:justify-self-end"
+        >
+          {/* MOBILE LOGO */}
+          <div className="mb-10 flex items-center gap-3 lg:hidden">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-300/15 bg-cyan-300/[0.06] text-cyan-200">
+              <Orbit size={20} />
+            </div>
+
+            <div>
+              <div className="font-semibold">orbitta</div>
+              <div className="text-[8px] uppercase tracking-[0.3em] text-white/25">
+                space
+              </div>
+            </div>
+          </div>
+
+          <div className="relative overflow-hidden rounded-[32px] border border-white/[0.08] bg-[#08101d]/85 p-6 shadow-[0_40px_120px_rgba(0,0,0,0.45)] backdrop-blur-2xl sm:p-9 lg:p-10">
+            {/* CARD GLOW */}
+            <div className="pointer-events-none absolute -right-24 -top-24 h-60 w-60 rounded-full bg-cyan-400/[0.07] blur-[80px]" />
+
+            <div className="relative">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.23em] text-cyan-300/50">
+                    Área do cliente
+                  </p>
+
+                  <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
+                    Bem-vindo de volta.
+                  </h2>
+                </div>
+
+                <div className="hidden h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.025] text-white/35 sm:flex">
+                  <LockKeyhole size={18} />
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-white/35">
+                Entre com a conta vinculada aos seus serviços Orbitta.
+              </p>
+
+              {/* FORM */}
+              <form onSubmit={handleSubmit} className="mt-9">
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="mb-2.5 block text-xs font-medium text-white/45"
+                  >
+                    E-mail
+                  </label>
+
+                  <div className="group relative">
+                    <Mail
+                      size={17}
+                      className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/25 transition group-focus-within:text-cyan-300/70"
+                    />
+
+                    <input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      placeholder="voce@empresa.com"
+                      className="h-14 w-full rounded-2xl border border-white/[0.07] bg-white/[0.025] pl-12 pr-4 text-sm text-white outline-none transition placeholder:text-white/15 hover:border-white/[0.1] focus:border-cyan-300/25 focus:bg-cyan-300/[0.025] focus:ring-4 focus:ring-cyan-300/[0.025]"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-5">
+                  <div className="mb-2.5 flex items-center justify-between">
+                    <label
+                      htmlFor="password"
+                      className="text-xs font-medium text-white/45"
+                    >
+                      Senha
+                    </label>
+
+                    <Link
+                      href="/recuperar-senha"
+                      className="text-xs text-cyan-300/50 transition hover:text-cyan-200"
+                    >
+                      Esqueci minha senha
+                    </Link>
+                  </div>
+
+                  <div className="group relative">
+                    <LockKeyhole
+                      size={17}
+                      className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-white/25 transition group-focus-within:text-cyan-300/70"
+                    />
+
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      placeholder="Sua senha"
+                      className="h-14 w-full rounded-2xl border border-white/[0.07] bg-white/[0.025] pl-12 pr-12 text-sm text-white outline-none transition placeholder:text-white/15 hover:border-white/[0.1] focus:border-cyan-300/25 focus:bg-cyan-300/[0.025] focus:ring-4 focus:ring-cyan-300/[0.025]"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((current) => !current)}
+                      aria-label={
+                        showPassword ? "Ocultar senha" : "Mostrar senha"
+                      }
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 transition hover:text-white/60"
+                    >
+                      {showPassword ? (
+                        <EyeOff size={17} />
+                      ) : (
+                        <Eye size={17} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex items-center gap-3">
+                  <input
+                    id="remember"
+                    type="checkbox"
+                    className="h-4 w-4 accent-cyan-300"
+                  />
+
+                  <label
+                    htmlFor="remember"
+                    className="cursor-pointer text-xs text-white/30"
+                  >
+                    Manter minha sessão neste dispositivo
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group mt-8 flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-white text-sm font-semibold text-[#07101c] transition hover:scale-[1.01] hover:bg-cyan-50 disabled:cursor-wait disabled:opacity-70"
+                >
+                  {loading ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#07101c]/20 border-t-[#07101c]" />
+                      Entrando...
+                    </>
+                  ) : (
+                    <>
+                      Entrar na minha conta
+
+                      <ArrowRight
+                        size={16}
+                        className="transition-transform group-hover:translate-x-1"
+                      />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* DIVIDER */}
+              <div className="my-8 flex items-center gap-4">
+                <div className="h-px flex-1 bg-white/[0.05]" />
+
+                <span className="text-[10px] uppercase tracking-[0.2em] text-white/15">
+                  Orbitta Space
+                </span>
+
+                <div className="h-px flex-1 bg-white/[0.05]" />
+              </div>
+
+              <div className="rounded-2xl border border-white/[0.05] bg-white/[0.018] p-4">
+                <div className="flex gap-3">
+                  <ShieldCheck
+                    size={17}
+                    className="mt-0.5 shrink-0 text-cyan-300/45"
+                  />
+
+                  <p className="text-xs leading-5 text-white/25">
+                    O acesso à área do cliente será disponibilizado para contas
+                    vinculadas a produtos ou serviços contratados com a Orbitta.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-white/20">
+            <LockKeyhole size={12} />
+            Acesso seguro à plataforma Orbitta
+          </div>
+        </motion.div>
+      </section>
+    </main>
+  );
+}

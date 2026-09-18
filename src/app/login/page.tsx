@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Check,
@@ -16,22 +18,78 @@ import {
   Sparkles,
 } from "lucide-react";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
 export default function LoginPage() {
+  const router = useRouter();
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
-    setLoading(true);
+    if (loading) {
+      return;
+    }
 
-    // Login visual por enquanto.
-    // A autenticação real será conectada depois.
-    setTimeout(() => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/auth/login`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          credentials: "include",
+
+          body: JSON.stringify({
+            email: email.trim(),
+            password,
+          }),
+        }
+      );
+
+      const data = await response
+        .json()
+        .catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            "Não foi possível entrar na sua conta."
+        );
+      }
+
+      router.push("/painel");
+      router.refresh();
+    } catch (error) {
+      if (error instanceof TypeError) {
+        setError(
+          "Não foi possível conectar ao servidor da Orbitta."
+        );
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError(
+          "Ocorreu um erro inesperado. Tente novamente."
+        );
+      }
+    } finally {
       setLoading(false);
-    }, 900);
+    }
   }
 
   return (
@@ -108,14 +166,15 @@ export default function LoginPage() {
 
             <h1 className="mt-7 text-[clamp(4rem,6vw,6.5rem)] font-semibold leading-[0.88] tracking-[-0.07em]">
               Seu espaço.
+
               <span className="block bg-gradient-to-r from-cyan-300 via-cyan-200 to-violet-400 bg-clip-text text-transparent">
                 Seus produtos.
               </span>
             </h1>
 
             <p className="mt-8 max-w-lg text-lg leading-8 text-white/40">
-              Gerencie os produtos e serviços da Orbitta vinculados à sua
-              empresa em um único ambiente.
+              Gerencie os produtos e serviços da Orbitta
+              vinculados à sua empresa em um único ambiente.
             </p>
           </div>
 
@@ -177,7 +236,10 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <div className="font-semibold">orbitta</div>
+              <div className="font-semibold">
+                orbitta
+              </div>
+
               <div className="text-[8px] uppercase tracking-[0.3em] text-white/25">
                 space
               </div>
@@ -206,11 +268,39 @@ export default function LoginPage() {
               </div>
 
               <p className="mt-4 text-sm leading-6 text-white/35">
-                Entre com a conta vinculada aos seus serviços Orbitta.
+                Entre com a conta vinculada aos seus serviços
+                Orbitta.
               </p>
 
+              {/* ERROR */}
+              {error && (
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                    y: -6,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  className="mt-6 flex gap-3 rounded-2xl border border-red-300/[0.1] bg-red-300/[0.04] p-4"
+                >
+                  <AlertCircle
+                    size={17}
+                    className="mt-0.5 shrink-0 text-red-300/70"
+                  />
+
+                  <p className="text-xs leading-5 text-red-100/60">
+                    {error}
+                  </p>
+                </motion.div>
+              )}
+
               {/* FORM */}
-              <form onSubmit={handleSubmit} className="mt-9">
+              <form
+                onSubmit={handleSubmit}
+                className="mt-9"
+              >
                 <div>
                   <label
                     htmlFor="email"
@@ -230,10 +320,17 @@ export default function LoginPage() {
                       type="email"
                       autoComplete="email"
                       required
+                      disabled={loading}
                       value={email}
-                      onChange={(event) => setEmail(event.target.value)}
+                      onChange={(event) => {
+                        setEmail(event.target.value);
+
+                        if (error) {
+                          setError("");
+                        }
+                      }}
                       placeholder="voce@empresa.com"
-                      className="h-14 w-full rounded-2xl border border-white/[0.07] bg-white/[0.025] pl-12 pr-4 text-sm text-white outline-none transition placeholder:text-white/15 hover:border-white/[0.1] focus:border-cyan-300/25 focus:bg-cyan-300/[0.025] focus:ring-4 focus:ring-cyan-300/[0.025]"
+                      className="h-14 w-full rounded-2xl border border-white/[0.07] bg-white/[0.025] pl-12 pr-4 text-sm text-white outline-none transition placeholder:text-white/15 hover:border-white/[0.1] focus:border-cyan-300/25 focus:bg-cyan-300/[0.025] focus:ring-4 focus:ring-cyan-300/[0.025] disabled:cursor-wait disabled:opacity-60"
                     />
                   </div>
                 </div>
@@ -263,22 +360,40 @@ export default function LoginPage() {
 
                     <input
                       id="password"
-                      type={showPassword ? "text" : "password"}
+                      type={
+                        showPassword
+                          ? "text"
+                          : "password"
+                      }
                       autoComplete="current-password"
                       required
+                      disabled={loading}
                       value={password}
-                      onChange={(event) => setPassword(event.target.value)}
+                      onChange={(event) => {
+                        setPassword(event.target.value);
+
+                        if (error) {
+                          setError("");
+                        }
+                      }}
                       placeholder="Sua senha"
-                      className="h-14 w-full rounded-2xl border border-white/[0.07] bg-white/[0.025] pl-12 pr-12 text-sm text-white outline-none transition placeholder:text-white/15 hover:border-white/[0.1] focus:border-cyan-300/25 focus:bg-cyan-300/[0.025] focus:ring-4 focus:ring-cyan-300/[0.025]"
+                      className="h-14 w-full rounded-2xl border border-white/[0.07] bg-white/[0.025] pl-12 pr-12 text-sm text-white outline-none transition placeholder:text-white/15 hover:border-white/[0.1] focus:border-cyan-300/25 focus:bg-cyan-300/[0.025] focus:ring-4 focus:ring-cyan-300/[0.025] disabled:cursor-wait disabled:opacity-60"
                     />
 
                     <button
                       type="button"
-                      onClick={() => setShowPassword((current) => !current)}
-                      aria-label={
-                        showPassword ? "Ocultar senha" : "Mostrar senha"
+                      disabled={loading}
+                      onClick={() =>
+                        setShowPassword(
+                          (current) => !current
+                        )
                       }
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 transition hover:text-white/60"
+                      aria-label={
+                        showPassword
+                          ? "Ocultar senha"
+                          : "Mostrar senha"
+                      }
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 transition hover:text-white/60 disabled:opacity-30"
                     >
                       {showPassword ? (
                         <EyeOff size={17} />
@@ -312,6 +427,7 @@ export default function LoginPage() {
                   {loading ? (
                     <>
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#07101c]/20 border-t-[#07101c]" />
+
                       Entrando...
                     </>
                   ) : (
@@ -346,8 +462,10 @@ export default function LoginPage() {
                   />
 
                   <p className="text-xs leading-5 text-white/25">
-                    O acesso à área do cliente será disponibilizado para contas
-                    vinculadas a produtos ou serviços contratados com a Orbitta.
+                    O acesso à área do cliente é
+                    disponibilizado para contas vinculadas a
+                    produtos ou serviços contratados com a
+                    Orbitta.
                   </p>
                 </div>
               </div>

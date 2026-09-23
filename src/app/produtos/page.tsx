@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -38,9 +38,12 @@ function formatCurrency(value: number) {
 }
 
 function formatDate(value: string | null) {
-  if (!value) return "Não definida";
+  if (!value) {
+    return "Não definida";
+  }
 
   const [year, month, day] = value.split("-");
+
   return `${day}/${month}/${year}`;
 }
 
@@ -84,9 +87,13 @@ function getStatusDotClasses(status: ClientProduct["status"]) {
 }
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<ClientProduct[]>([]);
+  const [products, setProducts] =
+    useState<ClientProduct[]>([]);
+
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const [error, setError] =
+    useState<string | null>(null);
 
   async function loadProducts() {
     try {
@@ -104,10 +111,15 @@ export default function ProductsPage() {
         }
       );
 
-      if (response.status === 401 || response.status === 403) {
-        window.location.href = `/login?returnUrl=${encodeURIComponent(
-          "/painel/produtos"
-        )}`;
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+        window.location.href =
+          `/login?returnUrl=${encodeURIComponent(
+            "/painel/produtos"
+          )}`;
+
         return;
       }
 
@@ -117,12 +129,21 @@ export default function ProductsPage() {
         );
       }
 
-      const data: ClientProduct[] = await response.json();
+      const data: ClientProduct[] =
+        await response.json();
+
       setProducts(data);
     } catch (err) {
-      console.error("Erro ao carregar produtos:", err);
+      console.error(
+        "Erro ao carregar produtos:",
+        err
+      );
+
       setProducts([]);
-      setError("Não foi possível carregar seus produtos.");
+
+      setError(
+        "Não foi possível carregar seus produtos."
+      );
     } finally {
       setLoading(false);
     }
@@ -155,6 +176,7 @@ export default function ProductsPage() {
   return (
     <div className="relative min-h-[calc(100vh-80px)] overflow-hidden">
       <div className="pointer-events-none absolute left-[10%] top-[-240px] h-[520px] w-[520px] rounded-full bg-violet-500/[0.04] blur-[140px]" />
+
       <div className="pointer-events-none absolute right-[-150px] top-[200px] h-[500px] w-[500px] rounded-full bg-cyan-400/[0.035] blur-[130px]" />
 
       <div className="relative mx-auto max-w-[1500px] px-5 py-8 sm:px-7 lg:px-10 lg:py-10">
@@ -169,7 +191,8 @@ export default function ProductsPage() {
             </h1>
 
             <p className="mt-3 max-w-xl text-xs leading-5 text-white/30">
-              Acesse e acompanhe os produtos vinculados à sua conta.
+              Acesse e acompanhe os produtos vinculados à
+              sua conta.
             </p>
           </div>
 
@@ -191,12 +214,21 @@ export default function ProductsPage() {
 
         {!error && products.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{
+              opacity: 0,
+              y: 12,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
             className="mt-8 flex min-h-[380px] flex-col items-center justify-center rounded-[28px] border border-white/[0.06] bg-[#08101d]/70 px-6 text-center"
           >
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.05] bg-white/[0.025]">
-              <PackageOpen size={23} className="text-white/20" />
+              <PackageOpen
+                size={23}
+                className="text-white/20"
+              />
             </div>
 
             <h2 className="mt-5 text-base font-medium text-white/65">
@@ -204,8 +236,9 @@ export default function ProductsPage() {
             </h2>
 
             <p className="mt-2 max-w-md text-xs leading-5 text-white/25">
-              Quando você contratar um produto Orbitta, ele aparecerá
-              aqui para gerenciamento e acesso.
+              Quando você contratar um produto Orbitta,
+              ele aparecerá aqui para gerenciamento e
+              acesso.
             </p>
 
             <Link
@@ -223,9 +256,17 @@ export default function ProductsPage() {
             {products.map((product, index) => (
               <motion.article
                 key={product.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                initial={{
+                  opacity: 0,
+                  y: 15,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  delay: index * 0.05,
+                }}
                 className="group overflow-hidden rounded-[26px] border border-white/[0.06] bg-[#08101d]/70 transition hover:border-white/[0.1] hover:bg-[#0a1321]/80"
               >
                 <div className="p-6">
@@ -244,6 +285,7 @@ export default function ProductsPage() {
                           product.status
                         )}`}
                       />
+
                       {getStatusLabel(product.status)}
                     </div>
                   </div>
@@ -253,7 +295,8 @@ export default function ProductsPage() {
                   </h2>
 
                   <p className="mt-1.5 min-h-10 text-xs leading-5 text-white/25">
-                    {product.subtitle ?? "Produto Orbitta"}
+                    {product.subtitle ??
+                      "Produto Orbitta"}
                   </p>
 
                   <div className="mt-6 space-y-2">
@@ -274,7 +317,9 @@ export default function ProductsPage() {
                       </div>
 
                       <div className="text-[10px] font-medium text-white/55">
-                        {formatCurrency(product.monthlyPrice)}
+                        {formatCurrency(
+                          product.monthlyPrice
+                        )}
                       </div>
                     </div>
 
@@ -285,7 +330,9 @@ export default function ProductsPage() {
                       </div>
 
                       <div className="text-[10px] font-medium text-white/55">
-                        {formatDate(product.renewalDate)}
+                        {formatDate(
+                          product.renewalDate
+                        )}
                       </div>
                     </div>
                   </div>

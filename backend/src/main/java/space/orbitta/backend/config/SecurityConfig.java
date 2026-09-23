@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -54,6 +55,10 @@ public class SecurityConfig {
                 List.of("*")
         );
 
+        configuration.setExposedHeaders(
+                List.of("X-XSRF-TOKEN")
+        );
+
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
@@ -72,6 +77,17 @@ public class SecurityConfig {
             HttpSecurity http
     ) throws Exception {
 
+        CookieCsrfTokenRepository csrfTokenRepository =
+                CookieCsrfTokenRepository.withHttpOnlyFalse();
+
+        csrfTokenRepository.setCookieName(
+                "XSRF-TOKEN"
+        );
+
+        csrfTokenRepository.setHeaderName(
+                "X-XSRF-TOKEN"
+        );
+
         http
                 .cors(cors ->
                         cors.configurationSource(
@@ -80,6 +96,10 @@ public class SecurityConfig {
                 )
 
                 .csrf(csrf -> csrf
+                        .csrfTokenRepository(
+                                csrfTokenRepository
+                        )
+
                         .ignoringRequestMatchers(
                                 "/api/auth/**",
                                 "/api/admin/**"
@@ -88,16 +108,51 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
+                        /*
+                         * =====================================================
+                         * ROTAS PÚBLICAS
+                         * =====================================================
+                         */
+
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/api/auth/logout",
+                                "/api/csrf",
                                 "/error"
                         )
                         .permitAll()
 
-                        .requestMatchers("/api/admin/**")
+                        /*
+                         * =====================================================
+                         * CATÁLOGO PÚBLICO
+                         * =====================================================
+                         */
+
+                        .requestMatchers(
+                                "/api/catalog/**"
+                        )
+                        .permitAll()
+
+                        /*
+                         * =====================================================
+                         * ADMIN
+                         * =====================================================
+                         */
+
+                        .requestMatchers(
+                                "/api/admin/**"
+                        )
                         .hasRole("ADMIN")
+
+                        /*
+                         * =====================================================
+                         * DEMAIS ROTAS
+                         * =====================================================
+                         *
+                         * Checkout continua protegido.
+                         * É necessário estar autenticado.
+                         */
 
                         .anyRequest()
                         .authenticated()

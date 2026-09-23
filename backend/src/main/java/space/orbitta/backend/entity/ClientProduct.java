@@ -22,6 +22,37 @@ public class ClientProduct {
     )
     private User user;
 
+    /*
+     * Referência ao produto original do catálogo.
+     *
+     * É opcional para manter compatibilidade com contratos
+     * criados antes da existência do catálogo.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "catalog_product_id",
+            foreignKey = @ForeignKey(name = "fk_client_products_catalog_product")
+    )
+    private CatalogProduct catalogProduct;
+
+    /*
+     * Referência ao plano original escolhido pelo cliente.
+     *
+     * Também é opcional para preservar registros antigos.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "catalog_plan_id",
+            foreignKey = @ForeignKey(name = "fk_client_products_catalog_plan")
+    )
+    private CatalogPlan catalogPlan;
+
+    /*
+     * Os campos abaixo continuam sendo snapshots do contrato.
+     *
+     * Mesmo que o nome ou preço do catálogo seja alterado
+     * futuramente, o contrato mantém os dados da contratação.
+     */
     @Column(nullable = false, length = 100)
     private String name;
 
@@ -92,6 +123,22 @@ public class ClientProduct {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public CatalogProduct getCatalogProduct() {
+        return catalogProduct;
+    }
+
+    public void setCatalogProduct(CatalogProduct catalogProduct) {
+        this.catalogProduct = catalogProduct;
+    }
+
+    public CatalogPlan getCatalogPlan() {
+        return catalogPlan;
+    }
+
+    public void setCatalogPlan(CatalogPlan catalogPlan) {
+        this.catalogPlan = catalogPlan;
     }
 
     public String getName() {

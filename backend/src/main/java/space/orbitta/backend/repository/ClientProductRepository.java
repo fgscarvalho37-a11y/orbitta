@@ -38,6 +38,20 @@ public interface ClientProductRepository
     );
 
     /*
+     * Verifica se o cliente já possui este plano
+     * do catálogo com determinado status.
+     *
+     * Usaremos isso no fluxo de contratação para impedir
+     * a criação acidental de uma segunda assinatura ativa
+     * do mesmo plano.
+     */
+    boolean existsByUserIdAndCatalogPlanIdAndStatus(
+            Long userId,
+            Long catalogPlanId,
+            ProductStatus status
+    );
+
+    /*
      * =========================================================
      * ADMIN
      * =========================================================

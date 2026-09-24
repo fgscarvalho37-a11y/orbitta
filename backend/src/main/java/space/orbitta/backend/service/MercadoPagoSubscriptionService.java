@@ -22,6 +22,9 @@ public class MercadoPagoSubscriptionService {
     private static final String PREAPPROVAL_PLAN_URL =
             "https://api.mercadopago.com/preapproval_plan";
 
+    private static final String PREAPPROVAL_URL =
+            "https://api.mercadopago.com/preapproval/";
+
     private final RestTemplate restTemplate;
 
     @Value("${mercadopago.access-token:}")
@@ -74,7 +77,7 @@ public class MercadoPagoSubscriptionService {
 
         autoRecurring.put(
                 "transaction_amount",
-                calculateRecurringAmount(checkout)
+                calculateInitialAmount(checkout)
         );
 
         autoRecurring.put(
@@ -209,13 +212,18 @@ public class MercadoPagoSubscriptionService {
         return String.valueOf(value);
     }
 
-    private BigDecimal calculateRecurringAmount(
+    private BigDecimal calculateInitialAmount(
             SubscriptionCheckout checkout
     ) {
 
         BigDecimal monthlyPrice =
                 checkout.getMonthlyPrice() != null
                         ? checkout.getMonthlyPrice()
+                        : BigDecimal.ZERO;
+
+        BigDecimal setupPrice =
+                checkout.getSetupPrice() != null
+                        ? checkout.getSetupPrice()
                         : BigDecimal.ZERO;
 
         if (
@@ -229,7 +237,144 @@ public class MercadoPagoSubscriptionService {
             );
         }
 
-        return monthlyPrice;
+        if (
+                setupPrice.compareTo(
+                        BigDecimal.ZERO
+                ) < 0
+        ) {
+
+            throw new IllegalArgumentException(
+                    "A taxa inicial não pode ser negativa."
+            );
+        }
+
+        /*
+         * A primeira cobrança precisa incluir:
+         *
+         * mensalidade + taxa inicial.
+         *
+         * Depois que essa cobrança for aprovada, o SyncService
+         * altera o valor recorrente da assinatura para apenas
+         * a mensalidade.
+         */
+        return monthlyPrice.add(
+                setupPrice
+        );
+    }
+
+    public void updateRecurringAmount(
+            String subscriptionId,
+            BigDecimal monthlyPrice,
+            String currency
+    ) {
+
+        validateConfiguration();
+
+        if (
+                subscriptionId == null ||
+                subscriptionId.isBlank()
+        ) {
+
+            throw new IllegalArgumentException(
+                    "ID da assinatura do Mercado Pago é obrigatório."
+            );
+        }
+
+        if (
+                monthlyPrice == null ||
+                monthlyPrice.compareTo(
+                        BigDecimal.ZERO
+                ) <= 0
+        ) {
+
+            throw new IllegalArgumentException(
+                    "O valor mensal da assinatura deve ser maior que zero."
+            );
+        }
+
+        if (
+                currency == null ||
+                currency.isBlank()
+        ) {
+
+            throw new IllegalArgumentException(
+                    "Moeda da assinatura é obrigatória."
+            );
+        }
+
+        HttpHeaders headers =
+                new HttpHeaders();
+
+        headers.setContentType(
+                MediaType.APPLICATION_JSON
+        );
+
+        headers.setBearerAuth(
+                accessToken.trim()
+        );
+
+        Map<String, Object> autoRecurring =
+                new HashMap<>();
+
+        autoRecurring.put(
+                "transaction_amount",
+                monthlyPrice
+        );
+
+        autoRecurring.put(
+                "currency_id",
+                currency
+                        .trim()
+                        .toUpperCase()
+        );
+
+        Map<String, Object> body =
+                new HashMap<>();
+
+        body.put(
+                "auto_recurring",
+                autoRecurring
+        );
+
+        HttpEntity<Map<String, Object>> request =
+                new HttpEntity<>(
+                        body,
+                        headers
+                );
+
+        try {
+
+            restTemplate.exchange(
+                    PREAPPROVAL_URL +
+                            subscriptionId.trim(),
+                    HttpMethod.PUT,
+                    request,
+                    Map.class
+            );
+
+        } catch (HttpClientErrorException exception) {
+
+            throw new IllegalStateException(
+                    "Mercado Pago recusou o ajuste da mensalidade recorrente. HTTP "
+                            +
+                            exception
+                                    .getStatusCode()
+                                    .value()
+                            +
+                            ": "
+                            +
+                            exception
+                                    .getResponseBodyAsString(),
+                    exception
+            );
+
+        } catch (Exception exception) {
+
+            throw new IllegalStateException(
+                    "Não foi possível ajustar o valor recorrente da assinatura no Mercado Pago.",
+                    exception
+            );
+        }
     }
 
     private String buildReason(

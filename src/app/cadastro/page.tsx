@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -31,6 +31,20 @@ export default function CadastroPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [returnUrl, setReturnUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedReturnUrl = params.get("returnUrl");
+
+    if (
+      requestedReturnUrl &&
+      requestedReturnUrl.startsWith("/") &&
+      !requestedReturnUrl.startsWith("//")
+    ) {
+      setReturnUrl(requestedReturnUrl);
+    }
+  }, []);
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
@@ -73,7 +87,39 @@ export default function CadastroPage() {
         );
       }
 
-      router.push("/login");
+      const loginResponse = await fetch(
+        `${API_URL}/api/auth/login`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.trim(),
+            password,
+          }),
+        }
+      );
+
+      const loginData = await loginResponse
+        .json()
+        .catch(() => null);
+
+      if (!loginResponse.ok) {
+        const loginUrl = returnUrl
+          ? `/login?returnUrl=${encodeURIComponent(returnUrl)}`
+          : "/login";
+
+        router.replace(loginUrl);
+        return;
+      }
+
+      const destination =
+        returnUrl ??
+        (loginData?.role === "ADMIN" ? "/admin" : "/painel");
+
+      router.replace(destination);
       router.refresh();
     } catch (error) {
       if (error instanceof TypeError) {
@@ -294,7 +340,11 @@ export default function CadastroPage() {
           <div className="mt-7 text-center text-xs text-white/30">
             Já possui conta?{" "}
             <Link
-              href="/login"
+              href={
+                returnUrl
+                  ? `/login?returnUrl=${encodeURIComponent(returnUrl)}`
+                  : "/login"
+              }
               className="text-cyan-300/70 hover:text-cyan-200"
             >
               Entrar

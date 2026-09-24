@@ -222,9 +222,7 @@ export default function ProductPricing({
         meResponse.status === 403
       ) {
         const returnUrl =
-          `${window.location.pathname}` +
-          `${window.location.search}` +
-          "#planos";
+          `/checkout/start?planId=${plan.id}`;
 
         router.push(
           `/login?returnUrl=${encodeURIComponent(
@@ -301,9 +299,7 @@ export default function ProductPricing({
         checkoutResponse.status === 403
       ) {
         const returnUrl =
-          `${window.location.pathname}` +
-          `${window.location.search}` +
-          "#planos";
+          `/checkout/start?planId=${plan.id}`;
 
         router.push(
           `/login?returnUrl=${encodeURIComponent(

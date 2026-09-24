@@ -396,7 +396,7 @@ public class PizzaSystemProvisionService {
             initialDelayString =
                     "${pizzasystem.provision-initial-delay-ms:15000}",
             fixedDelayString =
-                    "${pizzasystem.provision-retry-ms:900000}"
+                    "${pizzasystem.provision-retry-ms:60000}"
     )
     @Transactional
     public void retryPendingProvisions() {

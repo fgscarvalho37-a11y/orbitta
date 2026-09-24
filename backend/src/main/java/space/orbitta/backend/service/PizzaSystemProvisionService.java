@@ -396,7 +396,7 @@ public class PizzaSystemProvisionService {
             initialDelayString =
                     "${pizzasystem.provision-initial-delay-ms:15000}",
             fixedDelayString =
-                    "${pizzasystem.provision-retry-ms:60000}"
+                    "${pizzasystem.provision-retry-ms:900000}"
     )
     @Transactional
     public void retryPendingProvisions() {
@@ -422,21 +422,13 @@ public class PizzaSystemProvisionService {
                 continue;
             }
 
-            boolean systemUrlReady =
-                    product.getSystemUrl() != null &&
-                    !product.getSystemUrl().isBlank();
-
-            boolean storefrontReady =
-                    product.getDomain() != null &&
-                    !product.getDomain().isBlank();
-
-            if (
-                    systemUrlReady &&
-                    storefrontReady
-            ) {
-                continue;
-            }
-
+            /*
+             * Reconciliamos produtos ativos periodicamente.
+             * Além de recuperar provisionamentos pendentes,
+             * isso mantém URL pública, slug e credencial
+             * administrativa sincronizados sem depender de
+             * uma única chamada ter dado certo.
+             */
             try {
 
                 ClientProduct provisioned =

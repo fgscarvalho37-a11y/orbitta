@@ -74,6 +74,26 @@ function formatDateTime(value: string) {
   }).format(date);
 }
 
+function externalUrl(
+  value: string | null
+) {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed =
+    value.trim();
+
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://")
+  ) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+}
+
 function getStatusLabel(status: ClientProduct["status"]) {
   switch (status) {
     case "ACTIVE":
@@ -329,21 +349,44 @@ export default function ProductPage({
             </div>
           </div>
 
-          {product.systemUrl ? (
-            <a
-              href={product.systemUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-xs font-semibold text-[#07101c] transition hover:bg-white/90"
-            >
-              Abrir sistema
+          <div className="flex flex-wrap gap-2">
+            {externalUrl(
+              product.domain
+            ) ? (
+              <a
+                href={
+                  externalUrl(
+                    product.domain
+                  )!
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex h-11 items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.035] px-5 text-xs font-semibold text-white/70 transition hover:bg-white/[0.07]"
+              >
+                Abrir loja
 
-              <ExternalLink
-                size={13}
-                className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-              />
-            </a>
-          ) : null}
+                <Globe2
+                  size={13}
+                />
+              </a>
+            ) : null}
+
+            {product.systemUrl ? (
+              <a
+                href={product.systemUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-xs font-semibold text-[#07101c] transition hover:bg-white/90"
+              >
+                Abrir sistema
+
+                <ExternalLink
+                  size={13}
+                  className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                />
+              </a>
+            ) : null}
+          </div>
         </motion.section>
 
         {/* INFO */}

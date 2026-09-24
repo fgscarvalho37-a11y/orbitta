@@ -15,13 +15,18 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PizzaSystemProvisionService
+            pizzaSystemProvisionService;
 
     public UserService(
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            PizzaSystemProvisionService pizzaSystemProvisionService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.pizzaSystemProvisionService =
+                pizzaSystemProvisionService;
     }
 
     /*
@@ -268,7 +273,19 @@ public class UserService {
                 )
         );
 
-        userRepository.save(user);
+        user =
+                userRepository.save(
+                        user
+                );
+
+        /*
+         * Mantém a credencial administrativa do PizzaSystem
+         * sincronizada com a conta Orbitta.
+         */
+        pizzaSystemProvisionService
+                .syncUser(
+                        user
+                );
     }
 
     /*

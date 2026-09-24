@@ -1,5 +1,6 @@
 package space.orbitta.backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,10 +14,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 public class SecurityConfig {
+
+    @Value("${orbitta.cors.allowed-origins:http://localhost:3000}")
+    private String allowedOrigins;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -27,6 +32,7 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration configuration
     ) throws Exception {
+
         return configuration.getAuthenticationManager();
     }
 
@@ -36,8 +42,16 @@ public class SecurityConfig {
         CorsConfiguration configuration =
                 new CorsConfiguration();
 
+        List<String> origins =
+                Arrays.stream(
+                                allowedOrigins.split(",")
+                        )
+                        .map(String::trim)
+                        .filter(origin -> !origin.isBlank())
+                        .toList();
+
         configuration.setAllowedOrigins(
-                List.of("http://localhost:3000")
+                origins
         );
 
         configuration.setAllowedMethods(
@@ -56,10 +70,14 @@ public class SecurityConfig {
         );
 
         configuration.setExposedHeaders(
-                List.of("X-XSRF-TOKEN")
+                List.of(
+                        "X-XSRF-TOKEN"
+                )
         );
 
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(
+                true
+        );
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
@@ -102,17 +120,12 @@ public class SecurityConfig {
 
                         .ignoringRequestMatchers(
                                 "/api/auth/**",
-                                "/api/admin/**"
+                                "/api/admin/**",
+                                "/api/webhooks/**"
                         )
                 )
 
                 .authorizeHttpRequests(auth -> auth
-
-                        /*
-                         * =====================================================
-                         * ROTAS PÚBLICAS
-                         * =====================================================
-                         */
 
                         .requestMatchers(
                                 "/api/auth/register",
@@ -123,36 +136,20 @@ public class SecurityConfig {
                         )
                         .permitAll()
 
-                        /*
-                         * =====================================================
-                         * CATÁLOGO PÚBLICO
-                         * =====================================================
-                         */
+                        .requestMatchers(
+                                "/api/webhooks/mercadopago"
+                        )
+                        .permitAll()
 
                         .requestMatchers(
                                 "/api/catalog/**"
                         )
                         .permitAll()
 
-                        /*
-                         * =====================================================
-                         * ADMIN
-                         * =====================================================
-                         */
-
                         .requestMatchers(
                                 "/api/admin/**"
                         )
                         .hasRole("ADMIN")
-
-                        /*
-                         * =====================================================
-                         * DEMAIS ROTAS
-                         * =====================================================
-                         *
-                         * Checkout continua protegido.
-                         * É necessário estar autenticado.
-                         */
 
                         .anyRequest()
                         .authenticated()

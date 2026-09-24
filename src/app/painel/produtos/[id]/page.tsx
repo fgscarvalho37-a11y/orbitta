@@ -18,6 +18,9 @@ import {
   WalletCards,
 } from "lucide-react";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+
 type ClientProduct = {
   id: number;
   name: string;
@@ -71,9 +74,7 @@ function formatDateTime(value: string) {
   }).format(date);
 }
 
-function getStatusLabel(
-  status: ClientProduct["status"]
-) {
+function getStatusLabel(status: ClientProduct["status"]) {
   switch (status) {
     case "ACTIVE":
       return "Ativo";
@@ -89,9 +90,7 @@ function getStatusLabel(
   }
 }
 
-function getStatusClasses(
-  status: ClientProduct["status"]
-) {
+function getStatusClasses(status: ClientProduct["status"]) {
   switch (status) {
     case "ACTIVE":
       return "border-emerald-300/[0.08] bg-emerald-300/[0.04] text-emerald-200/60";
@@ -107,9 +106,7 @@ function getStatusClasses(
   }
 }
 
-function getStatusDotClasses(
-  status: ClientProduct["status"]
-) {
+function getStatusDotClasses(status: ClientProduct["status"]) {
   switch (status) {
     case "ACTIVE":
       return "bg-emerald-400";
@@ -145,7 +142,7 @@ export default function ProductPage({
       setError(null);
 
       const response = await fetch(
-        `http://localhost:8080/api/client/products/${id}`,
+        `${API_URL}/api/client/products/${id}`,
         {
           method: "GET",
           credentials: "include",
@@ -157,6 +154,7 @@ export default function ProductPage({
 
       if (response.status === 404) {
         setProduct(null);
+
         setError(
           "Este produto não existe ou não pertence à sua conta."
         );

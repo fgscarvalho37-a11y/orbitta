@@ -5,6 +5,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
@@ -294,15 +295,17 @@ public class MercadoPagoSubscriptionSyncService {
 
         /*
          * Assinatura cancelada.
+         *
+         * Não cortamos o acesso imediatamente.
+         * O cliente continua usando até a renewalDate.
          */
         if (
                 "cancelled".equalsIgnoreCase(status) ||
                 "canceled".equalsIgnoreCase(status)
         ) {
 
-            updateProductStatus(
-                    checkout,
-                    ProductStatus.CANCELLED
+            handleCancelledSubscription(
+                    checkout
             );
         }
     }
@@ -443,9 +446,8 @@ public class MercadoPagoSubscriptionSyncService {
                     "canceled".equalsIgnoreCase(status)
             ) {
 
-                updateProductStatus(
-                        checkout,
-                        ProductStatus.CANCELLED
+                handleCancelledSubscription(
+                        checkout
                 );
             }
 
@@ -710,20 +712,169 @@ public class MercadoPagoSubscriptionSyncService {
 
     /*
      * =========================================================
-     * ALTERAR STATUS DO PRODUTO
+     * CANCELAMENTO AO FIM DO PERÍODO PAGO
      * =========================================================
+     *
+     * Quando o Mercado Pago informa "canceled", a renovação
+     * automática acabou.
+     *
+     * Isso não significa que o cliente perde imediatamente
+     * os dias que já pagou.
+     *
+     * Registramos a data do cancelamento no checkout e
+     * mantemos o produto ativo até a renewalDate.
      */
-    private void updateProductStatus(
-            SubscriptionCheckout checkout,
-            ProductStatus status
+    private void handleCancelledSubscription(
+            SubscriptionCheckout checkout
     ) {
 
-        if (
-                checkout == null ||
-                status == null
-        ) {
+        if (checkout == null) {
 
             return;
+        }
+
+        /*
+         * Só registramos a primeira vez em que soubemos
+         * do cancelamento.
+         */
+        if (checkout.getCancelledAt() == null) {
+
+            checkout.setCancelledAt(
+                    LocalDateTime.now()
+            );
+
+            checkoutRepository.save(
+                    checkout
+            );
+        }
+
+        applyCancellationWhenPeriodEnds(
+                checkout,
+                LocalDate.now()
+        );
+    }
+
+    /*
+     * =========================================================
+     * VERIFICAR CANCELAMENTOS PENDENTES
+     * =========================================================
+     *
+     * A cada 15 minutos, enquanto o backend estiver ativo,
+     * verificamos checkouts que já foram cancelados.
+     *
+     * Quando a renewalDate chegar, o produto perde o acesso.
+     */
+    @Scheduled(
+            fixedDelayString =
+                    "${orbitta.subscription-cancellation-check-ms:900000}"
+    )
+    @Transactional
+    public void expireCancelledSubscriptions() {
+
+        LocalDate today =
+                LocalDate.now();
+
+        for (
+                SubscriptionCheckout checkout :
+                checkoutRepository.findAll()
+        ) {
+
+            if (checkout.getCancelledAt() == null) {
+
+                continue;
+            }
+
+            applyCancellationWhenPeriodEnds(
+                    checkout,
+                    today
+            );
+        }
+    }
+
+    /*
+     * =========================================================
+     * APLICAR CANCELAMENTO
+     * =========================================================
+     */
+    private void applyCancellationWhenPeriodEnds(
+            SubscriptionCheckout checkout,
+            LocalDate today
+    ) {
+
+        ClientProduct product =
+                findMatchingProduct(
+                        checkout
+                );
+
+        if (product == null) {
+
+            return;
+        }
+
+        LocalDate renewalDate =
+                product.getRenewalDate();
+
+        /*
+         * Se não temos renewalDate, não conseguimos provar
+         * que ainda existe período pago.
+         *
+         * Nesse caso cancelamos.
+         */
+        if (
+                renewalDate == null ||
+                !renewalDate.isAfter(today)
+        ) {
+
+            if (
+                    product.getStatus()
+                            != ProductStatus.CANCELLED
+            ) {
+
+                product.setStatus(
+                        ProductStatus.CANCELLED
+                );
+
+                clientProductRepository.save(
+                        product
+                );
+            }
+
+            return;
+        }
+
+        /*
+         * Ainda existe período pago.
+         *
+         * Se o comportamento antigo chegou a cancelar
+         * imediatamente, restauramos o acesso até renewalDate.
+         */
+        if (
+                product.getStatus()
+                        == ProductStatus.CANCELLED
+        ) {
+
+            product.setStatus(
+                    ProductStatus.ACTIVE
+            );
+
+            clientProductRepository.save(
+                    product
+            );
+        }
+    }
+
+    /*
+     * =========================================================
+     * LOCALIZAR PRODUTO DO CHECKOUT
+     * =========================================================
+     */
+    private ClientProduct findMatchingProduct(
+            SubscriptionCheckout checkout
+    ) {
+
+        if (checkout == null) {
+
+            return null;
         }
 
         List<ClientProduct> products =
@@ -763,17 +914,48 @@ public class MercadoPagoSubscriptionSyncService {
                     sameLegacyProduct
             ) {
 
-                product.setStatus(
-                        status
-                );
-
-                clientProductRepository.save(
-                        product
-                );
-
-                return;
+                return product;
             }
         }
+
+        return null;
+    }
+
+    /*
+     * =========================================================
+     * ALTERAR STATUS DO PRODUTO
+     * =========================================================
+     */
+    private void updateProductStatus(
+            SubscriptionCheckout checkout,
+            ProductStatus status
+    ) {
+
+        if (
+                checkout == null ||
+                status == null
+        ) {
+
+            return;
+        }
+
+        ClientProduct product =
+                findMatchingProduct(
+                        checkout
+                );
+
+        if (product == null) {
+
+            return;
+        }
+
+        product.setStatus(
+                status
+        );
+
+        clientProductRepository.save(
+                product
+        );
     }
 
     /*

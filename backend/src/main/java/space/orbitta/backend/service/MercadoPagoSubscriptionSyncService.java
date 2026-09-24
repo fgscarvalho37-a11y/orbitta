@@ -51,6 +51,7 @@ public class MercadoPagoSubscriptionSyncService {
     private final SubscriptionCheckoutRepository checkoutRepository;
     private final ClientProductRepository clientProductRepository;
     private final InvoiceRepository invoiceRepository;
+    private final MercadoPagoSubscriptionService mercadoPagoSubscriptionService;
 
     @Value("${mercadopago.access-token:}")
     private String accessToken;
@@ -58,7 +59,8 @@ public class MercadoPagoSubscriptionSyncService {
     public MercadoPagoSubscriptionSyncService(
             SubscriptionCheckoutRepository checkoutRepository,
             ClientProductRepository clientProductRepository,
-            InvoiceRepository invoiceRepository
+            InvoiceRepository invoiceRepository,
+            MercadoPagoSubscriptionService mercadoPagoSubscriptionService
     ) {
         this.restTemplate = new RestTemplate();
 
@@ -70,6 +72,9 @@ public class MercadoPagoSubscriptionSyncService {
 
         this.invoiceRepository =
                 invoiceRepository;
+
+        this.mercadoPagoSubscriptionService =
+                mercadoPagoSubscriptionService;
     }
 
     /*
@@ -493,6 +498,35 @@ public class MercadoPagoSubscriptionSyncService {
             throw new IllegalStateException(
                     "Mercado Pago retornou uma assinatura sem ID."
             );
+        }
+
+        /*
+         * Quando existe taxa inicial, o plano do Mercado Pago
+         * foi criado com:
+         *
+         * primeira cobrança = mensalidade + taxa inicial.
+         *
+         * Assim que confirmamos que essa primeira cobrança foi
+         * aprovada, reduzimos o valor recorrente da assinatura
+         * para somente a mensalidade. Dessa forma:
+         *
+         * hoje: setup + mensalidade
+         * próximos meses: apenas mensalidade
+         */
+        if (
+                checkout.getStatus()
+                        != SubscriptionCheckoutStatus.APPROVED &&
+                checkout.getSetupPrice() != null &&
+                checkout.getSetupPrice()
+                        .compareTo(BigDecimal.ZERO) > 0
+        ) {
+
+            mercadoPagoSubscriptionService
+                    .updateRecurringAmount(
+                            subscriptionId,
+                            checkout.getMonthlyPrice(),
+                            checkout.getCurrency()
+                    );
         }
 
         ClientProduct product =

@@ -725,8 +725,14 @@ public class MercadoPagoSubscriptionSyncService {
          * sincronizações futuras tentarão novamente.
          */
         if (
-                savedProduct.getSystemUrl() == null ||
-                savedProduct.getSystemUrl().isBlank()
+                pizzaSystemProvisionService
+                        .supports(
+                                savedProduct
+                        ) &&
+                (
+                        savedProduct.getSystemUrl() == null ||
+                        savedProduct.getSystemUrl().isBlank()
+                )
         ) {
 
             try {

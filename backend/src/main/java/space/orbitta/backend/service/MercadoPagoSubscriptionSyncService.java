@@ -53,6 +53,7 @@ public class MercadoPagoSubscriptionSyncService {
     private final ClientProductRepository clientProductRepository;
     private final InvoiceRepository invoiceRepository;
     private final MercadoPagoSubscriptionService mercadoPagoSubscriptionService;
+    private final PizzaSystemProvisionService pizzaSystemProvisionService;
 
     @Value("${mercadopago.access-token:}")
     private String accessToken;
@@ -61,7 +62,8 @@ public class MercadoPagoSubscriptionSyncService {
             SubscriptionCheckoutRepository checkoutRepository,
             ClientProductRepository clientProductRepository,
             InvoiceRepository invoiceRepository,
-            MercadoPagoSubscriptionService mercadoPagoSubscriptionService
+            MercadoPagoSubscriptionService mercadoPagoSubscriptionService,
+            PizzaSystemProvisionService pizzaSystemProvisionService
     ) {
         this.restTemplate = new RestTemplate();
 
@@ -76,6 +78,9 @@ public class MercadoPagoSubscriptionSyncService {
 
         this.mercadoPagoSubscriptionService =
                 mercadoPagoSubscriptionService;
+
+        this.pizzaSystemProvisionService =
+                pizzaSystemProvisionService;
     }
 
     /*
@@ -705,9 +710,50 @@ public class MercadoPagoSubscriptionSyncService {
             );
         }
 
-        return clientProductRepository.save(
-                product
-        );
+        ClientProduct savedProduct =
+                clientProductRepository.save(
+                        product
+                );
+
+        /*
+         * Provisiona o PizzaSystem depois que o ClientProduct
+         * já possui ID. Esse ID vira a chave idempotente do
+         * tenant no PizzaSystem.
+         *
+         * Falha de provisionamento não desfaz a confirmação
+         * do pagamento. Enquanto systemUrl estiver vazio,
+         * sincronizações futuras tentarão novamente.
+         */
+        if (
+                savedProduct.getSystemUrl() == null ||
+                savedProduct.getSystemUrl().isBlank()
+        ) {
+
+            try {
+
+                savedProduct =
+                        pizzaSystemProvisionService
+                                .provision(
+                                        savedProduct
+                                );
+
+                savedProduct =
+                        clientProductRepository.save(
+                                savedProduct
+                        );
+
+            } catch (RuntimeException exception) {
+
+                System.err.println(
+                        "[PIZZASYSTEM] Falha ao provisionar produto "
+                                + savedProduct.getId()
+                                + ": "
+                                + exception.getMessage()
+                );
+            }
+        }
+
+        return savedProduct;
     }
 
     /*

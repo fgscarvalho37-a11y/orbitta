@@ -8,13 +8,19 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 import org.springframework.stereotype.Service;
+
+import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import space.orbitta.backend.entity.ClientProduct;
+import space.orbitta.backend.entity.ProductStatus;
 import space.orbitta.backend.entity.User;
+import space.orbitta.backend.repository.ClientProductRepository;
 
 @Service
 public class PizzaSystemProvisionService {
@@ -22,12 +28,89 @@ public class PizzaSystemProvisionService {
     private final RestTemplate restTemplate =
             new RestTemplate();
 
+    private final ClientProductRepository
+            clientProductRepository;
+
     @Value("${pizzasystem.api-url:}")
     private String pizzaSystemApiUrl;
 
     @Value("${orbitta.integration-secret:}")
     private String integrationSecret;
 
+    /*
+     * Opcional.
+     *
+     * Se configurado, só o produto de catálogo com esse ID
+     * será tratado como PizzaSystem.
+     *
+     * Sem configuração, usamos o nome "PizzaSystem" como
+     * compatibilidade com o catálogo atual.
+     */
+    @Value("${pizzasystem.catalog-product-id:}")
+    private String pizzaSystemCatalogProductId;
+
+    public PizzaSystemProvisionService(
+            ClientProductRepository clientProductRepository
+    ) {
+        this.clientProductRepository =
+                clientProductRepository;
+    }
+
+    /*
+     * =========================================================
+     * VERIFICAR SE O PRODUTO É O PIZZASYSTEM
+     * =========================================================
+     */
+    public boolean supports(
+            ClientProduct product
+    ) {
+
+        if (product == null) {
+            return false;
+        }
+
+        String configuredId =
+                pizzaSystemCatalogProductId == null
+                        ? ""
+                        : pizzaSystemCatalogProductId.trim();
+
+        if (!configuredId.isBlank()) {
+
+            try {
+
+                Long catalogProductId =
+                        Long.valueOf(
+                                configuredId
+                        );
+
+                return product.getCatalogProduct() != null
+                        && product
+                        .getCatalogProduct()
+                        .getId() != null
+                        && product
+                        .getCatalogProduct()
+                        .getId()
+                        .equals(
+                                catalogProductId
+                        );
+
+            } catch (NumberFormatException ignored) {
+
+                return false;
+            }
+        }
+
+        return product.getName() != null
+                && "PizzaSystem".equalsIgnoreCase(
+                product.getName().trim()
+        );
+    }
+
+    /*
+     * =========================================================
+     * PROVISIONAR
+     * =========================================================
+     */
     public ClientProduct provision(
             ClientProduct product
     ) {
@@ -35,6 +118,12 @@ public class PizzaSystemProvisionService {
         if (product == null) {
             throw new IllegalArgumentException(
                     "Produto é obrigatório."
+            );
+        }
+
+        if (!supports(product)) {
+            throw new IllegalArgumentException(
+                    "Produto não pertence ao PizzaSystem."
             );
         }
 
@@ -137,6 +226,88 @@ public class PizzaSystemProvisionService {
                     exception
             );
         }
+    }
+
+    /*
+     * =========================================================
+     * RETENTATIVA AUTOMÁTICA
+     * =========================================================
+     *
+     * Também cobre assinaturas que já estavam ativas antes
+     * desta integração existir.
+     */
+    @Scheduled(
+            initialDelayString =
+                    "${pizzasystem.provision-initial-delay-ms:15000}",
+            fixedDelayString =
+                    "${pizzasystem.provision-retry-ms:60000}"
+    )
+    @Transactional
+    public void retryPendingProvisions() {
+
+        if (!configurationAvailable()) {
+            return;
+        }
+
+        for (
+                ClientProduct product :
+                clientProductRepository
+                        .findAllByOrderByCreatedAtDesc()
+        ) {
+
+            if (
+                    product.getStatus()
+                            != ProductStatus.ACTIVE
+            ) {
+                continue;
+            }
+
+            if (!supports(product)) {
+                continue;
+            }
+
+            if (
+                    product.getSystemUrl() != null &&
+                    !product.getSystemUrl().isBlank()
+            ) {
+                continue;
+            }
+
+            try {
+
+                ClientProduct provisioned =
+                        provision(
+                                product
+                        );
+
+                clientProductRepository.save(
+                        provisioned
+                );
+
+                System.out.println(
+                        "[PIZZASYSTEM] Produto "
+                                + product.getId()
+                                + " provisionado com sucesso."
+                );
+
+            } catch (RuntimeException exception) {
+
+                System.err.println(
+                        "[PIZZASYSTEM] Retentativa do produto "
+                                + product.getId()
+                                + " falhou: "
+                                + exception.getMessage()
+                );
+            }
+        }
+    }
+
+    private boolean configurationAvailable() {
+
+        return pizzaSystemApiUrl != null
+                && !pizzaSystemApiUrl.isBlank()
+                && integrationSecret != null
+                && !integrationSecret.isBlank();
     }
 
     private void validateConfiguration() {

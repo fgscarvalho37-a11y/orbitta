@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import {
@@ -30,6 +30,20 @@ export default function LoginPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [returnUrl, setReturnUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedReturnUrl = params.get("returnUrl");
+
+    if (
+      requestedReturnUrl &&
+      requestedReturnUrl.startsWith("/") &&
+      !requestedReturnUrl.startsWith("//")
+    ) {
+      setReturnUrl(requestedReturnUrl);
+    }
+  }, []);
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
@@ -73,7 +87,11 @@ export default function LoginPage() {
         );
       }
 
-      router.push("/painel");
+      const destination =
+        returnUrl ??
+        (data?.role === "ADMIN" ? "/admin" : "/painel");
+
+      router.replace(destination);
       router.refresh();
     } catch (error) {
       if (error instanceof TypeError) {
@@ -442,6 +460,20 @@ export default function LoginPage() {
                   )}
                 </button>
               </form>
+
+              <div className="mt-6 text-center text-xs text-white/30">
+                Ainda não tem conta?{" "}
+                <Link
+                  href={
+                    returnUrl
+                      ? `/cadastro?returnUrl=${encodeURIComponent(returnUrl)}`
+                      : "/cadastro"
+                  }
+                  className="text-cyan-300/70 transition hover:text-cyan-200"
+                >
+                  Criar conta
+                </Link>
+              </div>
 
               {/* DIVIDER */}
               <div className="my-8 flex items-center gap-4">

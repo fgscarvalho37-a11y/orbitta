@@ -216,6 +216,15 @@ public class PizzaSystemProvisionService {
                     body.systemUrl().trim()
             );
 
+            if (
+                    body.storefrontUrl() != null &&
+                    !body.storefrontUrl().isBlank()
+            ) {
+                product.setDomain(
+                        body.storefrontUrl().trim()
+                );
+            }
+
             return product;
 
         } catch (RestClientException exception) {
@@ -225,6 +234,153 @@ public class PizzaSystemProvisionService {
                             + exception.getMessage(),
                     exception
             );
+        }
+    }
+
+    /*
+     * =========================================================
+     * SUSPENDER / REATIVAR ACESSO
+     * =========================================================
+     */
+    public void suspend(
+            ClientProduct product
+    ) {
+        changeAccess(
+                product,
+                "suspend"
+        );
+    }
+
+    public void reactivate(
+            ClientProduct product
+    ) {
+        changeAccess(
+                product,
+                "reactivate"
+        );
+    }
+
+    private void changeAccess(
+            ClientProduct product,
+            String action
+    ) {
+
+        if (
+                product == null ||
+                product.getId() == null
+        ) {
+            throw new IllegalArgumentException(
+                    "Produto inválido."
+            );
+        }
+
+        if (!supports(product)) {
+            return;
+        }
+
+        validateConfiguration();
+
+        String baseUrl =
+                pizzaSystemApiUrl.trim();
+
+        while (baseUrl.endsWith("/")) {
+            baseUrl =
+                    baseUrl.substring(
+                            0,
+                            baseUrl.length() - 1
+                    );
+        }
+
+        HttpHeaders headers =
+                new HttpHeaders();
+
+        headers.setBearerAuth(
+                integrationSecret.trim()
+        );
+
+        try {
+            ResponseEntity<String> response =
+                    restTemplate.exchange(
+                            baseUrl
+                                    + "/api/internal/orbitta/"
+                                    + product.getId()
+                                    + "/"
+                                    + action,
+                            HttpMethod.POST,
+                            new HttpEntity<>(
+                                    headers
+                            ),
+                            String.class
+                    );
+
+            if (
+                    !response.getStatusCode()
+                            .is2xxSuccessful()
+            ) {
+                throw new IllegalStateException(
+                        "PizzaSystem não confirmou a alteração de acesso."
+                );
+            }
+
+        } catch (RestClientException exception) {
+            throw new IllegalStateException(
+                    "Falha ao sincronizar acesso com PizzaSystem: "
+                            + exception.getMessage(),
+                    exception
+            );
+        }
+    }
+
+    /*
+     * =========================================================
+     * SINCRONIZAR SENHA / DADOS DO USUÁRIO
+     * =========================================================
+     */
+    public void syncUser(
+            User user
+    ) {
+
+        if (
+                user == null ||
+                user.getId() == null
+        ) {
+            return;
+        }
+
+        for (
+                ClientProduct product :
+                clientProductRepository
+                        .findByUserIdOrderByCreatedAtDesc(
+                                user.getId()
+                        )
+        ) {
+
+            if (
+                    product.getStatus()
+                            != ProductStatus.ACTIVE ||
+                    !supports(product)
+            ) {
+                continue;
+            }
+
+            try {
+                ClientProduct synced =
+                        provision(
+                                product
+                        );
+
+                clientProductRepository.save(
+                        synced
+                );
+
+            } catch (RuntimeException exception) {
+                System.err.println(
+                        "[PIZZASYSTEM] Falha ao sincronizar usuário "
+                                + user.getId()
+                                + ": "
+                                + exception.getMessage()
+                );
+            }
         }
     }
 
@@ -266,9 +422,17 @@ public class PizzaSystemProvisionService {
                 continue;
             }
 
-            if (
+            boolean systemUrlReady =
                     product.getSystemUrl() != null &&
-                    !product.getSystemUrl().isBlank()
+                    !product.getSystemUrl().isBlank();
+
+            boolean storefrontReady =
+                    product.getDomain() != null &&
+                    !product.getDomain().isBlank();
+
+            if (
+                    systemUrlReady &&
+                    storefrontReady
             ) {
                 continue;
             }

@@ -728,30 +728,42 @@ public class MercadoPagoSubscriptionSyncService {
                 pizzaSystemProvisionService
                         .supports(
                                 savedProduct
-                        ) &&
-                (
-                        savedProduct.getSystemUrl() == null ||
-                        savedProduct.getSystemUrl().isBlank()
-                )
+                        )
         ) {
 
             try {
 
-                savedProduct =
-                        pizzaSystemProvisionService
-                                .provision(
-                                        savedProduct
-                                );
+                boolean needsProvision =
+                        savedProduct.getSystemUrl() == null ||
+                        savedProduct.getSystemUrl().isBlank() ||
+                        savedProduct.getDomain() == null ||
+                        savedProduct.getDomain().isBlank();
 
-                savedProduct =
-                        clientProductRepository.save(
-                                savedProduct
-                        );
+                if (needsProvision) {
+
+                    savedProduct =
+                            pizzaSystemProvisionService
+                                    .provision(
+                                            savedProduct
+                                    );
+
+                    savedProduct =
+                            clientProductRepository.save(
+                                    savedProduct
+                            );
+
+                } else {
+
+                    pizzaSystemProvisionService
+                            .reactivate(
+                                    savedProduct
+                            );
+                }
 
             } catch (RuntimeException exception) {
 
                 System.err.println(
-                        "[PIZZASYSTEM] Falha ao provisionar produto "
+                        "[PIZZASYSTEM] Falha ao sincronizar produto "
                                 + savedProduct.getId()
                                 + ": "
                                 + exception.getMessage()
@@ -886,8 +898,13 @@ public class MercadoPagoSubscriptionSyncService {
                         ProductStatus.CANCELLED
                 );
 
-                clientProductRepository.save(
-                        product
+                ClientProduct savedProduct =
+                        clientProductRepository.save(
+                                product
+                        );
+
+                syncPizzaSystemAccess(
+                        savedProduct
                 );
             }
 
@@ -909,8 +926,13 @@ public class MercadoPagoSubscriptionSyncService {
                     ProductStatus.ACTIVE
             );
 
-            clientProductRepository.save(
-                    product
+            ClientProduct savedProduct =
+                    clientProductRepository.save(
+                            product
+                    );
+
+            syncPizzaSystemAccess(
+                    savedProduct
             );
         }
     }
@@ -1005,9 +1027,57 @@ public class MercadoPagoSubscriptionSyncService {
                 status
         );
 
-        clientProductRepository.save(
-                product
+        ClientProduct savedProduct =
+                clientProductRepository.save(
+                        product
+                );
+
+        syncPizzaSystemAccess(
+                savedProduct
         );
+    }
+
+    private void syncPizzaSystemAccess(
+            ClientProduct product
+    ) {
+
+        if (
+                product == null ||
+                !pizzaSystemProvisionService
+                        .supports(
+                                product
+                        )
+        ) {
+            return;
+        }
+
+        try {
+
+            if (
+                    product.getStatus()
+                            == ProductStatus.ACTIVE
+            ) {
+                pizzaSystemProvisionService
+                        .reactivate(
+                                product
+                        );
+
+            } else {
+                pizzaSystemProvisionService
+                        .suspend(
+                                product
+                        );
+            }
+
+        } catch (RuntimeException exception) {
+
+            System.err.println(
+                    "[PIZZASYSTEM] Falha ao sincronizar status do produto "
+                            + product.getId()
+                            + ": "
+                            + exception.getMessage()
+            );
+        }
     }
 
     /*

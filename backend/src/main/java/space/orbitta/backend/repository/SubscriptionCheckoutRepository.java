@@ -32,4 +32,10 @@ public interface SubscriptionCheckoutRepository
             Long catalogPlanId,
             Collection<SubscriptionCheckoutStatus> statuses
     );
+
+    Optional<SubscriptionCheckout>
+    findFirstByUserIdAndStatusInOrderByCreatedAtDesc(
+            Long userId,
+            Collection<SubscriptionCheckoutStatus> statuses
+    );
 }

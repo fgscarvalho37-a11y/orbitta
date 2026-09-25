@@ -120,7 +120,7 @@ public class SubscriptionCheckoutService {
 
         if (alreadySubscribed) {
 
-            throw new IllegalArgumentException(
+            throw new IllegalStateException(
                     "Você já possui uma assinatura ativa deste plano."
             );
         }

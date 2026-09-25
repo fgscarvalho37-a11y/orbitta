@@ -75,30 +75,30 @@ const productIcons = {
 
 const heroTexts: Record<string, string> = {
   pizzasystem:
-    "Sua operaÃ§Ã£o de delivery em uma Ãºnica plataforma.",
+    "Sua operação de delivery em uma única plataforma.",
 
   condoflow:
-    "O condomÃnio conectado em uma Ãºnica experiÃªncia.",
+    "O condomínio conectado em uma única experiência.",
 
   vitalsync:
-    "A rotina de saÃºde conectada entre profissional e paciente.",
+    "A rotina de saúde conectada entre profissional e paciente.",
 
   cafeflow:
-    "A operaÃ§Ã£o da sua cafeteria organizada em um sÃ³ lugar.",
+    "A operação da sua cafeteria organizada em um só lugar.",
 };
 
 const sectionTexts: Record<string, string> = {
   pizzasystem:
-    "Uma operaÃ§Ã£o conectada do pedido Ã  entrega.",
+    "Uma operação conectada do pedido à entrega.",
 
   condoflow:
-    "Moradores, portaria e administraÃ§Ã£o trabalhando conectados.",
+    "Moradores, portaria e administração trabalhando conectados.",
 
   vitalsync:
-    "Atendimento, acompanhamento e gestÃ£o em uma Ãºnica experiÃªncia.",
+    "Atendimento, acompanhamento e gestão em uma única experiência.",
 
   cafeflow:
-    "Do cardÃ¡pio Ã  comanda, toda a operaÃ§Ã£o conectada.",
+    "Do cardápio à comanda, toda a operação conectada.",
 };
 
 export default function ProductPageClient({
@@ -148,7 +148,7 @@ export default function ProductPageClient({
           ) : (
             <div className="flex items-center gap-2 rounded-full border border-emerald-300/10 bg-emerald-300/[0.05] px-4 py-2 text-xs text-emerald-100/60">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-              DisponÃvel
+              Disponível
             </div>
           )}
         </div>
@@ -389,7 +389,7 @@ export default function ProductPageClient({
           </div>
 
           <div className="border-t border-white/[0.05] px-6 py-4 text-center text-[10px] uppercase tracking-[0.2em] text-white/20">
-            RepresentaÃ§Ã£o visual â€” preview interativo em desenvolvimento
+            Representação visual — preview interativo em desenvolvimento
           </div>
         </motion.div>
       </section>
@@ -445,8 +445,8 @@ export default function ProductPageClient({
                   </h3>
 
                   <p className="mt-3 leading-7 text-white/35">
-                    Recurso integrado Ã  plataforma {product.name} para
-                    simplificar e centralizar a operaÃ§Ã£o.
+                    Recurso integrado à plataforma {product.name} para
+                    simplificar e centralizar a operação.
                   </p>
                 </motion.div>
               );
@@ -464,13 +464,13 @@ export default function ProductPageClient({
             <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-cyan-400/[0.08] blur-[120px]" />
 
             <p className="text-xs uppercase tracking-[0.25em] text-white/30">
-              {product.name} Ã— Orbitta
+              {product.name} × Orbitta
             </p>
 
             <h2 className="relative mt-6 max-w-4xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-6xl lg:text-7xl">
               {product.status === "development"
-                ? `${product.name} estÃ¡ sendo construÃdo.`
-                : `ConheÃ§a o ${product.name}.`}
+                ? `${product.name} está sendo construído.`
+                : `Conheça o ${product.name}.`}
 
               <span className="block text-white/30">
                 Tecnologia criada pela Orbitta.
@@ -507,7 +507,7 @@ export default function ProductPageClient({
       </section>
 
       <footer className="mx-auto flex max-w-[1440px] flex-col gap-4 px-6 py-10 text-xs text-white/25 sm:flex-row sm:items-center sm:justify-between lg:px-12">
-        <span>Â© 2026 Orbitta Space</span>
+        <span>© 2026 Orbitta Space</span>
         <span>orbitta.space</span>
       </footer>
     </main>

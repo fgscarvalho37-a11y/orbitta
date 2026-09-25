@@ -279,6 +279,92 @@ public class SubscriptionCheckoutService {
 
     /*
      * =========================================================
+     * CHECKOUT ABERTO DO CLIENTE
+     * =========================================================
+     */
+    @Transactional
+    public SubscriptionCheckoutResponse findOpenForUser(
+            String email
+    ) {
+
+        User user =
+                getActiveClient(
+                        email
+                );
+
+        var openCheckout =
+                checkoutRepository
+                        .findFirstByUserIdAndStatusInOrderByCreatedAtDesc(
+                                user.getId(),
+                                List.of(
+                                        SubscriptionCheckoutStatus.PENDING,
+                                        SubscriptionCheckoutStatus.PAYMENT_PENDING
+                                )
+                        );
+
+        if (openCheckout.isEmpty()) {
+            return null;
+        }
+
+        SubscriptionCheckout checkout =
+                openCheckout.get();
+
+        if (
+                checkout.getStatus()
+                        == SubscriptionCheckoutStatus.PAYMENT_PENDING &&
+                checkout.getExternalPaymentId() != null &&
+                !checkout.getExternalPaymentId().isBlank()
+        ) {
+            try {
+                checkout =
+                        mercadoPagoSubscriptionSyncService
+                                .syncCheckout(
+                                        checkout
+                                );
+            } catch (RuntimeException exception) {
+                logger.warn(
+                        "Falha ao sincronizar checkout aberto {}: {}",
+                        checkout.getId(),
+                        exception.getMessage()
+                );
+            }
+        }
+
+        if (
+                checkout.getStatus()
+                        == SubscriptionCheckoutStatus.PENDING &&
+                isExpired(
+                        checkout
+                )
+        ) {
+            checkout.setStatus(
+                    SubscriptionCheckoutStatus.EXPIRED
+            );
+
+            checkout =
+                    checkoutRepository.save(
+                            checkout
+                    );
+
+            return null;
+        }
+
+        if (
+                checkout.getStatus()
+                        != SubscriptionCheckoutStatus.PENDING &&
+                checkout.getStatus()
+                        != SubscriptionCheckoutStatus.PAYMENT_PENDING
+        ) {
+            return null;
+        }
+
+        return SubscriptionCheckoutResponse.from(
+                checkout
+        );
+    }
+
+    /*
+     * =========================================================
      * CONSULTAR CHECKOUT
      * =========================================================
      *

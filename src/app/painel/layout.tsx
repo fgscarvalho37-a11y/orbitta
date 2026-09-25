@@ -18,6 +18,7 @@ import {
 } from "react";
 
 import ClientSidebar from "@/components/dashboard/ClientSidebar";
+import { resolveClientEntryDestination } from "@/lib/clientEntry";
 
 const API_URL = "/backend";
 
@@ -87,7 +88,7 @@ export default function PainelLayout({
         if (response.status === 401) {
           if (!cancelled) {
             router.replace(
-              `/login?redirect=${encodeURIComponent(
+              `/login?returnUrl=${encodeURIComponent(
                 pathname
               )}`
             );
@@ -104,6 +105,26 @@ export default function PainelLayout({
 
         const data: OrbittaUser =
           await response.json();
+
+        if (
+          data.role === "CLIENT"
+        ) {
+          const destination =
+            await resolveClientEntryDestination();
+
+          if (
+            destination !==
+            "/painel"
+          ) {
+            if (!cancelled) {
+              router.replace(
+                destination
+              );
+            }
+
+            return;
+          }
+        }
 
         if (!cancelled) {
           setUser(data);

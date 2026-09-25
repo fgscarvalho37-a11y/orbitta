@@ -221,6 +221,11 @@ public class MercadoPagoSubscriptionService {
                         ? checkout.getMonthlyPrice()
                         : BigDecimal.ZERO;
 
+        BigDecimal setupPrice =
+                checkout.getSetupPrice() != null
+                        ? checkout.getSetupPrice()
+                        : BigDecimal.ZERO;
+
         if (
                 monthlyPrice.compareTo(
                         BigDecimal.ZERO
@@ -232,12 +237,29 @@ public class MercadoPagoSubscriptionService {
             );
         }
 
+        if (
+                setupPrice.compareTo(
+                        BigDecimal.ZERO
+                ) < 0
+        ) {
+
+            throw new IllegalArgumentException(
+                    "A taxa inicial não pode ser negativa."
+            );
+        }
+
         /*
-         * Não existe mais taxa fixa de implantação.
-         * O checkout do Mercado Pago recebe somente
-         * o valor mensal recorrente do plano.
+         * A primeira cobrança inclui:
+         *
+         * mensalidade + taxa inicial.
+         *
+         * Depois que essa cobrança for aprovada, o SyncService
+         * altera o valor recorrente da assinatura para apenas
+         * a mensalidade.
          */
-        return monthlyPrice;
+        return monthlyPrice.add(
+                setupPrice
+        );
     }
 
     public String getPlanCheckoutUrl(

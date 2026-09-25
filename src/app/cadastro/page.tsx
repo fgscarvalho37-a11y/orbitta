@@ -15,9 +15,7 @@ import {
   User,
 } from "lucide-react";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:8080";
+const API_URL = "/backend";
 
 export default function CadastroPage() {
   const router = useRouter();

@@ -81,6 +81,45 @@ export default function CheckoutStartPage() {
           );
         }
 
+        const openCheckoutResponse =
+          await fetch(
+            `${API_URL}/api/checkout/subscriptions/open`,
+            {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                Accept: "application/json",
+              },
+            }
+          );
+
+        if (
+          openCheckoutResponse.ok &&
+          openCheckoutResponse.status !==
+            204
+        ) {
+          const text =
+            await openCheckoutResponse.text();
+
+          if (text) {
+            const openCheckout:
+              CheckoutResponse =
+              JSON.parse(
+                text
+              );
+
+            if (
+              openCheckout?.id
+            ) {
+              window.location.replace(
+                `/checkout/${openCheckout.id}`
+              );
+              return;
+            }
+          }
+        }
+
         const csrfResponse = await fetch(
           `${API_URL}/api/csrf`,
           {

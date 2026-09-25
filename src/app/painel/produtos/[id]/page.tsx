@@ -370,6 +370,14 @@ export default function ProductPage({
               </a>
             ) : null}
 
+            <Link
+              href="/painel/dominios"
+              className="group flex h-11 items-center justify-center gap-2 rounded-xl border border-cyan-300/[0.10] bg-cyan-300/[0.04] px-5 text-xs font-semibold text-cyan-100/60 transition hover:bg-cyan-300/[0.08] hover:text-cyan-100"
+            >
+              Alterar endereço
+              <Globe2 size={13} />
+            </Link>
+
             {product.systemUrl ? (
               <a
                 href={product.systemUrl}

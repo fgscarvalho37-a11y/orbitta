@@ -8,6 +8,7 @@ import space.orbitta.backend.dto.CreateSubscriptionRequest;
 import space.orbitta.backend.dto.MercadoPagoSubscriptionResponse;
 import space.orbitta.backend.dto.SubscriptionCheckoutResponse;
 import space.orbitta.backend.dto.SubscriptionPaymentResponse;
+import space.orbitta.backend.dto.TermsAcceptanceRequest;
 import space.orbitta.backend.entity.CatalogPlan;
 import space.orbitta.backend.entity.CatalogProduct;
 import space.orbitta.backend.entity.ProductStatus;
@@ -32,6 +33,9 @@ public class SubscriptionCheckoutService {
 
     private static final String MERCADO_PAGO_PROVIDER =
             "MERCADO_PAGO";
+
+    public static final String TERMS_VERSION =
+            "2026-09-24";
 
     private static final String MERCADO_PAGO_CHECKOUT_URL =
             "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=";
@@ -381,7 +385,8 @@ public class SubscriptionCheckoutService {
     @Transactional
     public SubscriptionPaymentResponse createPayment(
             Long checkoutId,
-            String email
+            String email,
+            TermsAcceptanceRequest terms
     ) {
 
         if (checkoutId == null) {
@@ -408,6 +413,23 @@ public class SubscriptionCheckoutService {
                                                 "Contratação não encontrada."
                                         )
                         );
+
+        validateTermsAcceptance(
+                terms
+        );
+
+        checkout.setTermsAcceptedAt(
+                LocalDateTime.now()
+        );
+
+        checkout.setTermsVersion(
+                TERMS_VERSION
+        );
+
+        checkout =
+                checkoutRepository.save(
+                        checkout
+                );
 
         /*
          * Checkout já finalizado.
@@ -575,6 +597,34 @@ public class SubscriptionCheckoutService {
      * AUXILIARES
      * =========================================================
      */
+    private void validateTermsAcceptance(
+            TermsAcceptanceRequest terms
+    ) {
+
+        if (
+                terms == null ||
+                !Boolean.TRUE.equals(
+                        terms.accepted()
+                )
+        ) {
+            throw new IllegalArgumentException(
+                    "Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar."
+            );
+        }
+
+        if (
+                terms.termsVersion() == null ||
+                !TERMS_VERSION.equals(
+                        terms.termsVersion()
+                                .trim()
+                )
+        ) {
+            throw new IllegalArgumentException(
+                    "Os termos desta contratação foram atualizados. Revise e aceite a versão atual."
+            );
+        }
+    }
+
     private User getActiveClient(
             String email
     ) {

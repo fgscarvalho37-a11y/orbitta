@@ -73,9 +73,17 @@ export default function AdminLayout({
         }
 
         if (
-          user.role !== "ADMIN" ||
-          !user.active
+          user.role !== "ADMIN"
         ) {
+          setAuthorized(false);
+          setAccessDenied(false);
+          router.replace(
+            "/painel"
+          );
+          return;
+        }
+
+        if (!user.active) {
           setAuthorized(false);
           setAccessDenied(true);
           return;

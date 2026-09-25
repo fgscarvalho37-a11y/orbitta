@@ -18,13 +18,17 @@ public class ClientProductService {
 
     private final ClientProductRepository clientProductRepository;
     private final UserService userService;
+    private final PizzaSystemProvisionService pizzaSystemProvisionService;
 
     public ClientProductService(
             ClientProductRepository clientProductRepository,
-            UserService userService
+            UserService userService,
+            PizzaSystemProvisionService pizzaSystemProvisionService
     ) {
         this.clientProductRepository = clientProductRepository;
         this.userService = userService;
+        this.pizzaSystemProvisionService =
+                pizzaSystemProvisionService;
     }
 
     /*
@@ -84,6 +88,52 @@ public class ClientProductService {
                         );
 
         return ClientProductResponse.from(product);
+    }
+
+    @Transactional
+    public ClientProductResponse updateStorefrontForUser(
+            Long productId,
+            String email,
+            String slug
+    ) {
+
+        User user =
+                getUserByEmail(
+                        email
+                );
+
+        ClientProduct product =
+                clientProductRepository
+                        .findByIdAndUserId(
+                                productId,
+                                user.getId()
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                "Produto não encontrado."
+                                        )
+                        );
+
+        if (
+                product.getStatus()
+                        != ProductStatus.ACTIVE
+        ) {
+            throw new IllegalArgumentException(
+                    "A loja precisa estar ativa para alterar o endereço."
+            );
+        }
+
+        ClientProduct updated =
+                pizzaSystemProvisionService
+                        .updateStorefront(
+                                product,
+                                slug
+                        );
+
+        return ClientProductResponse.from(
+                updated
+        );
     }
 
     @Transactional(readOnly = true)

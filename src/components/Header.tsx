@@ -31,19 +31,27 @@ export default function Header() {
           Produtos
         </a>
 
-        <a
-          className="transition duration-200 hover:text-white"
-          href="#solucoes"
+        <span
+          aria-disabled="true"
+          className="flex cursor-not-allowed items-center gap-2 text-white/25"
+          title="Disponível em breve"
         >
           Soluções
-        </a>
+          <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2 py-0.5 text-[9px] uppercase tracking-wider text-white/20">
+            Em breve
+          </span>
+        </span>
 
-        <a
-          className="transition duration-200 hover:text-white"
-          href="#orbitta"
+        <span
+          aria-disabled="true"
+          className="flex cursor-not-allowed items-center gap-2 text-white/25"
+          title="Disponível em breve"
         >
           Orbitta
-        </a>
+          <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2 py-0.5 text-[9px] uppercase tracking-wider text-white/20">
+            Em breve
+          </span>
+        </span>
       </nav>
 
       <a

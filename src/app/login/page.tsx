@@ -104,11 +104,32 @@ export default function LoginPage() {
           ? requestedReturnUrl
           : returnUrl;
 
+      const role =
+        data?.role === "ADMIN"
+          ? "ADMIN"
+          : "CLIENT";
+
+      const returnUrlMatchesRole =
+        role === "ADMIN"
+          ? Boolean(
+              safeReturnUrl?.startsWith(
+                "/admin"
+              )
+            )
+          : Boolean(
+              safeReturnUrl &&
+              !safeReturnUrl.startsWith(
+                "/admin"
+              )
+            );
+
       const destination =
-        safeReturnUrl ??
-        (data?.role === "ADMIN"
-          ? "/admin"
-          : await resolveClientEntryDestination());
+        returnUrlMatchesRole &&
+        safeReturnUrl
+          ? safeReturnUrl
+          : role === "ADMIN"
+            ? "/admin"
+            : await resolveClientEntryDestination();
 
       router.replace(destination);
       router.refresh();

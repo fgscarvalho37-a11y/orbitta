@@ -61,15 +61,25 @@ export async function resolveClientEntryDestination() {
     return "/login";
   }
 
-  if (openResponse.ok) {
-    const checkout:
-      OpenCheckout =
-      await openResponse.json();
+  if (
+    openResponse.ok &&
+    openResponse.status !== 204
+  ) {
+    const text =
+      await openResponse.text();
 
-    if (
-      checkout?.id
-    ) {
-      return `/checkout/${checkout.id}`;
+    if (text) {
+      const checkout:
+        OpenCheckout =
+        JSON.parse(
+          text
+        );
+
+      if (
+        checkout?.id
+      ) {
+        return `/checkout/${checkout.id}`;
+      }
     }
   }
 

@@ -154,6 +154,22 @@ public class SubscriptionCheckoutController {
                 );
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, String>> handleCheckoutState(
+            IllegalStateException exception
+    ) {
+        return ResponseEntity
+                .status(
+                        HttpStatus.BAD_GATEWAY
+                )
+                .body(
+                        Map.of(
+                                "message",
+                                "Não foi possível iniciar o pagamento no Mercado Pago agora. Tente novamente em instantes."
+                        )
+                );
+    }
+
     /*
      * =========================================================
      * AUTENTICAÇÃO

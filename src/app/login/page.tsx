@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
+import { resolveClientEntryDestination } from "@/lib/clientEntry";
 import {
   AlertCircle,
   ArrowLeft,
@@ -86,9 +87,28 @@ export default function LoginPage() {
         );
       }
 
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      const requestedReturnUrl =
+        params.get(
+          "returnUrl"
+        );
+
+      const safeReturnUrl =
+        requestedReturnUrl &&
+        requestedReturnUrl.startsWith("/") &&
+        !requestedReturnUrl.startsWith("//")
+          ? requestedReturnUrl
+          : returnUrl;
+
       const destination =
-        returnUrl ??
-        (data?.role === "ADMIN" ? "/admin" : "/painel");
+        safeReturnUrl ??
+        (data?.role === "ADMIN"
+          ? "/admin"
+          : await resolveClientEntryDestination());
 
       router.replace(destination);
       router.refresh();

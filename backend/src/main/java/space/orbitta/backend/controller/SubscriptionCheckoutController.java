@@ -158,6 +158,12 @@ public class SubscriptionCheckoutController {
     public ResponseEntity<Map<String, String>> handleCheckoutState(
             IllegalStateException exception
     ) {
+        String message =
+                exception.getMessage() != null &&
+                !exception.getMessage().isBlank()
+                        ? exception.getMessage()
+                        : "Não foi possível iniciar o pagamento no Mercado Pago agora. Tente novamente em instantes.";
+
         return ResponseEntity
                 .status(
                         HttpStatus.BAD_GATEWAY
@@ -165,7 +171,7 @@ public class SubscriptionCheckoutController {
                 .body(
                         Map.of(
                                 "message",
-                                "Não foi possível iniciar o pagamento no Mercado Pago agora. Tente novamente em instantes."
+                                message
                         )
                 );
     }

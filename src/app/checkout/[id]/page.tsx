@@ -15,8 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const API_URL = "/backend";
 
 const TERMS_VERSION =
   "2026-09-24";

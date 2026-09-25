@@ -239,6 +239,130 @@ public class PizzaSystemProvisionService {
 
     /*
      * =========================================================
+     * ATUALIZAR ENDEREÇO PÚBLICO
+     * =========================================================
+     */
+    public ClientProduct updateStorefront(
+            ClientProduct product,
+            String slug
+    ) {
+
+        if (
+                product == null ||
+                product.getId() == null
+        ) {
+            throw new IllegalArgumentException(
+                    "Produto inválido."
+            );
+        }
+
+        if (!supports(product)) {
+            throw new IllegalArgumentException(
+                    "Este produto não possui loja pública gerenciada."
+            );
+        }
+
+        validateConfiguration();
+
+        String baseUrl =
+                pizzaSystemApiUrl.trim();
+
+        while (baseUrl.endsWith("/")) {
+            baseUrl =
+                    baseUrl.substring(
+                            0,
+                            baseUrl.length() - 1
+                    );
+        }
+
+        HttpHeaders headers =
+                new HttpHeaders();
+
+        headers.setContentType(
+                MediaType.APPLICATION_JSON
+        );
+
+        headers.setBearerAuth(
+                integrationSecret.trim()
+        );
+
+        try {
+
+            ResponseEntity<StorefrontResponse> response =
+                    restTemplate.exchange(
+                            baseUrl
+                                    + "/api/internal/orbitta/"
+                                    + product.getId()
+                                    + "/storefront",
+                            HttpMethod.PUT,
+                            new HttpEntity<>(
+                                    new StorefrontRequest(
+                                            slug
+                                    ),
+                                    headers
+                            ),
+                            StorefrontResponse.class
+                    );
+
+            if (
+                    !response.getStatusCode()
+                            .is2xxSuccessful() ||
+                    response.getBody() == null ||
+                    response.getBody()
+                            .storefrontUrl() == null ||
+                    response.getBody()
+                            .storefrontUrl()
+                            .isBlank()
+            ) {
+                throw new IllegalStateException(
+                        "PizzaSystem não confirmou o novo endereço."
+                );
+            }
+
+            product.setDomain(
+                    response.getBody()
+                            .storefrontUrl()
+                            .trim()
+            );
+
+            return clientProductRepository.save(
+                    product
+            );
+
+        } catch (org.springframework.web.client.HttpClientErrorException exception) {
+
+            String body =
+                    exception.getResponseBodyAsString();
+
+            if (
+                    exception.getStatusCode()
+                            .is4xxClientError() &&
+                    body != null &&
+                    !body.isBlank()
+            ) {
+                throw new IllegalArgumentException(
+                        body,
+                        exception
+                );
+            }
+
+            throw new IllegalStateException(
+                    "Falha ao atualizar endereço no PizzaSystem.",
+                    exception
+            );
+
+        } catch (RestClientException exception) {
+
+            throw new IllegalStateException(
+                    "Falha ao atualizar endereço no PizzaSystem: "
+                            + exception.getMessage(),
+                    exception
+            );
+        }
+    }
+
+    /*
+     * =========================================================
      * SUSPENDER / REATIVAR ACESSO
      * =========================================================
      */
@@ -502,6 +626,19 @@ public class PizzaSystemProvisionService {
             String slug,
             Long adminUserId,
             String systemUrl,
+            String storefrontUrl
+    ) {
+    }
+
+    public record StorefrontRequest(
+            String slug
+    ) {
+    }
+
+    public record StorefrontResponse(
+            Long tenantId,
+            Long orbittaProductId,
+            String slug,
             String storefrontUrl
     ) {
     }

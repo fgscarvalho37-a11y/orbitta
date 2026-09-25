@@ -262,6 +262,87 @@ public class MercadoPagoSubscriptionService {
         );
     }
 
+    public String getPlanCheckoutUrl(
+            String planId
+    ) {
+
+        validateConfiguration();
+
+        if (
+                planId == null ||
+                planId.isBlank()
+        ) {
+
+            throw new IllegalArgumentException(
+                    "ID do plano de assinatura é obrigatório."
+            );
+        }
+
+        HttpHeaders headers =
+                new HttpHeaders();
+
+        headers.setBearerAuth(
+                accessToken.trim()
+        );
+
+        try {
+
+            ResponseEntity<Map> response =
+                    restTemplate.exchange(
+                            PREAPPROVAL_PLAN_URL
+                                    + "/"
+                                    + planId.trim(),
+                            HttpMethod.GET,
+                            new HttpEntity<>(
+                                    headers
+                            ),
+                            Map.class
+                    );
+
+            Map<?, ?> body =
+                    response.getBody();
+
+            String initPoint =
+                    body != null
+                            ? getString(
+                                    body,
+                                    "init_point"
+                            )
+                            : null;
+
+            if (
+                    initPoint == null ||
+                    initPoint.isBlank()
+            ) {
+
+                throw new IllegalStateException(
+                        "O Mercado Pago não retornou a URL do checkout do plano."
+                );
+            }
+
+            return initPoint.trim();
+
+        } catch (HttpClientErrorException exception) {
+
+            throw new IllegalStateException(
+                    buildMercadoPagoError(
+                            exception
+                    ),
+                    exception
+            );
+
+        } catch (IllegalStateException exception) {
+            throw exception;
+
+        } catch (Exception exception) {
+
+            throw new IllegalStateException(
+                    "Não foi possível recuperar o checkout de assinatura no Mercado Pago.",
+                    exception
+            );
+        }
+    }
+
     public void updateRecurringAmount(
             String subscriptionId,
             BigDecimal monthlyPrice,

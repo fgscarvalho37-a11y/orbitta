@@ -120,7 +120,7 @@ public class SubscriptionCheckoutService {
 
         if (alreadySubscribed) {
 
-            throw new IllegalStateException(
+            throw new IllegalArgumentException(
                     "Você já possui uma assinatura ativa deste plano."
             );
         }
@@ -207,12 +207,7 @@ public class SubscriptionCheckoutService {
                 );
 
         BigDecimal setupPrice =
-                plan.getSetupPrice() != null
-                        ? requireNonNegativePrice(
-                                plan.getSetupPrice(),
-                                "Taxa de implantação"
-                        )
-                        : BigDecimal.ZERO;
+                BigDecimal.ZERO;
 
         String currency =
                 normalizeCurrency(

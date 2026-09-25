@@ -506,6 +506,21 @@ export default function CheckoutPage({
                 </span>
               </div>
 
+              <div className="flex justify-between gap-4 text-xs">
+                <span className="text-white/30">
+                  Implantação
+                </span>
+
+                <span className="text-white/60">
+                  {checkout.setupPrice > 0
+                    ? formatCurrency(
+                        checkout.setupPrice,
+                        checkout.currency
+                      )
+                    : "R$ 0,00"}
+                </span>
+              </div>
+
             </div>
 
             <div className="flex items-end justify-between gap-4 py-6">

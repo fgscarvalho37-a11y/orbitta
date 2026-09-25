@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import space.orbitta.backend.dto.CreateSubscriptionRequest;
 import space.orbitta.backend.dto.SubscriptionCheckoutResponse;
 import space.orbitta.backend.dto.SubscriptionPaymentResponse;
+import space.orbitta.backend.dto.TermsAcceptanceRequest;
 import space.orbitta.backend.service.SubscriptionCheckoutService;
 
 @RestController
@@ -84,6 +85,7 @@ public class SubscriptionCheckoutController {
     @PostMapping("/{checkoutId}/payment")
     public ResponseEntity<SubscriptionPaymentResponse> createPayment(
             @PathVariable Long checkoutId,
+            @RequestBody TermsAcceptanceRequest terms,
             Authentication authentication
     ) {
         String email =
@@ -94,7 +96,8 @@ public class SubscriptionCheckoutController {
         SubscriptionPaymentResponse response =
                 checkoutService.createPayment(
                         checkoutId,
-                        email
+                        email,
+                        terms
                 );
 
         return ResponseEntity.ok(

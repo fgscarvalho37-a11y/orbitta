@@ -73,6 +73,31 @@ function storefrontSettingsUrl(
   }
 }
 
+function hostedSlug(
+  value: string | null
+) {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    const url =
+      new URL(
+        externalUrl(
+          value
+        )!
+      );
+
+    return (
+      url.hostname
+        .split(".")[0] ??
+      ""
+    );
+  } catch {
+    return "";
+  }
+}
+
 function displayAddress(
   value: string | null
 ) {
@@ -109,6 +134,40 @@ export default function DominiosPage() {
   const [
     error,
     setError,
+  ] =
+    useState("");
+
+  const [
+    editingProductId,
+    setEditingProductId,
+  ] =
+    useState<number | null>(
+      null
+    );
+
+  const [
+    slugValue,
+    setSlugValue,
+  ] =
+    useState("");
+
+  const [
+    savingProductId,
+    setSavingProductId,
+  ] =
+    useState<number | null>(
+      null
+    );
+
+  const [
+    actionError,
+    setActionError,
+  ] =
+    useState("");
+
+  const [
+    actionMessage,
+    setActionMessage,
   ] =
     useState("");
 
@@ -164,6 +223,195 @@ export default function DominiosPage() {
     void loadProducts();
   }, []);
 
+  function startEditing(
+    product: ClientProduct
+  ) {
+    setEditingProductId(
+      product.id
+    );
+
+    setSlugValue(
+      hostedSlug(
+        product.domain
+      )
+    );
+
+    setActionError("");
+    setActionMessage("");
+  }
+
+  async function saveStorefrontAddress(
+    productId: number
+  ) {
+    if (
+      savingProductId !== null
+    ) {
+      return;
+    }
+
+    const normalized =
+      slugValue
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(
+          /[\u0300-\u036f]/g,
+          ""
+        )
+        .replace(
+          /[^a-z0-9]+/g,
+          "-"
+        )
+        .replace(
+          /^-+|-+$/g,
+          ""
+        );
+
+    if (
+      normalized.length < 3
+    ) {
+      setActionError(
+        "O endereço precisa ter pelo menos 3 caracteres."
+      );
+      return;
+    }
+
+    try {
+      setSavingProductId(
+        productId
+      );
+      setActionError("");
+      setActionMessage("");
+
+      const csrfResponse =
+        await fetch(
+          `${API_URL}/api/csrf`,
+          {
+            method: "GET",
+            credentials:
+              "include",
+            cache:
+              "no-store",
+            headers: {
+              Accept:
+                "application/json",
+            },
+          }
+        );
+
+      if (!csrfResponse.ok) {
+        throw new Error(
+          "Não foi possível preparar a alteração."
+        );
+      }
+
+      const csrf:
+        {
+          token: string;
+          headerName: string;
+        } =
+        await csrfResponse.json();
+
+      const response =
+        await fetch(
+          `${API_URL}/api/client/products/${productId}/storefront`,
+          {
+            method: "PUT",
+            credentials:
+              "include",
+            headers: {
+              "Content-Type":
+                "application/json",
+              Accept:
+                "application/json",
+              [csrf.headerName]:
+                csrf.token,
+            },
+            body:
+              JSON.stringify({
+                slug:
+                  normalized,
+              }),
+          }
+        );
+
+      const text =
+        await response.text();
+
+      let data:
+        | ClientProduct
+        | {
+            message?: string;
+          }
+        | null =
+        null;
+
+      if (text) {
+        try {
+          data =
+            JSON.parse(
+              text
+            );
+        } catch {
+          data = null;
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          (
+            data &&
+            "message" in data &&
+            data.message
+          ) ||
+            "Não foi possível alterar o endereço."
+        );
+      }
+
+      const updated =
+        data as ClientProduct;
+
+      setProducts(
+        (current) =>
+          current.map(
+            (product) =>
+              product.id ===
+              productId
+                ? updated
+                : product
+          )
+      );
+
+      setSlugValue(
+        hostedSlug(
+          updated.domain
+        )
+      );
+
+      setEditingProductId(
+        null
+      );
+
+      setActionMessage(
+        "Endereço atualizado. A propagação do subdomínio é automática."
+      );
+
+    } catch (err) {
+      setActionError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível alterar o endereço."
+      );
+
+    } finally {
+      setSavingProductId(
+        null
+      );
+    }
+  }
+
+
+
   const productsWithStorefront =
     products.filter(
       (product) =>
@@ -218,6 +466,18 @@ export default function DominiosPage() {
         {error && (
           <div className="mt-8 rounded-2xl border border-red-300/[0.08] bg-red-300/[0.025] p-5 text-xs text-red-200/60">
             {error}
+          </div>
+        )}
+
+        {actionError && (
+          <div className="mt-5 rounded-2xl border border-red-300/[0.08] bg-red-300/[0.025] p-4 text-xs text-red-200/60">
+            {actionError}
+          </div>
+        )}
+
+        {actionMessage && (
+          <div className="mt-5 rounded-2xl border border-emerald-300/[0.08] bg-emerald-300/[0.025] p-4 text-xs text-emerald-200/60">
+            {actionMessage}
           </div>
         )}
 
@@ -337,18 +597,20 @@ export default function DominiosPage() {
                           </a>
                         ) : null}
 
-                        {settingsUrl ? (
-                          <a
-                            href={
-                              settingsUrl
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex h-10 items-center rounded-xl border border-cyan-300/[0.10] bg-cyan-300/[0.04] px-4 text-xs font-medium text-cyan-100/60 transition hover:bg-cyan-300/[0.08] hover:text-cyan-100"
-                          >
-                            Alterar endereço
-                          </a>
-                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            startEditing(
+                              product
+                            )
+                          }
+                          disabled={
+                            !active
+                          }
+                          className="flex h-10 items-center rounded-xl border border-cyan-300/[0.10] bg-cyan-300/[0.04] px-4 text-xs font-medium text-cyan-100/60 transition hover:bg-cyan-300/[0.08] hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-35"
+                        >
+                          Alterar endereço
+                        </button>
 
                         <Link
                           href={
@@ -362,6 +624,110 @@ export default function DominiosPage() {
                       </div>
 
                     </div>
+
+                    {editingProductId ===
+                      product.id && (
+                      <div className="border-b border-white/[0.05] bg-black/10 p-6 sm:p-8">
+                        <div className="max-w-2xl">
+
+                          <label
+                            htmlFor={`storefront-${product.id}`}
+                            className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/30"
+                          >
+                            Endereço da loja
+                          </label>
+
+                          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+
+                            <div className="flex min-h-11 flex-1 items-center rounded-xl border border-white/[0.07] bg-[#050914] px-4 focus-within:border-cyan-300/25">
+                              <input
+                                id={`storefront-${product.id}`}
+                                value={
+                                  slugValue
+                                }
+                                onChange={(
+                                  event
+                                ) => {
+                                  setSlugValue(
+                                    event.target.value
+                                  );
+                                  setActionError("");
+                                }}
+                                maxLength={
+                                  60
+                                }
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                spellCheck={
+                                  false
+                                }
+                                className="min-w-0 flex-1 bg-transparent py-3 text-sm text-white/75 outline-none placeholder:text-white/15"
+                                placeholder="minha-pizzaria"
+                              />
+
+                              <span className="shrink-0 text-xs text-white/25">
+                                .orbitta.space
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                saveStorefrontAddress(
+                                  product.id
+                                )
+                              }
+                              disabled={
+                                savingProductId ===
+                                product.id
+                              }
+                              className="h-11 rounded-xl bg-white px-5 text-xs font-semibold text-[#07101c] disabled:cursor-wait disabled:opacity-60"
+                            >
+                              {savingProductId ===
+                              product.id
+                                ? "Salvando..."
+                                : "Salvar"}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingProductId(
+                                  null
+                                );
+                                setActionError("");
+                              }}
+                              disabled={
+                                savingProductId ===
+                                product.id
+                              }
+                              className="h-11 rounded-xl border border-white/[0.06] px-4 text-xs text-white/40 transition hover:bg-white/[0.04]"
+                            >
+                              Cancelar
+                            </button>
+
+                          </div>
+
+                          <p className="mt-3 text-[11px] leading-5 text-white/20">
+                            Use de 3 a 60 caracteres. Espaços e acentos serão convertidos automaticamente.
+                          </p>
+
+                          {settingsUrl && (
+                            <a
+                              href={
+                                settingsUrl
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-3 inline-flex text-[11px] text-white/25 underline underline-offset-4 transition hover:text-white/50"
+                            >
+                              Também pode configurar pelo PizzaSystem
+                            </a>
+                          )}
+
+                        </div>
+                      </div>
+                    )}
 
                     <div className="grid gap-px bg-white/[0.04] sm:grid-cols-3">
 

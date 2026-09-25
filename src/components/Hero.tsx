@@ -62,12 +62,19 @@ export default function Hero() {
               />
             </a>
 
-            <a
-              href="#contato"
-              className="rounded-full border border-white/10 bg-white/[0.04] px-6 py-3.5 text-sm font-medium text-white/80 backdrop-blur-md transition hover:bg-white/[0.08] hover:text-white"
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              title="Contato disponível em breve"
+              className="flex cursor-not-allowed items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.025] px-6 py-3.5 text-sm font-medium text-white/30"
             >
               Falar com a Orbitta
-            </a>
+
+              <span className="rounded-full border border-white/[0.06] bg-white/[0.03] px-2 py-0.5 text-[9px] uppercase tracking-wider text-white/25">
+                Em breve
+              </span>
+            </button>
           </motion.div>
 
           <div className="mt-16 flex flex-wrap gap-x-10 gap-y-5 border-t border-white/[0.07] pt-6 text-xs uppercase tracking-[0.16em] text-white/30">

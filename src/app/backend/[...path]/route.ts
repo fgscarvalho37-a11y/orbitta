@@ -94,20 +94,95 @@ async function proxyRequest(
       ? undefined
       : await request.arrayBuffer();
 
-  const upstreamResponse =
-    await fetch(
-      upstreamUrl,
-      {
-        method,
-        headers:
-          buildUpstreamHeaders(
-            request
-          ),
-        body,
-        cache: "no-store",
-        redirect: "manual",
-      }
-    );
+  let upstreamResponse:
+    Response;
+
+  try {
+    upstreamResponse =
+      await fetch(
+        upstreamUrl,
+        {
+          method,
+          headers:
+            buildUpstreamHeaders(
+              request
+            ),
+          body,
+          cache: "no-store",
+          redirect: "manual",
+          signal:
+            AbortSignal.timeout(
+              25000
+            ),
+        }
+      );
+
+  } catch (
+    firstError
+  ) {
+    /*
+     * O Render pode levar alguns segundos para acordar.
+     * Fazemos uma única nova tentativa antes de devolver
+     * uma resposta tratada ao frontend.
+     */
+    try {
+      await new Promise(
+        (
+          resolve
+        ) =>
+          setTimeout(
+            resolve,
+            900
+          )
+      );
+
+      upstreamResponse =
+        await fetch(
+          upstreamUrl,
+          {
+            method,
+            headers:
+              buildUpstreamHeaders(
+                request
+              ),
+            body,
+            cache:
+              "no-store",
+            redirect:
+              "manual",
+            signal:
+              AbortSignal.timeout(
+                25000
+              ),
+          }
+        );
+
+    } catch (
+      secondError
+    ) {
+      console.error(
+        "[ORBITTA PROXY] Backend indisponível:",
+        firstError,
+        secondError
+      );
+
+      return NextResponse.json(
+        {
+          message:
+            "O servidor da Orbitta está iniciando ou temporariamente indisponível. Tente novamente em alguns segundos.",
+        },
+        {
+          status: 503,
+          headers: {
+            "cache-control":
+              "no-store",
+            "retry-after":
+              "5",
+          },
+        }
+      );
+    }
+  }
 
   const responseBody =
     await upstreamResponse.arrayBuffer();

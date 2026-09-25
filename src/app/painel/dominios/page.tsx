@@ -51,6 +51,28 @@ function externalUrl(
   return `https://${trimmed}`;
 }
 
+function storefrontSettingsUrl(
+  systemUrl: string | null
+) {
+  if (!systemUrl) {
+    return null;
+  }
+
+  try {
+    const url =
+      new URL(
+        externalUrl(
+          systemUrl
+        )!
+      );
+
+    return `${url.origin}/admin/loja`;
+
+  } catch {
+    return null;
+  }
+}
+
 function displayAddress(
   value: string | null
 ) {
@@ -234,6 +256,11 @@ export default function DominiosPage() {
                   product.status ===
                   "ACTIVE";
 
+                const settingsUrl =
+                  storefrontSettingsUrl(
+                    product.systemUrl
+                  );
+
                 return (
                   <article
                     key={
@@ -307,6 +334,19 @@ export default function DominiosPage() {
                             <ExternalLink
                               size={12}
                             />
+                          </a>
+                        ) : null}
+
+                        {settingsUrl ? (
+                          <a
+                            href={
+                              settingsUrl
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex h-10 items-center rounded-xl border border-cyan-300/[0.10] bg-cyan-300/[0.04] px-4 text-xs font-medium text-cyan-100/60 transition hover:bg-cyan-300/[0.08] hover:text-cyan-100"
+                          >
+                            Alterar endereço
                           </a>
                         ) : null}
 

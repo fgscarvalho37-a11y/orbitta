@@ -611,12 +611,35 @@ public class SubscriptionCheckoutService {
             String planId =
                     checkout.getExternalPaymentId();
 
+            String paymentUrl;
+
+            try {
+
+                paymentUrl =
+                        mercadoPagoSubscriptionService
+                                .getPlanCheckoutUrl(
+                                        planId
+                                );
+
+            } catch (RuntimeException exception) {
+
+                logger.warn(
+                        "Não foi possível recuperar init_point do plano {}: {}",
+                        planId,
+                        exception.getMessage()
+                );
+
+                paymentUrl =
+                        MERCADO_PAGO_CHECKOUT_URL
+                                + planId;
+            }
+
             return new SubscriptionPaymentResponse(
                     checkout.getId(),
                     checkout.getStatus().name(),
                     MERCADO_PAGO_PROVIDER,
                     planId,
-                    MERCADO_PAGO_CHECKOUT_URL + planId
+                    paymentUrl
             );
         }
 

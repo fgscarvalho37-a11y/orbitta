@@ -18,6 +18,9 @@ import {
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
+const TERMS_VERSION =
+  "2026-09-24";
+
 type CheckoutStatus =
   | "PENDING"
   | "PAYMENT_PENDING"
@@ -38,6 +41,8 @@ type SubscriptionCheckout = {
   currency: string;
   status: CheckoutStatus;
   externalReference: string | null;
+  termsAcceptedAt: string | null;
+  termsVersion: string | null;
   expiresAt: string;
   createdAt: string;
 };
@@ -136,6 +141,7 @@ export default function CheckoutPage({
   const [error, setError] = useState<string | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   async function loadCheckout() {
     try {
@@ -177,6 +183,13 @@ export default function CheckoutPage({
       const data: SubscriptionCheckout = await response.json();
 
       setCheckout(data);
+
+      setTermsAccepted(
+        Boolean(
+          data.termsAcceptedAt &&
+          data.termsVersion === TERMS_VERSION
+        )
+      );
     } catch (err) {
       console.error("Erro ao carregar checkout:", err);
       setCheckout(null);
@@ -194,6 +207,13 @@ export default function CheckoutPage({
 
   async function handlePayment() {
     if (paymentLoading) return;
+
+    if (!termsAccepted) {
+      setPaymentError(
+        "Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar."
+      );
+      return;
+    }
 
     try {
       setPaymentLoading(true);
@@ -221,8 +241,13 @@ export default function CheckoutPage({
           credentials: "include",
           headers: {
             Accept: "application/json",
+            "Content-Type": "application/json",
             [csrfData.headerName]: csrfData.token,
           },
+          body: JSON.stringify({
+            accepted: true,
+            termsVersion: TERMS_VERSION,
+          }),
         }
       );
 
@@ -517,12 +542,49 @@ export default function CheckoutPage({
             </div>
 
             {canPay ? (
-              <button
-                type="button"
-                onClick={handlePayment}
-                disabled={paymentLoading}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-[#07101c] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
-              >
+              <>
+                <label className="mb-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(event) =>
+                      setTermsAccepted(
+                        event.target.checked
+                      )
+                    }
+                    className="mt-0.5 h-4 w-4 accent-cyan-300"
+                  />
+
+                  <span className="text-[11px] leading-5 text-white/35">
+                    Li e aceito os{" "}
+                    <Link
+                      href="/termos"
+                      target="_blank"
+                      className="text-cyan-200/70 underline underline-offset-2"
+                    >
+                      Termos de Uso
+                    </Link>
+                    {" "}e a{" "}
+                    <Link
+                      href="/privacidade"
+                      target="_blank"
+                      className="text-cyan-200/70 underline underline-offset-2"
+                    >
+                      Política de Privacidade
+                    </Link>
+                    . Estou ciente da cobrança recorrente mensal e da taxa inicial indicada neste checkout.
+                  </span>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={handlePayment}
+                  disabled={
+                    paymentLoading ||
+                    !termsAccepted
+                  }
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-[#07101c] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
                 {paymentLoading ? (
                   <>
                     <LoaderCircle size={16} className="animate-spin" />
@@ -534,7 +596,8 @@ export default function CheckoutPage({
                     Ir para pagamento
                   </>
                 )}
-              </button>
+                </button>
+              </>
             ) : checkout.status === "APPROVED" ? (
               <Link
                 href="/painel/produtos"

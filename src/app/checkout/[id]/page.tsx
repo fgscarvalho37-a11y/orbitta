@@ -424,6 +424,27 @@ export default function CheckoutPage({
                   </div>
                 </div>
 
+                <div className="flex items-center justify-between rounded-2xl border border-white/[0.05] bg-white/[0.018] px-5 py-4">
+                  <div>
+                    <div className="text-xs text-white/55">
+                      Taxa de implantação
+                    </div>
+
+                    <div className="mt-1 text-[10px] text-white/20">
+                      Pagamento único
+                    </div>
+                  </div>
+
+                  <div className="text-sm font-medium text-white/75">
+                    {checkout.setupPrice > 0
+                      ? formatCurrency(
+                          checkout.setupPrice,
+                          checkout.currency
+                        )
+                      : "Grátis"}
+                  </div>
+                </div>
+
               </div>
             </div>
 
@@ -537,7 +558,7 @@ export default function CheckoutPage({
                     >
                       Política de Privacidade
                     </Link>
-                    . Estou ciente da cobrança recorrente mensal indicada neste checkout.
+                    . Estou ciente da cobrança recorrente mensal e da taxa inicial indicada neste checkout.
                   </span>
                 </label>
 

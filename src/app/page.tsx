@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import ProductShowcase from "@/components/ProductShowcase";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 export default function Home() {
+  const { text } = useLanguage();
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050914] text-white">
       <Header />
@@ -19,14 +24,14 @@ export default function Home() {
               href="/termos"
               className="transition hover:text-white/60"
             >
-              Termos de Uso
+              {text("Termos de Uso", "Terms of Use")}
             </Link>
 
             <Link
               href="/privacidade"
               className="transition hover:text-white/60"
             >
-              Privacidade
+              {text("Privacidade", "Privacy")}
             </Link>
           </div>
         </div>

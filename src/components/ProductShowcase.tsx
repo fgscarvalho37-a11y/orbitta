@@ -4,7 +4,8 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowUpRight, ExternalLink } from "lucide-react";
 
-import { products } from "@/data/products";
+import { localizeProduct, products } from "@/data/products";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 function ProductPreview({
   index,
@@ -15,6 +16,8 @@ function ProductPreview({
   name: string;
   previewUrl?: string;
 }) {
+  const { text } = useLanguage();
+
   return (
     <div className="relative aspect-[16/10] overflow-hidden rounded-[30px] border border-white/[0.08] bg-[#08101d] shadow-2xl shadow-black/30">
       <div className="relative flex h-11 items-center gap-2 border-b border-white/[0.06] px-5">
@@ -37,7 +40,7 @@ function ProductPreview({
         <div className="h-[calc(100%-44px)] overflow-hidden bg-[#f6f3ee]">
           <iframe
             src={previewUrl}
-            title={`Preview de ${name}`}
+            title={text(`Preview de ${name}`, `Preview of ${name}`)}
             loading="lazy"
             tabIndex={-1}
             className="pointer-events-none h-[160%] w-[160%] origin-top-left scale-[0.625] border-0"
@@ -96,7 +99,7 @@ function ProductPreview({
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#08101d] to-transparent" />
 
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/[0.08] bg-black/40 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-white/40 backdrop-blur-xl">
-            Preview em desenvolvimento
+            {text("Preview em desenvolvimento", "Preview in development")}
           </div>
         </>
       )}
@@ -105,6 +108,8 @@ function ProductPreview({
 }
 
 export default function ProductShowcase() {
+  const { locale, text } = useLanguage();
+
   return (
     <section
       id="produtos"
@@ -113,26 +118,36 @@ export default function ProductShowcase() {
       <div className="mx-auto max-w-[1440px] px-6 py-28 lg:px-12 lg:py-36">
         <div className="mb-24 max-w-4xl">
           <p className="text-xs uppercase tracking-[0.28em] text-cyan-300/60">
-            Produtos Orbitta
+            {text("Produtos Orbitta", "Orbitta products")}
           </p>
 
           <h2 className="mt-6 text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-6xl lg:text-7xl">
-            Produtos próprios.
+            {text("Produtos próprios.", "Products of our own.")}
 
             <span className="block text-white/35">
-              Construídos para operações reais.
+              {text(
+                "Construídos para operações reais.",
+                "Built for real-world operations."
+              )}
             </span>
           </h2>
 
           <p className="mt-7 max-w-2xl text-base leading-7 text-white/45 sm:text-lg">
-            Estamos desenvolvendo uma linha de plataformas especializadas,
-            cada uma criada para resolver necessidades específicas de
-            diferentes negócios.
+            {text(
+              "Estamos desenvolvendo uma linha de plataformas especializadas, cada uma criada para resolver necessidades específicas de diferentes negócios.",
+              "We are building a range of specialized platforms, each designed to solve specific needs across different businesses."
+            )}
           </p>
         </div>
 
         <div>
           {products.map((product, index) => {
+            const localizedProduct =
+              localizeProduct(
+                product,
+                locale
+              );
+
             const previewAvailable =
               (product.status === "preview" ||
                 product.status === "available") &&
@@ -168,7 +183,7 @@ export default function ProductShowcase() {
                     <span className="h-px w-10 bg-white/10" />
 
                     <span className="text-xs uppercase tracking-[0.2em] text-cyan-300/50">
-                      {product.category}
+                      {localizedProduct.category}
                     </span>
                   </div>
 
@@ -177,15 +192,15 @@ export default function ProductShowcase() {
                   </h3>
 
                   <p className="mt-6 max-w-xl text-2xl font-medium leading-tight tracking-[-0.03em] text-white/85">
-                    {product.shortDescription}
+                    {localizedProduct.shortDescription}
                   </p>
 
                   <p className="mt-5 max-w-lg text-base leading-7 text-white/40">
-                    {product.description}
+                    {localizedProduct.description}
                   </p>
 
                   <div className="mt-8 flex flex-wrap gap-2">
-                    {product.features.slice(0, 4).map((feature) => (
+                    {localizedProduct.features.slice(0, 4).map((feature) => (
                       <span
                         key={feature}
                         className="rounded-full border border-white/[0.08] bg-white/[0.025] px-3.5 py-2 text-xs text-white/45"
@@ -200,7 +215,7 @@ export default function ProductShowcase() {
                       href={`/produtos/${product.slug}`}
                       className="group flex items-center gap-2 text-sm font-medium text-white/65 transition hover:text-white"
                     >
-                      Conhecer produto
+                      {text("Conhecer produto", "Explore product")}
 
                       <ArrowUpRight
                         size={16}
@@ -215,7 +230,7 @@ export default function ProductShowcase() {
                         rel="noopener noreferrer"
                         className="group flex items-center gap-2 text-sm text-cyan-300/70 transition hover:text-cyan-200"
                       >
-                        Abrir preview
+                        {text("Abrir preview", "Open preview")}
 
                         <ExternalLink
                           size={14}
@@ -225,7 +240,7 @@ export default function ProductShowcase() {
                     ) : (
                       <div className="flex items-center gap-2 text-xs text-white/20">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-300/60" />
-                        Preview em breve
+                        {text("Preview em breve", "Preview coming soon")}
                       </div>
                     )}
                   </div>

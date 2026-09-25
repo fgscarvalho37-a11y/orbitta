@@ -2,8 +2,11 @@
 
 import { ArrowRight, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 export default function Hero() {
+  const { text } = useLanguage();
+
   return (
     <section className="relative min-h-[calc(100vh-96px)] overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_36%,rgba(34,211,238,0.10),transparent_26%),radial-gradient(circle_at_58%_52%,rgba(124,58,237,0.12),transparent_34%)]" />
@@ -19,7 +22,7 @@ export default function Hero() {
             className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-400/15 bg-cyan-400/[0.06] px-3.5 py-2 text-xs text-cyan-100"
           >
             <Sparkles size={14} />
-            Software pensado para negócios reais
+            {text("Software pensado para negócios reais", "Software built for real businesses")}
           </motion.div>
 
           <motion.h1
@@ -28,11 +31,11 @@ export default function Hero() {
             transition={{ duration: 0.75, delay: 0.08 }}
             className="max-w-4xl text-[clamp(3.5rem,7vw,7.4rem)] font-semibold leading-[0.92] tracking-[-0.065em]"
           >
-            Tecnologia para
+            {text("Tecnologia para", "Technology to")}
             <span className="block bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
-              colocar ideias
+              {text("colocar ideias", "put ideas")}
             </span>
-            em órbita.
+            {text(" em órbita.", " into orbit.")}
           </motion.h1>
 
           <motion.p
@@ -41,8 +44,10 @@ export default function Hero() {
             transition={{ duration: 0.7, delay: 0.18 }}
             className="mt-8 max-w-2xl text-base leading-7 text-white/50 sm:text-lg"
           >
-            Desenvolvemos SaaS, plataformas, sites e aplicativos com foco em
-            experiência, tecnologia e crescimento.
+            {text(
+              "Desenvolvemos SaaS, plataformas, sites e aplicativos com foco em experiência, tecnologia e crescimento.",
+              "We build SaaS products, platforms, websites and apps focused on experience, technology and growth."
+            )}
           </motion.p>
 
           <motion.div
@@ -55,7 +60,7 @@ export default function Hero() {
               href="#produtos"
               className="group flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
             >
-              Conhecer produtos
+              {text("Conhecer produtos", "Explore products")}
               <ArrowRight
                 size={16}
                 className="transition-transform group-hover:translate-x-1"
@@ -66,13 +71,13 @@ export default function Hero() {
               type="button"
               disabled
               aria-disabled="true"
-              title="Contato disponível em breve"
+              title={text("Contato disponível em breve", "Contact coming soon")}
               className="flex cursor-not-allowed items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.025] px-6 py-3.5 text-sm font-medium text-white/30"
             >
-              Falar com a Orbitta
+              {text("Falar com a Orbitta", "Talk to Orbitta")}
 
               <span className="rounded-full border border-white/[0.06] bg-white/[0.03] px-2 py-0.5 text-[9px] uppercase tracking-wider text-white/25">
-                Em breve
+                {text("Em breve", "Coming soon")}
               </span>
             </button>
           </motion.div>
@@ -82,7 +87,7 @@ export default function Hero() {
             <span>Software</span>
             <span>Web</span>
             <span>Mobile</span>
-            <span>Produtos digitais</span>
+            <span>{text("Produtos digitais", "Digital products")}</span>
           </div>
         </div>
 
@@ -118,7 +123,7 @@ export default function Hero() {
 
               <div className="mt-1 flex items-center gap-2 text-xs text-white/70">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                Sistemas em desenvolvimento
+                {text("Sistemas em desenvolvimento", "Systems in development")}
               </div>
             </div>
           </motion.div>

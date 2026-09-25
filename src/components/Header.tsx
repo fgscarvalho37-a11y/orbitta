@@ -1,8 +1,12 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 export default function Header() {
+  const { text } = useLanguage();
+
   return (
     <header className="relative z-20 mx-auto flex w-full max-w-[1440px] items-center justify-between px-6 py-7 lg:px-12">
       <a href="#" className="group flex items-center gap-3">
@@ -28,43 +32,47 @@ export default function Header() {
           className="transition duration-200 hover:text-white"
           href="#produtos"
         >
-          Produtos
+          {text("Produtos", "Products")}
         </a>
 
         <span
           aria-disabled="true"
           className="flex cursor-not-allowed items-center gap-2 text-white/25"
-          title="Disponível em breve"
+          title={text("Disponível em breve", "Coming soon")}
         >
-          Soluções
+          {text("Soluções", "Solutions")}
           <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2 py-0.5 text-[9px] uppercase tracking-wider text-white/20">
-            Em breve
+            {text("Em breve", "Coming soon")}
           </span>
         </span>
 
         <span
           aria-disabled="true"
           className="flex cursor-not-allowed items-center gap-2 text-white/25"
-          title="Disponível em breve"
+          title={text("Disponível em breve", "Coming soon")}
         >
           Orbitta
           <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2 py-0.5 text-[9px] uppercase tracking-wider text-white/20">
-            Em breve
+            {text("Em breve", "Coming soon")}
           </span>
         </span>
       </nav>
 
-      <a
-        href="/login"
-        className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-5 py-2.5 text-sm font-medium backdrop-blur-md transition duration-200 hover:border-white/20 hover:bg-white/[0.1]"
-      >
-        Área do cliente
+      <div className="flex items-center gap-3">
+        <LanguageSwitcher compact />
 
-        <ArrowRight
+        <a
+          href="/login"
+          className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-5 py-2.5 text-sm font-medium backdrop-blur-md transition duration-200 hover:border-white/20 hover:bg-white/[0.1]"
+        >
+          {text("Área do cliente", "Client area")}
+
+          <ArrowRight
           size={15}
-          className="transition-transform duration-200 group-hover:translate-x-1"
-        />
-      </a>
+            className="transition-transform duration-200 group-hover:translate-x-1"
+          />
+        </a>
+      </div>
     </header>
   );
 }

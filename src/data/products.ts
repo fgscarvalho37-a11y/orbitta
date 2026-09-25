@@ -20,7 +20,7 @@ export const products: OrbittaProduct[] = [
       "Operação digital completa para delivery e negócios de alimentação.",
     description:
       "Uma plataforma para centralizar cardápio, pedidos, pagamentos, cozinha, entregas e administração em uma única operação.",
-    status: "development",
+    status: "available",
     features: [
       "Cardápio online",
       "Pedidos",

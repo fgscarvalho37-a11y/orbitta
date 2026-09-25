@@ -10,6 +10,8 @@ import space.orbitta.backend.dto.SubscriptionPaymentResponse;
 import space.orbitta.backend.dto.TermsAcceptanceRequest;
 import space.orbitta.backend.service.SubscriptionCheckoutService;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/checkout/subscriptions")
 public class SubscriptionCheckoutController {
@@ -47,6 +49,37 @@ public class SubscriptionCheckoutController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    /*
+     * =========================================================
+     * RETOMAR CHECKOUT ABERTO
+     * =========================================================
+     */
+
+    @GetMapping("/open")
+    public ResponseEntity<SubscriptionCheckoutResponse> findOpenCheckout(
+            Authentication authentication
+    ) {
+        String email =
+                getAuthenticatedEmail(
+                        authentication
+                );
+
+        SubscriptionCheckoutResponse response =
+                checkoutService.findOpenForUser(
+                        email
+                );
+
+        if (response == null) {
+            return ResponseEntity
+                    .noContent()
+                    .build();
+        }
+
+        return ResponseEntity.ok(
+                response
+        );
     }
 
     /*
@@ -103,6 +136,22 @@ public class SubscriptionCheckoutController {
         return ResponseEntity.ok(
                 response
         );
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleBadRequest(
+            IllegalArgumentException exception
+    ) {
+        return ResponseEntity
+                .badRequest()
+                .body(
+                        Map.of(
+                                "message",
+                                exception.getMessage() != null
+                                        ? exception.getMessage()
+                                        : "Não foi possível concluir a contratação."
+                        )
+                );
     }
 
     /*

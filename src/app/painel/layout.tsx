@@ -107,23 +107,31 @@ export default function PainelLayout({
           await response.json();
 
         if (
-          data.role === "CLIENT"
+          data.role === "ADMIN"
         ) {
-          const destination =
-            await resolveClientEntryDestination();
-
-          if (
-            destination !==
-            "/painel"
-          ) {
-            if (!cancelled) {
-              router.replace(
-                destination
-              );
-            }
-
-            return;
+          if (!cancelled) {
+            router.replace(
+              "/admin"
+            );
           }
+
+          return;
+        }
+
+        const destination =
+          await resolveClientEntryDestination();
+
+        if (
+          destination !==
+          "/painel"
+        ) {
+          if (!cancelled) {
+            router.replace(
+              destination
+            );
+          }
+
+          return;
         }
 
         if (!cancelled) {

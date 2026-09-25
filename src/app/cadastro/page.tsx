@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { resolveClientEntryDestination } from "@/lib/clientEntry";
 import {
   AlertCircle,
   ArrowLeft,
@@ -113,9 +114,28 @@ export default function CadastroPage() {
         return;
       }
 
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      const requestedReturnUrl =
+        params.get(
+          "returnUrl"
+        );
+
+      const safeReturnUrl =
+        requestedReturnUrl &&
+        requestedReturnUrl.startsWith("/") &&
+        !requestedReturnUrl.startsWith("//")
+          ? requestedReturnUrl
+          : returnUrl;
+
       const destination =
-        returnUrl ??
-        (loginData?.role === "ADMIN" ? "/admin" : "/painel");
+        safeReturnUrl ??
+        (loginData?.role === "ADMIN"
+          ? "/admin"
+          : await resolveClientEntryDestination());
 
       router.replace(destination);
       router.refresh();

@@ -27,8 +27,7 @@ type ClientProduct = {
   updatedAt: string;
 };
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const API_URL = "/backend";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("pt-BR", {

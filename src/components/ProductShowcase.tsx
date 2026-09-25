@@ -9,83 +9,97 @@ import { products } from "@/data/products";
 function ProductPreview({
   index,
   name,
+  previewUrl,
 }: {
   index: number;
   name: string;
+  previewUrl?: string;
 }) {
   return (
     <div className="relative aspect-[16/10] overflow-hidden rounded-[30px] border border-white/[0.08] bg-[#08101d] shadow-2xl shadow-black/30">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.12),transparent_38%)]" />
-
       <div className="relative flex h-11 items-center gap-2 border-b border-white/[0.06] px-5">
-        <span className="h-2 w-2 rounded-full bg-white/20" />
-        <span className="h-2 w-2 rounded-full bg-white/20" />
-        <span className="h-2 w-2 rounded-full bg-white/20" />
+        <span className="h-2 w-2 rounded-full bg-red-400/50" />
+        <span className="h-2 w-2 rounded-full bg-amber-300/50" />
+        <span className="h-2 w-2 rounded-full bg-emerald-300/50" />
 
-        <div className="ml-3 h-5 w-44 rounded-full bg-white/[0.04]" />
+        <div className="ml-3 h-5 min-w-0 flex-1 truncate rounded-full bg-white/[0.04] px-4 py-1 text-[9px] text-white/20">
+          {previewUrl
+            ? previewUrl.replace(/^https?:\/\//, "")
+            : name}
+        </div>
 
         <span className="ml-auto hidden text-[9px] uppercase tracking-[0.18em] text-white/20 sm:block">
           {name}
         </span>
       </div>
 
-      <div className="grid h-[calc(100%-44px)] grid-cols-[82px_1fr]">
-        <div className="border-r border-white/[0.05] p-4">
-          <div className="mb-8 h-7 w-7 rounded-lg bg-cyan-400/70" />
-
-          <div className="space-y-3">
-            {Array.from({ length: 6 }).map((_, item) => (
-              <div
-                key={item}
-                className="h-7 rounded-lg bg-white/[0.035]"
-              />
-            ))}
-          </div>
+      {previewUrl ? (
+        <div className="h-[calc(100%-44px)] overflow-hidden bg-[#f6f3ee]">
+          <iframe
+            src={previewUrl}
+            title={`Preview de ${name}`}
+            loading="lazy"
+            tabIndex={-1}
+            className="pointer-events-none h-[160%] w-[160%] origin-top-left scale-[0.625] border-0"
+          />
         </div>
+      ) : (
+        <>
+          <div className="absolute inset-0 top-11 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.12),transparent_38%)]" />
 
-        <div className="p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <div className="h-3 w-20 rounded-full bg-white/10" />
-              <div className="mt-3 h-7 w-44 rounded-lg bg-white/80" />
-            </div>
+          <div className="grid h-[calc(100%-44px)] grid-cols-[82px_1fr]">
+            <div className="border-r border-white/[0.05] p-4">
+              <div className="mb-8 h-7 w-7 rounded-lg bg-cyan-400/70" />
 
-            <div className="h-9 w-24 rounded-full bg-cyan-400/80" />
-          </div>
-
-          <motion.div
-            animate={{
-              y: index % 2 === 0 ? [0, -10, 0] : [0, 10, 0],
-            }}
-            transition={{
-              duration: 6 + index,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="grid grid-cols-3 gap-3"
-          >
-            <div className="col-span-2 h-32 rounded-2xl border border-white/[0.05] bg-white/[0.04]" />
-
-            <div className="h-32 rounded-2xl border border-white/[0.05] bg-gradient-to-br from-cyan-400/20 to-violet-500/10" />
-
-            <div className="h-40 rounded-2xl border border-white/[0.05] bg-white/[0.035]" />
-
-            <div className="col-span-2 h-40 rounded-2xl border border-white/[0.05] bg-white/[0.035] p-4">
               <div className="space-y-3">
-                <div className="h-8 rounded-xl bg-white/[0.045]" />
-                <div className="h-8 rounded-xl bg-white/[0.045]" />
-                <div className="h-8 rounded-xl bg-white/[0.045]" />
+                {Array.from({ length: 6 }).map((_, item) => (
+                  <div
+                    key={item}
+                    className="h-7 rounded-lg bg-white/[0.035]"
+                  />
+                ))}
               </div>
             </div>
-          </motion.div>
-        </div>
-      </div>
 
-      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#08101d] to-transparent" />
+            <div className="p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <div className="h-3 w-20 rounded-full bg-white/10" />
+                  <div className="mt-3 h-7 w-44 rounded-lg bg-white/80" />
+                </div>
 
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/[0.08] bg-black/40 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-white/40 backdrop-blur-xl">
-        Preview em desenvolvimento
-      </div>
+                <div className="h-9 w-24 rounded-full bg-cyan-400/80" />
+              </div>
+
+              <motion.div
+                animate={{
+                  y:
+                    index % 2 === 0
+                      ? [0, -10, 0]
+                      : [0, 10, 0],
+                }}
+                transition={{
+                  duration: 6 + index,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="grid grid-cols-3 gap-3"
+              >
+                <div className="col-span-2 h-32 rounded-2xl border border-white/[0.05] bg-white/[0.04]" />
+                <div className="h-32 rounded-2xl border border-white/[0.05] bg-gradient-to-br from-cyan-400/20 to-violet-500/10" />
+                <div className="h-40 rounded-2xl border border-white/[0.05] bg-white/[0.035]" />
+                <div className="col-span-2 h-40 rounded-2xl border border-white/[0.05] bg-white/[0.035]" />
+              </motion.div>
+            </div>
+          </div>
+
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#08101d] to-transparent" />
+
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/[0.08] bg-black/40 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-white/40 backdrop-blur-xl">
+            Preview em desenvolvimento
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -242,6 +256,11 @@ export default function ProductShowcase() {
                     <ProductPreview
                       index={index}
                       name={product.name}
+                      previewUrl={
+                        previewAvailable
+                          ? product.previewUrl
+                          : undefined
+                      }
                     />
                   </div>
                 </motion.div>

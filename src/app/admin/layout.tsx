@@ -30,6 +30,8 @@ export default function AdminLayout({
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [validationError, setValidationError] = useState("");
+  const [retryVersion, setRetryVersion] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,6 +40,7 @@ export default function AdminLayout({
       try {
         setLoading(true);
         setAccessDenied(false);
+        setValidationError("");
 
         const response = await fetch(
           `${API_URL}/api/auth/me`,
@@ -98,7 +101,10 @@ export default function AdminLayout({
 
         if (!cancelled) {
           setAuthorized(false);
-          setAccessDenied(true);
+          setAccessDenied(false);
+          setValidationError(
+            "Não foi possível validar sua sessão agora. O servidor pode estar iniciando; tente novamente."
+          );
         }
       } finally {
         if (!cancelled) {
@@ -112,7 +118,7 @@ export default function AdminLayout({
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, retryVersion]);
 
   if (loading) {
     return (
@@ -128,6 +134,39 @@ export default function AdminLayout({
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/25">
             Validando acesso administrativo
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (validationError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#050914] px-5 text-white">
+        <div className="w-full max-w-md rounded-[28px] border border-amber-300/[0.08] bg-[#08101d] p-8 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-300/[0.10] bg-amber-300/[0.04] text-amber-200/60">
+            <ShieldAlert size={23} />
+          </div>
+
+          <h1 className="mt-6 text-xl font-semibold tracking-[-0.03em]">
+            Falha temporária de conexão
+          </h1>
+
+          <p className="mt-3 text-xs leading-6 text-white/30">
+            {validationError}
+          </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              setRetryVersion(
+                (current) =>
+                  current + 1
+              )
+            }
+            className="mt-7 h-11 w-full rounded-xl bg-white text-xs font-semibold text-[#07101c] transition hover:bg-violet-50"
+          >
+            Tentar novamente
+          </button>
         </div>
       </div>
     );

@@ -22,7 +22,7 @@ export const products: OrbittaProduct[] = [
       "Uma plataforma para centralizar cardápio, pedidos, pagamentos, cozinha, entregas e administração em uma única operação.",
     status: "available",
     previewUrl:
-      "https://pizza-system-nine.vercel.app/preview",
+      "/previews/pizzasystem.html",
     features: [
       "Cardápio online",
       "Pedidos",

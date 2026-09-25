@@ -238,6 +238,57 @@ export default function ProductPricing({
       }
 
       /*
+       * Cliente que já pagou e possui produto ativo
+       * não deve abrir um segundo checkout do mesmo SaaS.
+       *
+       * Além de melhorar a experiência, isso evita que um
+       * erro de regra de negócio apareça como "Internal Server Error"
+       * caso o backend ainda esteja em uma versão anterior.
+       */
+      const activeProductsResponse =
+        await fetch(
+          `${API_URL}/api/client/products/active`,
+          {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        );
+
+      if (
+        activeProductsResponse.ok
+      ) {
+        const activeProducts:
+          Array<{
+            name?: string;
+            planName?: string;
+          }> =
+          await activeProductsResponse.json();
+
+        const alreadyHasProduct =
+          activeProducts.some(
+            (activeProduct) =>
+              activeProduct.name
+                ?.trim()
+                .toLowerCase() ===
+              product?.name
+                ?.trim()
+                .toLowerCase()
+          );
+
+        if (alreadyHasProduct) {
+          router.push(
+            "/painel"
+          );
+
+          return;
+        }
+      }
+
+      /*
        * Busca o token CSRF.
        */
       const csrfResponse = await fetch(

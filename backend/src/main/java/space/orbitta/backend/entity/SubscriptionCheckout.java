@@ -145,6 +145,17 @@ public class SubscriptionCheckout {
     private LocalDateTime cancelledAt;
 
     @Column(
+            name = "terms_accepted_at"
+    )
+    private LocalDateTime termsAcceptedAt;
+
+    @Column(
+            name = "terms_version",
+            length = 30
+    )
+    private String termsVersion;
+
+    @Column(
             name = "expires_at"
     )
     private LocalDateTime expiresAt;
@@ -311,6 +322,28 @@ public class SubscriptionCheckout {
             LocalDateTime cancelledAt
     ) {
         this.cancelledAt = cancelledAt;
+    }
+
+    public LocalDateTime getTermsAcceptedAt() {
+        return termsAcceptedAt;
+    }
+
+    public void setTermsAcceptedAt(
+            LocalDateTime termsAcceptedAt
+    ) {
+        this.termsAcceptedAt =
+                termsAcceptedAt;
+    }
+
+    public String getTermsVersion() {
+        return termsVersion;
+    }
+
+    public void setTermsVersion(
+            String termsVersion
+    ) {
+        this.termsVersion =
+                termsVersion;
     }
 
     public LocalDateTime getExpiresAt() {

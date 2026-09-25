@@ -4,9 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { LoaderCircle, AlertCircle, ArrowLeft } from "lucide-react";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:8080";
+const API_URL = "/backend";
 
 type CsrfResponse = {
   token: string;

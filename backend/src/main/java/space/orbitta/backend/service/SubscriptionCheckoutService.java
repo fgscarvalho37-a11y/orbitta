@@ -207,7 +207,12 @@ public class SubscriptionCheckoutService {
                 );
 
         BigDecimal setupPrice =
-                BigDecimal.ZERO;
+                plan.getSetupPrice() != null
+                        ? requireNonNegativePrice(
+                                plan.getSetupPrice(),
+                                "Taxa de implantação"
+                        )
+                        : BigDecimal.ZERO;
 
         String currency =
                 normalizeCurrency(

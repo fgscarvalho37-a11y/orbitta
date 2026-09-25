@@ -17,6 +17,8 @@ public record SubscriptionCheckoutResponse(
         String currency,
         String status,
         String externalReference,
+        LocalDateTime termsAcceptedAt,
+        String termsVersion,
         LocalDateTime expiresAt,
         LocalDateTime createdAt
 ) {
@@ -46,6 +48,8 @@ public record SubscriptionCheckoutResponse(
                 checkout.getCurrency(),
                 checkout.getStatus().name(),
                 checkout.getExternalReference(),
+                checkout.getTermsAcceptedAt(),
+                checkout.getTermsVersion(),
                 checkout.getExpiresAt(),
                 checkout.getCreatedAt()
         );

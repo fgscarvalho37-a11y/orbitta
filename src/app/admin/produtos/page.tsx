@@ -127,6 +127,31 @@ function formatMoney(
   }
 }
 
+function currencySymbol(currency: string) {
+  const normalized =
+    currency.trim().toUpperCase();
+
+  const symbols: Record<string, string> = {
+    BRL: "R$",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    CAD: "C$",
+  };
+
+  return symbols[normalized] ?? normalized;
+}
+
+function paymentProviderForCurrency(
+  currency: string
+) {
+  return currency
+    .trim()
+    .toUpperCase() === "BRL"
+    ? "Mercado Pago"
+    : "Stripe";
+}
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<
     CatalogProduct[]
@@ -766,9 +791,9 @@ export default function AdminProductsPage() {
             </h1>
 
             <p className="mt-2 max-w-xl text-sm leading-6 text-white/30">
-              Gerencie os produtos e planos
-              disponíveis para novas
-              contratações.
+              Gerencie produtos, planos,
+              moedas, preços brasileiros e
+              preços internacionais.
             </p>
           </div>
 
@@ -958,7 +983,7 @@ export default function AdminProductsPage() {
                           className="flex h-10 items-center gap-2 rounded-xl bg-white px-3.5 text-xs font-semibold text-[#07101c] transition hover:bg-violet-50"
                         >
                           <Plus size={14} />
-                          Adicionar plano
+                          Adicionar plano/preço
                         </button>
                       </div>
                     </div>
@@ -1066,6 +1091,18 @@ export default function AdminProductsPage() {
                                       {
                                         plan.slug
                                       }
+                                    </div>
+
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                      <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-white/35">
+                                        {plan.currency}
+                                      </span>
+
+                                      <span className="rounded-full border border-violet-300/[0.08] bg-violet-300/[0.035] px-2.5 py-1 text-[9px] text-violet-100/55">
+                                        {paymentProviderForCurrency(
+                                          plan.currency
+                                        )}
+                                      </span>
                                     </div>
                                   </div>
 
@@ -1412,7 +1449,9 @@ export default function AdminProductsPage() {
               <Field label="Valor mensal">
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/25">
-                    R$
+                    {currencySymbol(
+                      planForm.currency
+                    )}
                   </span>
 
                   <input
@@ -1435,7 +1474,9 @@ export default function AdminProductsPage() {
               <Field label="Taxa inicial">
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs text-white/25">
-                    R$
+                    {currencySymbol(
+                      planForm.currency
+                    )}
                   </span>
 
                   <input
@@ -1456,22 +1497,41 @@ export default function AdminProductsPage() {
               </Field>
 
               <Field label="Moeda">
-                <input
-                  value={
-                    planForm.currency
-                  }
-                  maxLength={3}
+                <select
+                  value={planForm.currency}
                   onChange={(event) =>
                     updatePlanForm(
                       "currency",
                       event.target.value
-                        .toUpperCase()
-                        .slice(0, 3)
                     )
                   }
-                  placeholder="BRL"
                   className={inputClass}
-                />
+                >
+                  <option value="BRL">
+                    BRL — Real brasileiro
+                  </option>
+                  <option value="USD">
+                    USD — Dólar
+                  </option>
+                  <option value="EUR">
+                    EUR — Euro
+                  </option>
+                  <option value="GBP">
+                    GBP — Libra
+                  </option>
+                  <option value="CAD">
+                    CAD — Dólar canadense
+                  </option>
+                </select>
+
+                <div className="mt-2 text-[10px] text-white/20">
+                  Gateway:{" "}
+                  <span className="text-white/45">
+                    {paymentProviderForCurrency(
+                      planForm.currency
+                    )}
+                  </span>
+                </div>
               </Field>
 
               <Field label="Ordem">

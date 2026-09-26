@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleHelp,
+  CreditCard,
   FileText,
   LayoutDashboard,
   LogOut,
@@ -43,6 +44,11 @@ const navigation = [
     icon: ReceiptText,
   },
   {
+    name: "Pagamentos",
+    href: "/admin/pagamentos",
+    icon: CreditCard,
+  },
+  {
     name: "Suporte",
     href: "/admin/suporte",
     icon: CircleHelp,
@@ -62,6 +68,7 @@ const NAV_EN: Record<string, string> = {
   "Clientes": "Clients",
   "Produtos": "Products",
   "Faturas": "Invoices",
+  "Pagamentos": "Payments",
   "Suporte": "Support",
   "Configurações": "Settings",
 };

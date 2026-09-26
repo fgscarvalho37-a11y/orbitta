@@ -5,6 +5,8 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { resolveClientEntryDestination } from "@/lib/clientEntry";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   AlertCircle,
   ArrowLeft,
@@ -23,6 +25,10 @@ const API_URL = "/backend";
 
 export default function LoginPage() {
   const router = useRouter();
+
+  const {
+    text,
+  } = useLanguage();
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -83,7 +89,7 @@ export default function LoginPage() {
       if (!response.ok) {
         throw new Error(
           data?.message ||
-            "Não foi possível entrar na sua conta."
+            text("Não foi possível entrar na sua conta.", "We could not sign you in.")
         );
       }
 
@@ -136,13 +142,13 @@ export default function LoginPage() {
     } catch (error) {
       if (error instanceof TypeError) {
         setError(
-          "Não foi possível conectar ao servidor da Orbitta."
+          text("Não foi possível conectar ao servidor da Orbitta.", "We could not connect to the Orbitta server.")
         );
       } else if (error instanceof Error) {
         setError(error.message);
       } else {
         setError(
-          "Ocorreu um erro inesperado. Tente novamente."
+          text("Ocorreu um erro inesperado. Tente novamente.", "An unexpected error occurred. Please try again.")
         );
       }
     } finally {
@@ -173,12 +179,16 @@ export default function LoginPage() {
               className="transition-transform group-hover:-translate-x-1"
             />
 
-            Voltar para Orbitta
+            {text("Voltar para Orbitta", "Back to Orbitta")}
           </Link>
 
-          <div className="hidden items-center gap-2 text-xs text-white/25 sm:flex">
-            <ShieldCheck size={14} />
-            Ambiente Orbitta
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher compact />
+
+            <div className="hidden items-center gap-2 text-xs text-white/25 sm:flex">
+              <ShieldCheck size={14} />
+              {text("Ambiente Orbitta", "Orbitta environment")}
+            </div>
           </div>
         </div>
       </header>
@@ -219,30 +229,32 @@ export default function LoginPage() {
           <div className="mt-14 max-w-[650px]">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-cyan-300/55">
               <Sparkles size={13} />
-              Orbitta Client Space
+              {text("Espaço do cliente Orbitta", "Orbitta Client Space")}
             </div>
 
             <h1 className="mt-7 text-[clamp(4rem,6vw,6.5rem)] font-semibold leading-[0.88] tracking-[-0.07em]">
-              Seu espaço.
+              {text("Seu espaço.", "Your space.")}
 
               <span className="block bg-gradient-to-r from-cyan-300 via-cyan-200 to-violet-400 bg-clip-text text-transparent">
-                Seus produtos.
+                {text("Seus produtos.", "Your products.")}
               </span>
             </h1>
 
             <p className="mt-8 max-w-lg text-lg leading-8 text-white/40">
-              Gerencie os produtos e serviços da Orbitta
-              vinculados à sua empresa em um único ambiente.
+              {text(
+                "Gerencie os produtos e serviços da Orbitta vinculados à sua empresa em um único ambiente.",
+                "Manage the Orbitta products and services linked to your business in one place."
+              )}
             </p>
           </div>
 
           {/* FEATURES */}
           <div className="mt-14 grid max-w-[620px] grid-cols-2 gap-3">
             {[
-              "Produtos contratados",
-              "Assinaturas e renovações",
-              "Pagamentos e faturas",
-              "Domínios e serviços",
+              text("Produtos contratados", "Purchased products"),
+              text("Assinaturas e renovações", "Subscriptions and renewals"),
+              text("Pagamentos e faturas", "Payments and invoices"),
+              text("Domínios e serviços", "Domains and services"),
             ].map((feature, index) => (
               <motion.div
                 key={feature}
@@ -312,11 +324,11 @@ export default function LoginPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-[0.23em] text-cyan-300/50">
-                    Área do cliente
+                    {text("Área do cliente", "Client area")}
                   </p>
 
                   <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-                    Bem-vindo de volta.
+                    {text("Bem-vindo de volta.", "Welcome back.")}
                   </h2>
                 </div>
 
@@ -326,8 +338,10 @@ export default function LoginPage() {
               </div>
 
               <p className="mt-4 text-sm leading-6 text-white/35">
-                Entre com a conta vinculada aos seus serviços
-                Orbitta.
+                {text(
+                  "Entre com a conta vinculada aos seus serviços Orbitta.",
+                  "Sign in with the account linked to your Orbitta services."
+                )}
               </p>
 
               {/* ERROR */}
@@ -399,14 +413,14 @@ export default function LoginPage() {
                       htmlFor="password"
                       className="text-xs font-medium text-white/45"
                     >
-                      Senha
+                      {text("Senha", "Password")}
                     </label>
 
                     <Link
                       href="/recuperar-senha"
                       className="text-xs text-cyan-300/50 transition hover:text-cyan-200"
                     >
-                      Esqueci minha senha
+                      {text("Esqueci minha senha", "Forgot password")}
                     </Link>
                   </div>
 
@@ -434,7 +448,7 @@ export default function LoginPage() {
                           setError("");
                         }
                       }}
-                      placeholder="Sua senha"
+                      placeholder={text("Sua senha", "Your password")}
                       className="h-14 w-full rounded-2xl border border-white/[0.07] bg-white/[0.025] pl-12 pr-12 text-sm text-white outline-none transition placeholder:text-white/15 hover:border-white/[0.1] focus:border-cyan-300/25 focus:bg-cyan-300/[0.025] focus:ring-4 focus:ring-cyan-300/[0.025] disabled:cursor-wait disabled:opacity-60"
                     />
 
@@ -448,8 +462,8 @@ export default function LoginPage() {
                       }
                       aria-label={
                         showPassword
-                          ? "Ocultar senha"
-                          : "Mostrar senha"
+                          ? text("Ocultar senha", "Hide password")
+                          : text("Mostrar senha", "Show password")
                       }
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 transition hover:text-white/60 disabled:opacity-30"
                     >
@@ -473,7 +487,7 @@ export default function LoginPage() {
                     htmlFor="remember"
                     className="cursor-pointer text-xs text-white/30"
                   >
-                    Manter minha sessão neste dispositivo
+                    {text("Manter minha sessão neste dispositivo", "Keep me signed in on this device")}
                   </label>
                 </div>
 
@@ -486,11 +500,11 @@ export default function LoginPage() {
                     <>
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#07101c]/20 border-t-[#07101c]" />
 
-                      Entrando...
+                      {text("Entrando...", "Signing in...")}
                     </>
                   ) : (
                     <>
-                      Entrar na minha conta
+                      {text("Entrar na minha conta", "Sign in to my account")}
 
                       <ArrowRight
                         size={16}
@@ -502,7 +516,7 @@ export default function LoginPage() {
               </form>
 
               <div className="mt-6 text-center text-xs text-white/30">
-                Ainda não tem conta?{" "}
+                {text("Ainda não tem conta?", "Don't have an account yet?")}{" "}
                 <Link
                   href={
                     returnUrl
@@ -511,7 +525,7 @@ export default function LoginPage() {
                   }
                   className="text-cyan-300/70 transition hover:text-cyan-200"
                 >
-                  Criar conta
+                  {text("Criar conta", "Create account")}
                 </Link>
               </div>
 
@@ -534,10 +548,10 @@ export default function LoginPage() {
                   />
 
                   <p className="text-xs leading-5 text-white/25">
-                    O acesso à área do cliente é
-                    disponibilizado para contas vinculadas a
-                    produtos ou serviços contratados com a
-                    Orbitta.
+                    {text(
+                      "O acesso à área do cliente é disponibilizado para contas vinculadas a produtos ou serviços contratados com a Orbitta.",
+                      "Client-area access is available to accounts linked to Orbitta products or services."
+                    )}
                   </p>
                 </div>
               </div>
@@ -546,7 +560,7 @@ export default function LoginPage() {
 
           <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-white/20">
             <LockKeyhole size={12} />
-            Acesso seguro à plataforma Orbitta
+            {text("Acesso seguro à plataforma Orbitta", "Secure access to the Orbitta platform")}
           </div>
         </motion.div>
       </section>

@@ -18,6 +18,8 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 const navigation = [
   {
@@ -55,8 +57,30 @@ const secondaryNavigation = [
   },
 ];
 
+const NAV_EN: Record<string, string> = {
+  "Visão geral": "Overview",
+  "Clientes": "Clients",
+  "Produtos": "Products",
+  "Faturas": "Invoices",
+  "Suporte": "Support",
+  "Configurações": "Settings",
+};
+
 export default function AdminSidebar() {
+  const {
+    text,
+  } = useLanguage();
+
   const pathname = usePathname();
+
+  function navText(
+    value: string
+  ) {
+    return text(
+      value,
+      NAV_EN[value] ?? value
+    );
+  }
 
   const [collapsed, setCollapsed] =
     useState(false);
@@ -113,7 +137,7 @@ export default function AdminSidebar() {
       <div className="flex-1 overflow-y-auto px-3 py-6">
         {!collapsed && (
           <div className="mb-3 px-3 text-[9px] uppercase tracking-[0.25em] text-white/20">
-            Administração
+            {text("Administração", "Administration")}
           </div>
         )}
 
@@ -124,11 +148,11 @@ export default function AdminSidebar() {
 
             return (
               <Link
-                key={item.name}
+                key={navText(item.name)}
                 href={item.href}
                 title={
                   collapsed
-                    ? item.name
+                    ? navText(item.name)
                     : undefined
                 }
                 className={`group relative flex h-11 items-center rounded-xl transition ${
@@ -156,7 +180,7 @@ export default function AdminSidebar() {
 
                 {!collapsed && (
                   <span className="text-sm">
-                    {item.name}
+                    {navText(item.name)}
                   </span>
                 )}
               </Link>
@@ -182,7 +206,7 @@ export default function AdminSidebar() {
 
               return (
                 <Link
-                  key={item.name}
+                  key={navText(item.name)}
                   href={item.href}
                   title={
                     collapsed
@@ -214,7 +238,7 @@ export default function AdminSidebar() {
 
                   {!collapsed && (
                     <span className="text-sm">
-                      {item.name}
+                      {navText(item.name)}
                     </span>
                   )}
                 </Link>
@@ -230,12 +254,14 @@ export default function AdminSidebar() {
             <div className="flex items-center gap-2 text-[10px] text-violet-200/50">
               <ShieldCheck size={13} />
 
-              Área administrativa
+              {text("Área administrativa", "Admin area")}
             </div>
 
             <p className="mt-2 text-[9px] leading-4 text-white/20">
-              Gerenciamento interno da
-              plataforma Orbitta.
+              {text(
+                "Gerenciamento interno da plataforma Orbitta.",
+                "Internal management of the Orbitta platform."
+              )}
             </p>
           </div>
         )}
@@ -244,6 +270,11 @@ export default function AdminSidebar() {
       {/* FOOTER */}
 
       <div className="border-t border-white/[0.05] p-3">
+        {!collapsed && (
+          <div className="mb-3">
+            <LanguageSwitcher compact />
+          </div>
+        )}
         {!collapsed && (
           <div className="mb-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
             <div className="flex items-center gap-3">
@@ -257,14 +288,14 @@ export default function AdminSidebar() {
                 </div>
 
                 <div className="mt-0.5 truncate text-[10px] text-violet-200/30">
-                  Administrador
+                  {text("Administrador", "Administrator")}
                 </div>
               </div>
 
               <Link
                 href="/admin/configuracoes"
                 className="text-white/20 transition hover:text-white/60"
-                title="Configurações"
+                title={text("Configurações", "Settings")}
               >
                 <ArrowUpRight size={14} />
               </Link>
@@ -276,7 +307,7 @@ export default function AdminSidebar() {
           href="/"
           title={
             collapsed
-              ? "Voltar ao site"
+              ? text("Voltar ao site", "Back to website")
               : undefined
           }
           className={`mb-1 flex h-10 items-center rounded-xl text-white/25 transition hover:bg-white/[0.035] hover:text-white/60 ${
@@ -289,7 +320,7 @@ export default function AdminSidebar() {
 
           {!collapsed && (
             <span className="text-xs">
-              Voltar ao site
+              {text("Voltar ao site", "Back to website")}
             </span>
           )}
         </Link>
@@ -297,7 +328,7 @@ export default function AdminSidebar() {
         <Link
           href="/login"
           title={
-            collapsed ? "Sair" : undefined
+            collapsed ? text("Sair", "Sign out") : undefined
           }
           className={`flex h-10 items-center rounded-xl text-white/25 transition hover:bg-red-400/[0.04] hover:text-red-200/60 ${
             collapsed

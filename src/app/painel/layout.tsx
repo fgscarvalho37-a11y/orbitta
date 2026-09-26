@@ -18,6 +18,8 @@ import {
 } from "react";
 
 import ClientSidebar from "@/components/dashboard/ClientSidebar";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { resolveClientEntryDestination } from "@/lib/clientEntry";
 
 const API_URL = "/backend";
@@ -59,6 +61,10 @@ type PainelLayoutProps = {
 export default function PainelLayout({
   children,
 }: PainelLayoutProps) {
+  const {
+    text,
+  } = useLanguage();
+
   const router = useRouter();
   const pathname = usePathname();
 
@@ -99,7 +105,7 @@ export default function PainelLayout({
 
         if (!response.ok) {
           throw new Error(
-            "Não foi possível validar sua sessão."
+            text("Não foi possível validar sua sessão.", "We could not validate your session.")
           );
         }
 
@@ -210,7 +216,7 @@ export default function PainelLayout({
           </div>
 
           <div className="mt-2 text-[10px] text-white/20">
-            Carregando seu espaço...
+            {text("Carregando seu espaço...", "Loading your workspace...")}
           </div>
         </div>
       </div>
@@ -234,7 +240,7 @@ export default function PainelLayout({
               <button
                 type="button"
                 className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-white/50"
-                aria-label="Abrir menu"
+                aria-label={text("Abrir menu", "Open menu")}
               >
                 <Menu size={18} />
               </button>
@@ -264,23 +270,25 @@ export default function PainelLayout({
 
                 <input
                   type="search"
-                  placeholder="Buscar produtos, faturas, domínios..."
+                  placeholder={text("Buscar produtos, faturas, domínios...", "Search products, invoices, domains...")}
                   className="h-10 w-full rounded-xl border border-white/[0.05] bg-white/[0.02] pl-11 pr-4 text-xs text-white/70 outline-none transition placeholder:text-white/18 focus:border-cyan-300/15 focus:bg-white/[0.03]"
                 />
               </div>
             </div>
 
             <div className="ml-auto flex items-center gap-3">
+              <LanguageSwitcher compact />
+
               <div className="hidden items-center gap-2 rounded-full border border-emerald-300/[0.08] bg-emerald-300/[0.035] px-3 py-2 text-[10px] text-emerald-200/45 sm:flex">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
 
-                Serviços operacionais
+                {text("Serviços operacionais", "Services operational")}
               </div>
 
               <button
                 type="button"
                 className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.025] text-white/35 transition hover:text-white/70"
-                aria-label="Notificações"
+                aria-label={text("Notificações", "Notifications")}
               >
                 <Bell size={16} />
 
@@ -315,7 +323,7 @@ export default function PainelLayout({
                     href="/painel/configuracoes"
                     className="flex h-9 items-center rounded-xl px-2 text-xs text-white/35 transition hover:bg-white/[0.04] hover:text-white/70"
                   >
-                    Configurações
+                    {text("Configurações", "Settings")}
                   </Link>
 
                   <button
@@ -327,8 +335,8 @@ export default function PainelLayout({
                     <LogOut size={14} />
 
                     {loggingOut
-                      ? "Saindo..."
-                      : "Sair da conta"}
+                      ? text("Saindo...", "Signing out...")
+                      : text("Sair da conta", "Sign out")}
                   </button>
                 </div>
               </div>

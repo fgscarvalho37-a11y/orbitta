@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import { useOrbittaUser } from "./layout";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 type ClientProduct = {
   id: number;
@@ -60,22 +61,33 @@ type Invoice = {
 
 const API_URL = "/backend";
 
-function getGreeting() {
+function getGreeting(
+  locale: "pt-BR" | "en-US"
+) {
   const hour = new Date().getHours();
 
   if (hour >= 5 && hour < 12) {
-    return "Bom dia";
+    return locale === "en-US"
+      ? "Good morning"
+      : "Bom dia";
   }
 
   if (hour >= 12 && hour < 18) {
-    return "Boa tarde";
+    return locale === "en-US"
+      ? "Good afternoon"
+      : "Boa tarde";
   }
 
-  return "Boa noite";
+  return locale === "en-US"
+    ? "Good evening"
+    : "Boa noite";
 }
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("pt-BR", {
+function formatCurrency(
+  value: number,
+  locale: "pt-BR" | "en-US"
+) {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "BRL",
   }).format(Number(value));
@@ -89,73 +101,83 @@ function parseLocalDate(value: string) {
   return new Date(year, month - 1, day);
 }
 
-function formatDate(value: string | null) {
+function formatDate(
+  value: string | null,
+  locale: "pt-BR" | "en-US"
+) {
   if (!value) {
-    return "Não definida";
+    return locale === "en-US"
+      ? "Not set"
+      : "Não definida";
   }
 
   const date = value.includes("T")
     ? new Date(value)
     : parseLocalDate(value);
 
-  return new Intl.DateTimeFormat("pt-BR").format(
+  return new Intl.DateTimeFormat(locale).format(
     date
   );
 }
 
-function formatShortDate(value: string | null) {
+function formatShortDate(
+  value: string | null,
+  locale: "pt-BR" | "en-US"
+) {
   if (!value) {
     return "—";
   }
 
   const date = parseLocalDate(value);
 
-  const months = [
-    "JAN",
-    "FEV",
-    "MAR",
-    "ABR",
-    "MAI",
-    "JUN",
-    "JUL",
-    "AGO",
-    "SET",
-    "OUT",
-    "NOV",
-    "DEZ",
-  ];
-
-  return `${String(date.getDate()).padStart(
-    2,
-    "0"
-  )} ${months[date.getMonth()]}`;
+  return new Intl.DateTimeFormat(
+    locale,
+    {
+      day: "2-digit",
+      month: "short",
+    }
+  )
+    .format(date)
+    .toUpperCase();
 }
 
-function formatLongDate(value: string | null) {
+function formatLongDate(
+  value: string | null,
+  locale: "pt-BR" | "en-US"
+) {
   if (!value) {
-    return "Data não definida";
+    return locale === "en-US"
+      ? "Date not set"
+      : "Data não definida";
   }
 
   const date = parseLocalDate(value);
 
-  return new Intl.DateTimeFormat("pt-BR", {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "long",
   }).format(date);
 }
 
 function getProductStatusLabel(
-  status: ClientProduct["status"]
+  status: ClientProduct["status"],
+  locale: "pt-BR" | "en-US"
 ) {
   switch (status) {
     case "ACTIVE":
-      return "Ativo";
+      return locale === "en-US"
+        ? "Active"
+        : "Ativo";
 
     case "SUSPENDED":
-      return "Suspenso";
+      return locale === "en-US"
+        ? "Suspended"
+        : "Suspenso";
 
     case "CANCELLED":
-      return "Cancelado";
+      return locale === "en-US"
+        ? "Cancelled"
+        : "Cancelado";
 
     default:
       return status;
@@ -213,10 +235,13 @@ function InvoiceStatusBadge({
 }: {
   status: InvoiceStatus;
 }) {
+  const {
+    text,
+  } = useLanguage();
   if (status === "PAID") {
     return (
       <span className="w-fit rounded-full border border-emerald-300/[0.06] bg-emerald-300/[0.04] px-2.5 py-1 text-[9px] text-emerald-200/50">
-        Pago
+        {text("Pago", "Paid")}
       </span>
     );
   }
@@ -224,7 +249,7 @@ function InvoiceStatusBadge({
   if (status === "OVERDUE") {
     return (
       <span className="w-fit rounded-full border border-red-300/[0.07] bg-red-300/[0.04] px-2.5 py-1 text-[9px] text-red-200/55">
-        Vencida
+        {text("Vencida", "Overdue")}
       </span>
     );
   }
@@ -232,14 +257,14 @@ function InvoiceStatusBadge({
   if (status === "CANCELLED") {
     return (
       <span className="w-fit rounded-full border border-white/[0.06] bg-white/[0.025] px-2.5 py-1 text-[9px] text-white/30">
-        Cancelada
+        {text("Cancelada", "Cancelled")}
       </span>
     );
   }
 
   return (
     <span className="w-fit rounded-full border border-amber-300/[0.07] bg-amber-300/[0.04] px-2.5 py-1 text-[9px] text-amber-200/50">
-      Pendente
+      {text("Pendente", "Pending")}
     </span>
   );
 }
@@ -247,8 +272,15 @@ function InvoiceStatusBadge({
 export default function PainelPage() {
   const user = useOrbittaUser();
 
+  const {
+    locale,
+    text,
+  } = useLanguage();
+
   const [greeting, setGreeting] =
-    useState(getGreeting());
+    useState(
+      getGreeting(locale)
+    );
 
   const [products, setProducts] = useState<
     ClientProduct[]
@@ -272,7 +304,7 @@ export default function PainelPage() {
 
   useEffect(() => {
     function updateGreeting() {
-      setGreeting(getGreeting());
+      setGreeting(getGreeting(locale));
     }
 
     updateGreeting();
@@ -285,7 +317,7 @@ export default function PainelPage() {
     return () => {
       window.clearInterval(interval);
     };
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     let cancelled = false;
@@ -332,7 +364,7 @@ export default function PainelPage() {
 
         if (!cancelled) {
           setProductsError(
-            "Não foi possível carregar seus produtos."
+            text("Não foi possível carregar seus produtos.", "We could not load your products.")
           );
         }
       } finally {
@@ -394,7 +426,7 @@ export default function PainelPage() {
 
         if (!cancelled) {
           setInvoicesError(
-            "Não foi possível carregar suas faturas."
+            text("Não foi possível carregar suas faturas.", "We could not load your invoices.")
           );
         }
       } finally {
@@ -487,10 +519,10 @@ export default function PainelPage() {
       {
         label: "Próxima cobrança",
         value: nextInvoice
-          ? formatShortDate(nextInvoice.dueDate)
+          ? formatShortDate(nextInvoice.dueDate, locale)
           : "—",
         detail: nextInvoice
-          ? formatCurrency(nextInvoice.amount)
+          ? formatCurrency(nextInvoice.amount, locale)
           : "Nenhuma cobrança pendente",
         icon: CalendarDays,
       },
@@ -530,20 +562,21 @@ export default function PainelPage() {
         detail: primaryProduct.name,
         status:
           primaryProduct.status === "ACTIVE"
-            ? "Online"
+            ? text("Online", "Online")
             : getProductStatusLabel(
-                primaryProduct.status
+                primaryProduct.status,
+                locale
               ),
         healthy:
           primaryProduct.status === "ACTIVE",
       },
       {
         name: "Banco de dados",
-        detail: "Produção",
+        detail: text("Produção", "Production"),
         status:
           primaryProduct.status === "ACTIVE"
-            ? "Online"
-            : "Indisponível",
+            ? text("Online", "Online")
+            : text("Indisponível", "Unavailable"),
         healthy:
           primaryProduct.status === "ACTIVE",
       },
@@ -551,10 +584,10 @@ export default function PainelPage() {
         name: "Domínio",
         detail:
           primaryProduct.domain ??
-          "Não configurado",
+          text("Não configurado", "Not configured"),
         status: primaryProduct.domain
-          ? "Ativo"
-          : "Pendente",
+          ? text("Ativo", "Active")
+          : text("Pendente", "Pending"),
         healthy: Boolean(primaryProduct.domain),
       },
     ];
@@ -585,10 +618,7 @@ export default function PainelPage() {
         >
           <div>
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-cyan-300/45">
-              <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
-
-              Client Space
-            </div>
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />{text("Client Space", "Client Space")}</div>
 
             <h1 className="mt-4 text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">
               {greeting}, {user.firstName}.
@@ -710,9 +740,7 @@ export default function PainelPage() {
                     <Loader2
                       size={15}
                       className="animate-spin"
-                    />
-                    Carregando produtos...
-                  </div>
+                    />{text("Carregando produtos...", "Loading products...")}</div>
                 </div>
               ) : productsError ? (
                 <div className="flex min-h-[320px] items-center justify-center rounded-[22px] border border-red-300/[0.08] bg-[#050914] px-6 text-center">
@@ -727,9 +755,7 @@ export default function PainelPage() {
                     className="text-white/15"
                   />
 
-                  <div className="mt-4 text-sm text-white/50">
-                    Nenhum produto vinculado
-                  </div>
+                  <div className="mt-4 text-sm text-white/50">{text("Nenhum produto vinculado", "No linked products")}</div>
 
                   <p className="mt-2 max-w-sm text-xs leading-5 text-white/20">
                     Quando um produto Orbitta for
@@ -758,14 +784,15 @@ export default function PainelPage() {
                               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
 
                               {getProductStatusLabel(
-                                primaryProduct.status
+                                primaryProduct.status,
+                                locale
                               )}
                             </span>
                           </div>
 
                           <p className="mt-2 text-xs text-white/25">
                             {primaryProduct.subtitle ??
-                              "Produto Orbitta"}
+                              text("Produto Orbitta", "Orbitta product")}
                           </p>
                         </div>
                       </div>
@@ -781,9 +808,7 @@ export default function PainelPage() {
                     <div className="grid gap-3 sm:grid-cols-3">
                       <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-4">
                         <div className="flex items-center gap-2 text-[10px] text-white/25">
-                          <WalletCards size={13} />
-                          Plano
-                        </div>
+                          <WalletCards size={13} />{text("Plano", "Plan")}</div>
 
                         <div className="mt-3 text-sm text-white/70">
                           {primaryProduct.planName}
@@ -792,26 +817,24 @@ export default function PainelPage() {
 
                       <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-4">
                         <div className="flex items-center gap-2 text-[10px] text-white/25">
-                          <CreditCard size={13} />
-                          Mensalidade
-                        </div>
+                          <CreditCard size={13} />{text("Mensalidade", "Monthly price")}</div>
 
                         <div className="mt-3 text-sm text-white/70">
                           {formatCurrency(
-                            primaryProduct.monthlyPrice
+                            primaryProduct.monthlyPrice,
+                            locale
                           )}
                         </div>
                       </div>
 
                       <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-4">
                         <div className="flex items-center gap-2 text-[10px] text-white/25">
-                          <CalendarDays size={13} />
-                          Renovação
-                        </div>
+                          <CalendarDays size={13} />{text("Renovação", "Renewal")}</div>
 
                         <div className="mt-3 text-sm text-white/70">
                           {formatDate(
-                            primaryProduct.renewalDate
+                            primaryProduct.renewalDate,
+                            locale
                           )}
                         </div>
                       </div>
@@ -847,10 +870,7 @@ export default function PainelPage() {
                         <Link
                           href={`/painel/produtos/${primaryProduct.id}`}
                           className="group flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-semibold text-[#07101c]"
-                        >
-                          Gerenciar
-
-                          <ArrowRight
+                        >{text("Gerenciar", "Manage")}<ArrowRight
                             size={12}
                             className="transition-transform group-hover:translate-x-1"
                           />
@@ -881,13 +901,9 @@ export default function PainelPage() {
           >
             <div className="flex items-center justify-between border-b border-white/[0.05] px-6 py-5">
               <div>
-                <div className="text-xs font-medium text-white/60">
-                  Infraestrutura
-                </div>
+                <div className="text-xs font-medium text-white/60">{text("Infraestrutura", "Infrastructure")}</div>
 
-                <div className="mt-1 text-[10px] text-white/20">
-                  Status dos serviços
-                </div>
+                <div className="mt-1 text-[10px] text-white/20">{text("Status dos serviços", "Service status")}</div>
               </div>
 
               <Server
@@ -958,9 +974,7 @@ export default function PainelPage() {
                       />
 
                       <div>
-                        <div className="text-xs text-white/55">
-                          Operação normal
-                        </div>
+                        <div className="text-xs text-white/55">{text("Operação normal", "Operating normally")}</div>
 
                         <p className="mt-1.5 text-[10px] leading-5 text-white/25">
                           Os serviços vinculados à sua
@@ -971,9 +985,7 @@ export default function PainelPage() {
                   </div>
                 </>
               ) : (
-                <div className="flex min-h-[250px] items-center justify-center text-center text-xs text-white/20">
-                  Nenhuma infraestrutura disponível.
-                </div>
+                <div className="flex min-h-[250px] items-center justify-center text-center text-xs text-white/20">{text("Nenhuma infraestrutura disponível.", "No infrastructure available.")}</div>
               )}
             </div>
           </motion.div>
@@ -1000,22 +1012,15 @@ export default function PainelPage() {
           >
             <div className="flex items-center justify-between border-b border-white/[0.05] px-6 py-5">
               <div>
-                <div className="text-xs font-medium text-white/60">
-                  Faturas recentes
-                </div>
+                <div className="text-xs font-medium text-white/60">{text("Faturas recentes", "Recent invoices")}</div>
 
-                <div className="mt-1 text-[10px] text-white/20">
-                  Histórico financeiro da conta
-                </div>
+                <div className="mt-1 text-[10px] text-white/20">{text("Histórico financeiro da conta", "Account billing history")}</div>
               </div>
 
               <Link
                 href="/painel/faturas"
                 className="group flex items-center gap-2 text-xs text-white/30 transition hover:text-white/70"
-              >
-                Ver histórico
-
-                <ArrowRight
+              >{text("Ver histórico", "View history")}<ArrowRight
                   size={13}
                   className="transition-transform group-hover:translate-x-1"
                 />
@@ -1028,9 +1033,7 @@ export default function PainelPage() {
                   <Loader2
                     size={15}
                     className="animate-spin"
-                  />
-                  Carregando faturas...
-                </div>
+                  />{text("Carregando faturas...", "Loading invoices...")}</div>
               </div>
             ) : invoicesError ? (
               <div className="flex min-h-[210px] items-center justify-center px-6 text-center">
@@ -1045,18 +1048,16 @@ export default function PainelPage() {
                   className="text-white/15"
                 />
 
-                <div className="mt-3 text-xs text-white/25">
-                  Nenhuma fatura encontrada
-                </div>
+                <div className="mt-3 text-xs text-white/25">{text("Nenhuma fatura encontrada", "No invoices found")}</div>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <div className="min-w-[650px]">
                   <div className="grid grid-cols-[1.35fr_1fr_1fr_0.8fr_40px] border-b border-white/[0.04] px-6 py-3 text-[9px] uppercase tracking-[0.14em] text-white/18">
-                    <span>Fatura</span>
-                    <span>Vencimento</span>
-                    <span>Valor</span>
-                    <span>Status</span>
+                    <span>{text("Fatura", "Invoice")}</span>
+                    <span>{text("Vencimento", "Due date")}</span>
+                    <span>{text("Valor", "Amount")}</span>
+                    <span>{text("Status", "Status")}</span>
                     <span />
                   </div>
 
@@ -1082,12 +1083,13 @@ export default function PainelPage() {
                       </div>
 
                       <span className="text-xs text-white/25">
-                        {formatDate(invoice.dueDate)}
+                        {formatDate(invoice.dueDate, locale)}
                       </span>
 
                       <span className="text-xs text-white/55">
                         {formatCurrency(
-                          invoice.amount
+                          invoice.amount,
+                          locale
                         )}
                       </span>
 
@@ -1134,9 +1136,7 @@ export default function PainelPage() {
                 <CreditCard size={17} />
               </div>
 
-              <p className="mt-7 text-[10px] uppercase tracking-[0.2em] text-white/25">
-                Próxima cobrança
-              </p>
+              <p className="mt-7 text-[10px] uppercase tracking-[0.2em] text-white/25">{text("Próxima cobrança", "Next charge")}</p>
 
               {loadingInvoices ? (
                 <div className="flex min-h-[170px] items-center justify-center">
@@ -1149,14 +1149,16 @@ export default function PainelPage() {
                 <>
                   <div className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
                     {formatCurrency(
-                      nextInvoice.amount
+                      nextInvoice.amount,
+                      locale
                     )}
                   </div>
 
                   <div className="mt-2 text-xs text-white/25">
                     Vencimento em{" "}
                     {formatLongDate(
-                      nextInvoice.dueDate
+                      nextInvoice.dueDate,
+                      locale
                     )}
                   </div>
 
@@ -1186,26 +1188,19 @@ export default function PainelPage() {
                     —
                   </div>
 
-                  <div className="mt-2 text-xs text-white/25">
-                    Nenhuma cobrança pendente
-                  </div>
+                  <div className="mt-2 text-xs text-white/25">{text("Nenhuma cobrança pendente", "No pending charges")}</div>
 
                   <div className="my-6 h-px bg-white/[0.05]" />
 
                   <div className="flex items-center gap-2 text-xs text-emerald-200/40">
-                    <CheckCircle2 size={13} />
-                    Sem pagamentos pendentes
-                  </div>
+                    <CheckCircle2 size={13} />{text("Sem pagamentos pendentes", "No pending payments")}</div>
                 </>
               )}
 
               <Link
                 href="/painel/faturas"
                 className="group mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.035] text-xs text-white/55 transition hover:bg-white/[0.06] hover:text-white"
-              >
-                Ver faturas
-
-                <ArrowRight
+              >{text("Ver faturas", "View invoices")}<ArrowRight
                   size={13}
                   className="transition-transform group-hover:translate-x-1"
                 />

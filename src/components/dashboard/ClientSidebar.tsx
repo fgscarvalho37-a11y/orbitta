@@ -18,6 +18,8 @@ import {
   WalletCards,
 } from "lucide-react";
 import { useState } from "react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 const navigation = [
   {
@@ -65,8 +67,32 @@ const secondaryNavigation = [
   },
 ];
 
+const NAV_EN: Record<string, string> = {
+  "Visão geral": "Overview",
+  "Meus produtos": "My products",
+  "Assinaturas": "Subscriptions",
+  "Pagamentos": "Payments",
+  "Faturas": "Invoices",
+  "Domínios": "Domains",
+  "Suporte": "Support",
+  "Configurações": "Settings",
+};
+
 export default function ClientSidebar() {
+  const {
+    text,
+  } = useLanguage();
+
   const pathname = usePathname();
+
+  function navText(
+    value: string
+  ) {
+    return text(
+      value,
+      NAV_EN[value] ?? value
+    );
+  }
   const [collapsed, setCollapsed] = useState(false);
 
   function isActive(href: string) {
@@ -123,7 +149,7 @@ export default function ClientSidebar() {
 
             return (
               <Link
-                key={item.name}
+                key={navText(item.name)}
                 href={item.href}
                 title={collapsed ? item.name : undefined}
                 className={`group relative flex h-11 items-center rounded-xl transition ${
@@ -148,7 +174,7 @@ export default function ClientSidebar() {
                 />
 
                 {!collapsed && (
-                  <span className="text-sm">{item.name}</span>
+                  <span className="text-sm">{navText(item.name)}</span>
                 )}
               </Link>
             );
@@ -159,7 +185,7 @@ export default function ClientSidebar() {
 
         {!collapsed && (
           <div className="mb-3 px-3 text-[9px] uppercase tracking-[0.25em] text-white/20">
-            Conta
+            {text("Conta", "Account")}
           </div>
         )}
 
@@ -170,7 +196,7 @@ export default function ClientSidebar() {
 
             return (
               <Link
-                key={item.name}
+                key={navText(item.name)}
                 href={item.href}
                 title={collapsed ? item.name : undefined}
                 className={`group relative flex h-11 items-center rounded-xl transition ${
@@ -191,7 +217,7 @@ export default function ClientSidebar() {
                 />
 
                 {!collapsed && (
-                  <span className="text-sm">{item.name}</span>
+                  <span className="text-sm">{navText(item.name)}</span>
                 )}
               </Link>
             );
@@ -200,6 +226,11 @@ export default function ClientSidebar() {
       </div>
 
       <div className="border-t border-white/[0.05] p-3">
+        {!collapsed && (
+          <div className="mb-3">
+            <LanguageSwitcher compact />
+          </div>
+        )}
         {!collapsed && (
           <div className="mb-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
             <div className="flex items-center gap-3">
@@ -213,7 +244,7 @@ export default function ClientSidebar() {
                 </div>
 
                 <div className="mt-0.5 truncate text-[10px] text-white/25">
-                  Cliente Orbitta
+                  {text("Cliente Orbitta", "Orbitta client")}
                 </div>
               </div>
 
@@ -229,7 +260,7 @@ export default function ClientSidebar() {
 
         <Link
           href="/login"
-          title={collapsed ? "Sair" : undefined}
+          title={collapsed ? text("Sair", "Sign out") : undefined}
           className={`flex h-10 items-center rounded-xl text-white/25 transition hover:bg-red-400/[0.04] hover:text-red-200/60 ${
             collapsed
               ? "justify-center"
@@ -238,7 +269,7 @@ export default function ClientSidebar() {
         >
           <LogOut size={16} />
 
-          {!collapsed && <span className="text-xs">Sair</span>}
+          {!collapsed && <span className="text-xs">{text("Sair", "Sign out")}</span>}
         </Link>
       </div>
 
@@ -247,7 +278,7 @@ export default function ClientSidebar() {
         onClick={() => setCollapsed((value) => !value)}
         className="absolute -right-3 top-[94px] flex h-7 w-7 items-center justify-center rounded-full border border-white/[0.08] bg-[#0a111e] text-white/35 shadow-xl transition hover:border-cyan-300/20 hover:text-cyan-200"
         aria-label={
-          collapsed ? "Expandir menu" : "Recolher menu"
+          collapsed ? text("Expandir menu", "Expand menu") : text("Recolher menu", "Collapse menu")
         }
       >
         {collapsed ? (

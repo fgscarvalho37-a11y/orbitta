@@ -4,6 +4,8 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { resolveClientEntryDestination } from "@/lib/clientEntry";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import {
   AlertCircle,
   ArrowLeft,
@@ -20,6 +22,10 @@ const API_URL = "/backend";
 
 export default function CadastroPage() {
   const router = useRouter();
+
+  const {
+    text,
+  } = useLanguage();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -82,7 +88,7 @@ export default function CadastroPage() {
       if (!response.ok) {
         throw new Error(
           data?.message ||
-            "Não foi possível criar sua conta."
+            text("Não foi possível criar sua conta.", "We could not create your account.")
         );
       }
 
@@ -142,13 +148,13 @@ export default function CadastroPage() {
     } catch (error) {
       if (error instanceof TypeError) {
         setError(
-          "Não foi possível conectar ao servidor da Orbitta."
+          text("Não foi possível conectar ao servidor da Orbitta.", "We could not connect to the Orbitta server.")
         );
       } else if (error instanceof Error) {
         setError(error.message);
       } else {
         setError(
-          "Ocorreu um erro inesperado."
+          text("Ocorreu um erro inesperado.", "An unexpected error occurred.")
         );
       }
     } finally {
@@ -165,29 +171,34 @@ export default function CadastroPage() {
       </div>
 
       <header className="relative z-20">
-        <div className="mx-auto flex h-20 max-w-[1200px] items-center px-6 lg:px-10">
+        <div className="mx-auto flex h-20 max-w-[1200px] items-center justify-between px-6 lg:px-10">
           <Link
             href="/"
             className="flex items-center gap-3 text-sm text-white/45 transition hover:text-white"
           >
             <ArrowLeft size={16} />
-            Voltar para Orbitta
+            {text("Voltar para Orbitta", "Back to Orbitta")}
           </Link>
+
+          <LanguageSwitcher compact />
         </div>
       </header>
 
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-80px)] max-w-[1200px] items-center justify-center px-6 pb-12">
         <div className="w-full max-w-[580px] rounded-[32px] border border-white/[0.08] bg-[#08101d]/90 p-7 shadow-[0_40px_120px_rgba(0,0,0,0.45)] backdrop-blur-2xl sm:p-10">
           <p className="text-xs uppercase tracking-[0.23em] text-cyan-300/50">
-            Criar conta
+            {text("Criar conta", "Create account")}
           </p>
 
           <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-            Comece na Orbitta.
+            {text("Comece na Orbitta.", "Get started with Orbitta.")}
           </h1>
 
           <p className="mt-4 text-sm leading-6 text-white/35">
-            Crie sua conta para contratar e gerenciar os produtos Orbitta.
+            {text(
+              "Crie sua conta para contratar e gerenciar os produtos Orbitta.",
+              "Create your account to purchase and manage Orbitta products."
+            )}
           </p>
 
           {error && (
@@ -210,7 +221,7 @@ export default function CadastroPage() {
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <label className="mb-2.5 block text-xs text-white/45">
-                  Nome
+                  {text("Nome", "First name")}
                 </label>
 
                 <div className="relative">
@@ -232,7 +243,7 @@ export default function CadastroPage() {
 
               <div>
                 <label className="mb-2.5 block text-xs text-white/45">
-                  Sobrenome
+                  {text("Sobrenome", "Last name")}
                 </label>
 
                 <input
@@ -271,7 +282,7 @@ export default function CadastroPage() {
 
             <div className="mt-5">
               <label className="mb-2.5 block text-xs text-white/45">
-                Telefone
+                {text("Telefone", "Phone")}
               </label>
 
               <div className="relative">
@@ -293,7 +304,7 @@ export default function CadastroPage() {
 
             <div className="mt-5">
               <label className="mb-2.5 block text-xs text-white/45">
-                Senha
+                {text("Senha", "Password")}
               </label>
 
               <div className="relative">
@@ -336,7 +347,7 @@ export default function CadastroPage() {
               </div>
 
               <p className="mt-2 text-[10px] text-white/20">
-                Mínimo de 8 caracteres.
+                {text("Mínimo de 8 caracteres.", "At least 8 characters.")}
               </p>
             </div>
 
@@ -346,8 +357,8 @@ export default function CadastroPage() {
               className="mt-8 flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-white text-sm font-semibold text-[#07101c] transition hover:bg-cyan-50 disabled:opacity-60"
             >
               {loading
-                ? "Criando conta..."
-                : "Criar minha conta"}
+                ? text("Criando conta...", "Creating account...")
+                : text("Criar minha conta", "Create my account")}
 
               {!loading && (
                 <ArrowRight size={16} />
@@ -356,7 +367,7 @@ export default function CadastroPage() {
           </form>
 
           <div className="mt-7 text-center text-xs text-white/30">
-            Já possui conta?{" "}
+            {text("Já possui conta?", "Already have an account?")}{" "}
             <Link
               href={
                 returnUrl
@@ -365,7 +376,7 @@ export default function CadastroPage() {
               }
               className="text-cyan-300/70 hover:text-cyan-200"
             >
-              Entrar
+              {text("Entrar", "Sign in")}
             </Link>
           </div>
         </div>

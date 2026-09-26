@@ -22,6 +22,12 @@ public interface SubscriptionCheckoutRepository
             String externalReference
     );
 
+    Optional<SubscriptionCheckout>
+    findFirstByPaymentProviderAndExternalPaymentIdOrderByCreatedAtDesc(
+            String paymentProvider,
+            String externalPaymentId
+    );
+
     List<SubscriptionCheckout> findByUserIdOrderByCreatedAtDesc(
             Long userId
     );

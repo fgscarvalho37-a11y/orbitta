@@ -63,6 +63,12 @@ public class Invoice {
     )
     private BigDecimal amount;
 
+    @Column(
+            length = 3
+    )
+    private String currency =
+            "BRL";
+
     @Enumerated(EnumType.STRING)
     @Column(
             nullable = false,
@@ -155,6 +161,20 @@ public class Invoice {
             BigDecimal amount
     ) {
         this.amount = amount;
+    }
+
+    public String getCurrency() {
+        return currency == null ||
+                currency.isBlank()
+                ? "BRL"
+                : currency;
+    }
+
+    public void setCurrency(
+            String currency
+    ) {
+        this.currency =
+                currency;
     }
 
     public InvoiceStatus getStatus() {

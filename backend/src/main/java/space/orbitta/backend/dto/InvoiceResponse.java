@@ -16,6 +16,7 @@ public record InvoiceResponse(
         String productName,
 
         BigDecimal amount,
+        String currency,
         InvoiceStatus status,
 
         LocalDate dueDate,
@@ -37,6 +38,7 @@ public record InvoiceResponse(
                 invoice.getProduct().getName(),
 
                 invoice.getAmount(),
+                invoice.getCurrency(),
                 invoice.getStatus(),
 
                 invoice.getDueDate(),

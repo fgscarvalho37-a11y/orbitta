@@ -137,7 +137,8 @@ public class SecurityConfig {
                         .permitAll()
 
                         .requestMatchers(
-                                "/api/webhooks/mercadopago"
+                                "/api/webhooks/mercadopago",
+                                "/api/webhooks/stripe"
                         )
                         .permitAll()
 

@@ -39,6 +39,7 @@ type SubscriptionCheckout = {
   totalPrice: number;
   currency: string;
   status: CheckoutStatus;
+  paymentProvider: string | null;
   externalReference: string | null;
   termsAcceptedAt: string | null;
   termsVersion: string | null;
@@ -274,7 +275,7 @@ export default function CheckoutPage({
       const data: { paymentUrl?: string } = await response.json();
 
       if (!data.paymentUrl) {
-        throw new Error("O Mercado Pago não retornou a URL de pagamento.");
+        throw new Error("O provedor de pagamento não retornou uma URL válida.");
       }
 
       window.location.href = data.paymentUrl;
@@ -334,6 +335,12 @@ export default function CheckoutPage({
   }
 
   const status = getStatusInfo(checkout.status);
+
+  const gatewayName =
+    checkout.paymentProvider === "STRIPE" ||
+    checkout.currency.toUpperCase() !== "BRL"
+      ? "Stripe"
+      : "Mercado Pago";
 
   const canPay =
     checkout.status === "PENDING" ||
@@ -622,7 +629,7 @@ export default function CheckoutPage({
               </p>
             ) : canPay ? (
               <p className="mt-3 text-center text-[10px] leading-4 text-white/20">
-                Você será redirecionado para o Mercado Pago para concluir a assinatura.
+                Você será redirecionado para {gatewayName} para concluir a assinatura.
               </p>
             ) : null}
 

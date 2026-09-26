@@ -1210,6 +1210,10 @@ public class MercadoPagoSubscriptionSyncService {
                 amount
         );
 
+        invoice.setCurrency(
+                checkout.getCurrency()
+        );
+
         invoice.setDueDate(
                 debitDate
         );

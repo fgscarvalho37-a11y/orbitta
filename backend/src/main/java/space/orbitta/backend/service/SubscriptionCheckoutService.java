@@ -21,6 +21,7 @@ import space.orbitta.backend.repository.SubscriptionCheckoutRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -33,6 +34,9 @@ public class SubscriptionCheckoutService {
 
     private static final String MERCADO_PAGO_PROVIDER =
             "MERCADO_PAGO";
+
+    private static final String STRIPE_PROVIDER =
+            StripeSubscriptionSyncService.PROVIDER;
 
     public static final String TERMS_VERSION =
             "2026-09-24";
@@ -49,13 +53,19 @@ public class SubscriptionCheckoutService {
 
     private final MercadoPagoSubscriptionSyncService mercadoPagoSubscriptionSyncService;
 
+    private final StripeSubscriptionService stripeSubscriptionService;
+
+    private final StripeSubscriptionSyncService stripeSubscriptionSyncService;
+
     public SubscriptionCheckoutService(
             SubscriptionCheckoutRepository checkoutRepository,
             ClientProductRepository clientProductRepository,
             UserService userService,
             CatalogService catalogService,
             MercadoPagoSubscriptionService mercadoPagoSubscriptionService,
-            MercadoPagoSubscriptionSyncService mercadoPagoSubscriptionSyncService
+            MercadoPagoSubscriptionSyncService mercadoPagoSubscriptionSyncService,
+            StripeSubscriptionService stripeSubscriptionService,
+            StripeSubscriptionSyncService stripeSubscriptionSyncService
     ) {
         this.checkoutRepository =
                 checkoutRepository;
@@ -74,6 +84,12 @@ public class SubscriptionCheckoutService {
 
         this.mercadoPagoSubscriptionSyncService =
                 mercadoPagoSubscriptionSyncService;
+
+        this.stripeSubscriptionService =
+                stripeSubscriptionService;
+
+        this.stripeSubscriptionSyncService =
+                stripeSubscriptionSyncService;
     }
 
     /*
@@ -155,10 +171,9 @@ public class SubscriptionCheckoutService {
                 try {
 
                     checkout =
-                            mercadoPagoSubscriptionSyncService
-                                    .syncCheckout(
-                                            checkout
-                                    );
+                            syncCheckoutByProvider(
+                                    checkout
+                            );
 
                 } catch (RuntimeException exception) {
 
@@ -317,10 +332,9 @@ public class SubscriptionCheckoutService {
         ) {
             try {
                 checkout =
-                        mercadoPagoSubscriptionSyncService
-                                .syncCheckout(
-                                        checkout
-                                );
+                        syncCheckoutByProvider(
+                                checkout
+                        );
             } catch (RuntimeException exception) {
                 logger.warn(
                         "Falha ao sincronizar checkout aberto {}: {}",
@@ -419,10 +433,9 @@ public class SubscriptionCheckoutService {
             try {
 
                 checkout =
-                        mercadoPagoSubscriptionSyncService
-                                .syncCheckout(
-                                        checkout
-                                );
+                        syncCheckoutByProvider(
+                                checkout
+                        );
 
             } catch (RuntimeException exception) {
 
@@ -580,10 +593,9 @@ public class SubscriptionCheckoutService {
             try {
 
                 checkout =
-                        mercadoPagoSubscriptionSyncService
-                                .syncCheckout(
-                                        checkout
-                                );
+                        syncCheckoutByProvider(
+                                checkout
+                        );
 
             } catch (RuntimeException exception) {
 
@@ -605,6 +617,42 @@ public class SubscriptionCheckoutService {
                         checkout.getPaymentProvider(),
                         checkout.getExternalPaymentId(),
                         null
+                );
+            }
+
+            if (
+                    STRIPE_PROVIDER.equalsIgnoreCase(
+                            checkout.getPaymentProvider()
+                    )
+            ) {
+
+                Map<?, ?> session =
+                        stripeSubscriptionService
+                                .getCheckoutSession(
+                                        checkout.getExternalPaymentId()
+                                );
+
+                String paymentUrl =
+                        getMapString(
+                                session,
+                                "url"
+                        );
+
+                if (
+                        paymentUrl == null ||
+                        paymentUrl.isBlank()
+                ) {
+                    throw new IllegalStateException(
+                            "A Stripe não retornou uma URL de checkout válida."
+                    );
+                }
+
+                return new SubscriptionPaymentResponse(
+                        checkout.getId(),
+                        checkout.getStatus().name(),
+                        STRIPE_PROVIDER,
+                        checkout.getExternalPaymentId(),
+                        paymentUrl
                 );
             }
 
@@ -661,6 +709,45 @@ public class SubscriptionCheckoutService {
             );
         }
 
+        if (
+                shouldUseStripe(
+                        checkout
+                )
+        ) {
+
+            StripeSubscriptionService.StripeCheckoutSession stripeSession =
+                    stripeSubscriptionService
+                            .createCheckoutSession(
+                                    checkout,
+                                    user.getEmail()
+                            );
+
+            checkout.setPaymentProvider(
+                    STRIPE_PROVIDER
+            );
+
+            checkout.setExternalPaymentId(
+                    stripeSession.id()
+            );
+
+            checkout.setStatus(
+                    SubscriptionCheckoutStatus.PAYMENT_PENDING
+            );
+
+            SubscriptionCheckout saved =
+                    checkoutRepository.save(
+                            checkout
+                    );
+
+            return new SubscriptionPaymentResponse(
+                    saved.getId(),
+                    saved.getStatus().name(),
+                    STRIPE_PROVIDER,
+                    stripeSession.id(),
+                    stripeSession.url()
+            );
+        }
+
         MercadoPagoSubscriptionResponse mercadoPagoResponse =
                 mercadoPagoSubscriptionService
                         .createSubscription(
@@ -706,6 +793,69 @@ public class SubscriptionCheckoutService {
      * AUXILIARES
      * =========================================================
      */
+    private SubscriptionCheckout syncCheckoutByProvider(
+            SubscriptionCheckout checkout
+    ) {
+
+        if (
+                checkout != null &&
+                STRIPE_PROVIDER.equalsIgnoreCase(
+                        checkout.getPaymentProvider()
+                )
+        ) {
+            return stripeSubscriptionSyncService
+                    .syncCheckout(
+                            checkout
+                    );
+        }
+
+        return mercadoPagoSubscriptionSyncService
+                .syncCheckout(
+                        checkout
+                );
+    }
+
+    private boolean shouldUseStripe(
+            SubscriptionCheckout checkout
+    ) {
+
+        if (
+                checkout == null ||
+                checkout.getCurrency() == null
+        ) {
+            return false;
+        }
+
+        /*
+         * Mantemos Mercado Pago para BRL/Brasil.
+         * Planos internacionais do catálogo usam Stripe.
+         */
+        return !"BRL".equalsIgnoreCase(
+                checkout.getCurrency()
+        );
+    }
+
+    private String getMapString(
+            Map<?, ?> map,
+            String key
+    ) {
+
+        if (map == null) {
+            return null;
+        }
+
+        Object value =
+                map.get(
+                        key
+                );
+
+        return value == null
+                ? null
+                : String.valueOf(
+                        value
+                );
+    }
+
     private void validateTermsAcceptance(
             TermsAcceptanceRequest terms
     ) {

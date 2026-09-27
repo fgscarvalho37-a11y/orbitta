@@ -8,6 +8,8 @@ export type OrbittaProduct = {
   description: string;
   status: ProductStatus;
   previewUrl?: string;
+  accessUrl?: string;
+  androidUrl?: string;
   features: string[];
   en?: {
     category: string;
@@ -62,7 +64,8 @@ export const products: OrbittaProduct[] = [
       "Uma plataforma conectando moradores, portaria e administração.",
     description:
       "Reservas, encomendas, ocorrências, comunicados e gestão condominial reunidos em uma experiência digital.",
-    status: "development",
+    status: "available",
+    accessUrl: "https://condoflow-web.onrender.com",
     en: {
       category: "Condominium Management",
       shortDescription:

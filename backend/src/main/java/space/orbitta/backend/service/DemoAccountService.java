@@ -74,6 +74,9 @@ public class DemoAccountService {
                                         )
                         );
 
+        Long selectedId =
+                selected.getId();
+
         userRepository
                 .findFirstByRoleAndDemoAccountTrue(
                         User.Role.CLIENT
@@ -83,7 +86,7 @@ public class DemoAccountService {
                             if (
                                     !current.getId()
                                             .equals(
-                                                    selected.getId()
+                                                    selectedId
                                             )
                             ) {
                                 current.setDemoAccount(

@@ -219,6 +219,16 @@ export default function ProductPageClient({
                   />
                 </a>
 
+                {product.accessUrl && (
+                  <Link
+                    href={`/produtos/${product.slug}/acessar`}
+                    className="group flex items-center gap-3 rounded-full border border-cyan-300/30 bg-cyan-300/[0.08] px-6 py-3.5 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300/50 hover:bg-cyan-300/[0.12]"
+                  >
+                    Acessar produto
+                    <ExternalLink size={15} />
+                  </Link>
+                )}
+
                 {previewAvailable && product.previewUrl ? (
                   <a
                     href={product.previewUrl}

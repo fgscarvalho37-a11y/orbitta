@@ -65,7 +65,7 @@ export const products: OrbittaProduct[] = [
     description:
       "Reservas, encomendas, ocorrências, comunicados e gestão condominial reunidos em uma experiência digital.",
     status: "available",
-    accessUrl: "/condoflow/quinta-do-conde",
+    accessUrl: "https://condoflow.orbitta.space/quinta-do-conde",
     en: {
       category: "Condominium Management",
       shortDescription:

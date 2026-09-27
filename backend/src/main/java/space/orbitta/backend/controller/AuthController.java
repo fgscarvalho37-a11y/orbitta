@@ -20,6 +20,7 @@ import space.orbitta.backend.dto.RegisterRequest;
 import space.orbitta.backend.dto.RegisterResponse;
 import space.orbitta.backend.dto.UpdateProfileRequest;
 import space.orbitta.backend.entity.User;
+import space.orbitta.backend.service.DemoAccountService;
 import space.orbitta.backend.service.UserService;
 
 import java.util.Map;
@@ -30,13 +31,16 @@ public class AuthController {
 
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
+    private final DemoAccountService demoAccountService;
 
     public AuthController(
             UserService userService,
-            AuthenticationManager authenticationManager
+            AuthenticationManager authenticationManager,
+            DemoAccountService demoAccountService
     ) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
+        this.demoAccountService = demoAccountService;
     }
 
     /*
@@ -126,6 +130,20 @@ public class AuthController {
             User user = userService.findByEmail(
                     authentication.getName()
             );
+
+            try {
+                demoAccountService
+                        .recordSuccessfulLogin(
+                                user
+                        );
+            } catch (
+                    RuntimeException exception
+            ) {
+                System.err.println(
+                        "[DEMO ACCESS] Falha ao registrar acesso: "
+                                + exception.getMessage()
+                );
+            }
 
             return ResponseEntity.ok(
                     RegisterResponse.from(user)

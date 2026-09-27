@@ -36,6 +36,12 @@ public class User {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(
+            name = "demo_account",
+            nullable = false
+    )
+    private boolean demoAccount = false;
+
     @Column(length = 30)
     private String phone;
 
@@ -120,6 +126,17 @@ public class User {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isDemoAccount() {
+        return demoAccount;
+    }
+
+    public void setDemoAccount(
+            boolean demoAccount
+    ) {
+        this.demoAccount =
+                demoAccount;
     }
 
     public String getPhone() {

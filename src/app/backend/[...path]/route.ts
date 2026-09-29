@@ -9,9 +9,14 @@ export const runtime =
 export const dynamic =
   "force-dynamic";
 
-const BACKEND_URL =
-  process.env.ORBITTA_BACKEND_URL ??
+const PRODUCTION_BACKEND_URL =
   "https://orbitta-api.onrender.com";
+
+const BACKEND_URL =
+  process.env.NODE_ENV === "production"
+    ? PRODUCTION_BACKEND_URL
+    : process.env.ORBITTA_BACKEND_URL ??
+      PRODUCTION_BACKEND_URL;
 
 type RouteContext = {
   params: Promise<{

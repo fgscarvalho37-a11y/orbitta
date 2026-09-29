@@ -22,6 +22,8 @@ import space.orbitta.backend.entity.ProductStatus;
 import space.orbitta.backend.entity.User;
 import space.orbitta.backend.repository.ClientProductRepository;
 
+import java.time.LocalDate;
+
 @Service
 public class PizzaSystemProvisionService {
 
@@ -173,7 +175,8 @@ public class PizzaSystemProvisionService {
                         user.getEmail(),
                         "Minha Loja",
                         product.getPlanName(),
-                        user.getPasswordHash()
+                        user.getPasswordHash(),
+                        product.getRenewalDate()
                 );
 
         try {
@@ -617,7 +620,8 @@ public class PizzaSystemProvisionService {
             String email,
             String name,
             String planName,
-            String passwordHash
+            String passwordHash,
+            LocalDate renewalDate
     ) {
     }
 

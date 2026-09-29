@@ -1035,6 +1035,14 @@ public class MercadoPagoSubscriptionSyncService {
                 checkout.getMonthlyPrice()
         );
 
+        product.setCurrency(
+                checkout.getCurrency()
+        );
+
+        product.setBillingProvider(
+                checkout.getPaymentProvider()
+        );
+
         product.setStatus(
                 ProductStatus.ACTIVE
         );

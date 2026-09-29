@@ -5,7 +5,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import space.orbitta.backend.dto.ClientProductResponse;
+import space.orbitta.backend.dto.SubscriptionPaymentResponse;
+import space.orbitta.backend.dto.TermsAcceptanceRequest;
 import space.orbitta.backend.service.ClientProductService;
+import space.orbitta.backend.service.SubscriptionCheckoutService;
 
 import java.util.List;
 import java.util.Map;
@@ -15,11 +18,14 @@ import java.util.Map;
 public class ClientProductController {
 
     private final ClientProductService clientProductService;
+    private final SubscriptionCheckoutService subscriptionCheckoutService;
 
     public ClientProductController(
-            ClientProductService clientProductService
+            ClientProductService clientProductService,
+            SubscriptionCheckoutService subscriptionCheckoutService
     ) {
         this.clientProductService = clientProductService;
+        this.subscriptionCheckoutService = subscriptionCheckoutService;
     }
 
     @GetMapping
@@ -161,6 +167,56 @@ public class ClientProductController {
                             Map.of(
                                     "message",
                                     "Não foi possível sincronizar o novo endereço agora. Tente novamente."
+                            )
+                    );
+        }
+    }
+
+    @PostMapping("/{id}/stripe-renewal")
+    public ResponseEntity<?> createStripeRenewal(
+            @PathVariable Long id,
+            @RequestBody TermsAcceptanceRequest terms,
+            Authentication authentication
+    ) {
+        try {
+            String email =
+                    authentication.getName();
+
+            SubscriptionPaymentResponse response =
+                    subscriptionCheckoutService
+                            .createStripeRenewal(
+                                    id,
+                                    email,
+                                    terms
+                            );
+
+            return ResponseEntity.ok(
+                    response
+            );
+
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            Map.of(
+                                    "message",
+                                    exception.getMessage() != null
+                                            ? exception.getMessage()
+                                            : "Não foi possível configurar a renovação automática."
+                            )
+                    );
+
+        } catch (IllegalStateException exception) {
+            return ResponseEntity
+                    .status(
+                            HttpStatus.BAD_GATEWAY
+                    )
+                    .body(
+                            Map.of(
+                                    "message",
+                                    exception.getMessage() != null
+                                            ? exception.getMessage()
+                                            : "A Stripe ainda não está disponível para esta renovação."
                             )
                     );
         }

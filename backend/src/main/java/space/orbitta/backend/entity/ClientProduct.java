@@ -70,6 +70,12 @@ public class ClientProduct {
     )
     private BigDecimal monthlyPrice;
 
+    @Column(length = 3)
+    private String currency = "BRL";
+
+    @Column(name = "billing_provider", length = 50)
+    private String billingProvider;
+
     @Column(length = 255)
     private String domain;
 
@@ -171,6 +177,27 @@ public class ClientProduct {
 
     public void setMonthlyPrice(BigDecimal monthlyPrice) {
         this.monthlyPrice = monthlyPrice;
+    }
+
+    public String getCurrency() {
+        return currency == null || currency.isBlank()
+                ? "BRL"
+                : currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency =
+                currency == null || currency.isBlank()
+                        ? "BRL"
+                        : currency.trim().toUpperCase();
+    }
+
+    public String getBillingProvider() {
+        return billingProvider;
+    }
+
+    public void setBillingProvider(String billingProvider) {
+        this.billingProvider = billingProvider;
     }
 
     public String getDomain() {

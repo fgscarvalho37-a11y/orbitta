@@ -21,6 +21,8 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
@@ -51,6 +53,18 @@ public class StripeSubscriptionService {
             SubscriptionCheckout checkout,
             String customerEmail
     ) {
+        return createCheckoutSession(
+                checkout,
+                customerEmail,
+                null
+        );
+    }
+
+    public StripeCheckoutSession createCheckoutSession(
+            SubscriptionCheckout checkout,
+            String customerEmail,
+            LocalDate billingAnchorDate
+    ) {
 
         validateApiConfiguration();
         validateCheckout(
@@ -72,18 +86,26 @@ public class StripeSubscriptionService {
 
         form.add(
                 "success_url",
-                buildReturnUrl(
-                        checkout,
-                        "success"
-                )
+                billingAnchorDate != null
+                        ? buildRenewalReturnUrl(
+                                "success"
+                        )
+                        : buildReturnUrl(
+                                checkout,
+                                "success"
+                        )
         );
 
         form.add(
                 "cancel_url",
-                buildReturnUrl(
-                        checkout,
-                        "cancel"
-                )
+                billingAnchorDate != null
+                        ? buildRenewalReturnUrl(
+                                "cancel"
+                        )
+                        : buildReturnUrl(
+                                checkout,
+                                "cancel"
+                        )
         );
 
         form.add(
@@ -161,12 +183,62 @@ public class StripeSubscriptionService {
                         + checkout.getPlanName()
         );
 
+        boolean delayedBilling =
+                billingAnchorDate != null;
+
+        if (delayedBilling) {
+            LocalDate today =
+                    LocalDate.now(
+                            ZoneOffset.UTC
+                    );
+
+            if (
+                    !billingAnchorDate.isAfter(
+                            today
+                    )
+            ) {
+                throw new IllegalArgumentException(
+                        "A data da primeira cobrança Stripe precisa ser futura."
+                );
+            }
+
+            if (
+                    billingAnchorDate.isAfter(
+                            today.plusMonths(1)
+                    )
+            ) {
+                throw new IllegalArgumentException(
+                        "A data da primeira cobrança Stripe precisa estar dentro do próximo ciclo mensal."
+                );
+            }
+
+            long billingAnchor =
+                    billingAnchorDate
+                            .atStartOfDay(
+                                    ZoneOffset.UTC
+                            )
+                            .toEpochSecond();
+
+            form.add(
+                    "subscription_data[billing_cycle_anchor]",
+                    String.valueOf(
+                            billingAnchor
+                    )
+            );
+
+            form.add(
+                    "subscription_data[proration_behavior]",
+                    "none"
+            );
+        }
+
         BigDecimal setupPrice =
                 checkout.getSetupPrice() != null
                         ? checkout.getSetupPrice()
                         : BigDecimal.ZERO;
 
         if (
+                !delayedBilling &&
                 setupPrice.compareTo(
                         BigDecimal.ZERO
                 ) > 0
@@ -675,6 +747,28 @@ public class StripeSubscriptionService {
                 + "?stripe="
                 + result
                 + "&session_id={CHECKOUT_SESSION_ID}";
+    }
+
+    private String buildRenewalReturnUrl(
+            String result
+    ) {
+        String base =
+                frontendUrl == null ||
+                frontendUrl.isBlank()
+                        ? "https://example.com"
+                        : frontendUrl.trim();
+
+        while (base.endsWith("/")) {
+            base =
+                    base.substring(
+                            0,
+                            base.length() - 1
+                    );
+        }
+
+        return base
+                + "/painel?stripeRenewal="
+                + result;
     }
 
     private void validateApiConfiguration() {

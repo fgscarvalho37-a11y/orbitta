@@ -13,6 +13,7 @@ import space.orbitta.backend.dto.TermsAcceptanceRequest;
 import space.orbitta.backend.entity.CatalogPlan;
 import space.orbitta.backend.entity.CatalogPlanPrice;
 import space.orbitta.backend.entity.CatalogProduct;
+import space.orbitta.backend.entity.ClientProduct;
 import space.orbitta.backend.entity.ProductStatus;
 import space.orbitta.backend.entity.SubscriptionCheckout;
 import space.orbitta.backend.entity.SubscriptionCheckoutStatus;
@@ -21,7 +22,9 @@ import space.orbitta.backend.repository.ClientProductRepository;
 import space.orbitta.backend.repository.SubscriptionCheckoutRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -962,6 +965,300 @@ public class SubscriptionCheckoutService {
                 MERCADO_PAGO_PROVIDER,
                 mercadoPagoResponse.id(),
                 mercadoPagoResponse.initPoint()
+        );
+    }
+
+    /*
+     * =========================================================
+     * MIGRAÇÃO DO PRIMEIRO MÊS US -> STRIPE RECORRENTE
+     * =========================================================
+     *
+     * O primeiro mês já foi pago no Mercado Pago.
+     * Aqui o Stripe Checkout apenas cadastra a recorrência e
+     * ancora a primeira cobrança na renewalDate existente.
+     * Assim não existe cobrança duplicada do período já pago.
+     */
+    @Transactional
+    public SubscriptionPaymentResponse createStripeRenewal(
+            Long productId,
+            String email,
+            TermsAcceptanceRequest terms
+    ) {
+
+        if (productId == null) {
+            throw new IllegalArgumentException(
+                    "Produto é obrigatório."
+            );
+        }
+
+        User user =
+                getActiveClient(
+                        email
+                );
+
+        validateTermsAcceptance(
+                terms
+        );
+
+        ClientProduct product =
+                clientProductRepository
+                        .findByIdAndUserId(
+                                productId,
+                                user.getId()
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                "Produto não encontrado."
+                                        )
+                        );
+
+        if (
+                product.getStatus()
+                        != ProductStatus.ACTIVE
+        ) {
+            throw new IllegalArgumentException(
+                    "O produto precisa estar ativo para configurar a renovação."
+            );
+        }
+
+        if (
+                product.getCatalogPlan() == null ||
+                product.getCatalogProduct() == null
+        ) {
+            throw new IllegalArgumentException(
+                    "Este produto ainda não está vinculado ao catálogo atual."
+            );
+        }
+
+        LocalDate renewalDate =
+                product.getRenewalDate();
+
+        if (renewalDate == null) {
+            throw new IllegalArgumentException(
+                    "A data de renovação ainda não está definida."
+            );
+        }
+
+        long daysRemaining =
+                ChronoUnit.DAYS.between(
+                        LocalDate.now(),
+                        renewalDate
+                );
+
+        if (daysRemaining <= 0) {
+            throw new IllegalArgumentException(
+                    "A renovação já venceu. Regularize o plano antes de ativar a recorrência."
+            );
+        }
+
+        if (daysRemaining > 14) {
+            throw new IllegalArgumentException(
+                    "A renovação automática poderá ser ativada nos 14 dias anteriores ao vencimento."
+            );
+        }
+
+        List<SubscriptionCheckout> history =
+                checkoutRepository
+                        .findByUserIdOrderByCreatedAtDesc(
+                                user.getId()
+                        );
+
+        /*
+         * Se uma sessão Stripe já existe, reutilizamos.
+         * Se já foi concluída, a recorrência já está ativa.
+         */
+        for (SubscriptionCheckout item : history) {
+
+            boolean samePlan =
+                    item.getCatalogPlan() != null &&
+                    product.getCatalogPlan() != null &&
+                    item.getCatalogPlan()
+                            .getId()
+                            .equals(
+                                    product.getCatalogPlan()
+                                            .getId()
+                            );
+
+            if (
+                    !samePlan ||
+                    !STRIPE_PROVIDER.equalsIgnoreCase(
+                            item.getPaymentProvider()
+                    )
+            ) {
+                continue;
+            }
+
+            if (
+                    item.getStatus()
+                            == SubscriptionCheckoutStatus.APPROVED
+            ) {
+                throw new IllegalArgumentException(
+                        "A renovação automática pela Stripe já está ativa."
+                );
+            }
+
+            if (
+                    item.getStatus()
+                            == SubscriptionCheckoutStatus.PAYMENT_PENDING &&
+                    item.getExternalPaymentId() != null &&
+                    item.getExternalPaymentId()
+                            .startsWith(
+                                    "cs_"
+                            )
+            ) {
+                Map<?, ?> session =
+                        stripeSubscriptionService
+                                .getCheckoutSession(
+                                        item.getExternalPaymentId()
+                                );
+
+                String url =
+                        getMapString(
+                                session,
+                                "url"
+                        );
+
+                if (
+                        url != null &&
+                        !url.isBlank()
+                ) {
+                    return new SubscriptionPaymentResponse(
+                            item.getId(),
+                            item.getStatus().name(),
+                            STRIPE_PROVIDER,
+                            item.getExternalPaymentId(),
+                            url
+                    );
+                }
+            }
+        }
+
+        SubscriptionCheckout source =
+                history.stream()
+                        .filter(
+                                item ->
+                                        item.getCatalogPlan() != null &&
+                                        item.getCatalogPlan()
+                                                .getId()
+                                                .equals(
+                                                        product.getCatalogPlan()
+                                                                .getId()
+                                                ) &&
+                                        item.getStatus()
+                                                == SubscriptionCheckoutStatus.APPROVED &&
+                                        "USD".equalsIgnoreCase(
+                                                item.getCurrency()
+                                        ) &&
+                                        MERCADO_PAGO_ONE_TIME_PROVIDER
+                                                .equalsIgnoreCase(
+                                                        item.getPaymentProvider()
+                                                )
+                        )
+                        .findFirst()
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                "Não foi encontrado o primeiro mês internacional aprovado para este produto."
+                                        )
+                        );
+
+        SubscriptionCheckout migration =
+                new SubscriptionCheckout();
+
+        migration.setUser(
+                user
+        );
+
+        migration.setCatalogProduct(
+                source.getCatalogProduct()
+        );
+
+        migration.setCatalogPlan(
+                source.getCatalogPlan()
+        );
+
+        migration.setProductName(
+                source.getProductName()
+        );
+
+        migration.setPlanName(
+                source.getPlanName()
+        );
+
+        migration.setMonthlyPrice(
+                source.getMonthlyPrice()
+        );
+
+        /*
+         * A taxa inicial pertence somente à primeira contratação.
+         * A migração cria apenas a mensalidade recorrente.
+         */
+        migration.setSetupPrice(
+                BigDecimal.ZERO
+        );
+
+        migration.setCurrency(
+                "USD"
+        );
+
+        migration.setStatus(
+                SubscriptionCheckoutStatus.PENDING
+        );
+
+        migration.setExternalReference(
+                generateExternalReference()
+        );
+
+        migration.setTermsAcceptedAt(
+                LocalDateTime.now()
+        );
+
+        migration.setTermsVersion(
+                TERMS_VERSION
+        );
+
+        migration.setExpiresAt(
+                LocalDateTime.now()
+                        .plusMinutes(30)
+        );
+
+        migration =
+                checkoutRepository.save(
+                        migration
+                );
+
+        StripeSubscriptionService.StripeCheckoutSession stripeSession =
+                stripeSubscriptionService
+                        .createCheckoutSession(
+                                migration,
+                                user.getEmail(),
+                                renewalDate
+                        );
+
+        migration.setPaymentProvider(
+                STRIPE_PROVIDER
+        );
+
+        migration.setExternalPaymentId(
+                stripeSession.id()
+        );
+
+        migration.setStatus(
+                SubscriptionCheckoutStatus.PAYMENT_PENDING
+        );
+
+        SubscriptionCheckout saved =
+                checkoutRepository.save(
+                        migration
+                );
+
+        return new SubscriptionPaymentResponse(
+                saved.getId(),
+                saved.getStatus().name(),
+                STRIPE_PROVIDER,
+                stripeSession.id(),
+                stripeSession.url()
         );
     }
 

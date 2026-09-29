@@ -32,6 +32,8 @@ type ClientProduct = {
   subtitle: string | null;
   planName: string;
   monthlyPrice: number;
+  currency: string;
+  billingProvider: string | null;
   domain: string | null;
   systemUrl: string | null;
   status: "ACTIVE" | "SUSPENDED" | "CANCELLED";
@@ -52,6 +54,7 @@ type Invoice = {
   productId: number;
   productName: string;
   amount: number;
+  currency: string;
   status: InvoiceStatus;
   dueDate: string;
   paidAt: string | null;
@@ -60,6 +63,9 @@ type Invoice = {
 };
 
 const API_URL = "/backend";
+
+const TERMS_VERSION =
+  "2026-09-24";
 
 function getGreeting(
   locale: "pt-BR" | "en-US"
@@ -85,11 +91,12 @@ function getGreeting(
 
 function formatCurrency(
   value: number,
-  locale: "pt-BR" | "en-US"
+  locale: "pt-BR" | "en-US",
+  currency = "BRL"
 ) {
   return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "BRL",
+    currency: currency || "BRL",
   }).format(Number(value));
 }
 
@@ -157,6 +164,27 @@ function formatLongDate(
     day: "2-digit",
     month: "long",
   }).format(date);
+}
+
+function daysUntilLocalDate(
+  value: string | null
+) {
+  if (!value) {
+    return null;
+  }
+
+  const target = parseLocalDate(value);
+  const today = new Date();
+  const currentDay = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+
+  return Math.round(
+    (target.getTime() - currentDay.getTime()) /
+      86_400_000
+  );
 }
 
 function getProductStatusLabel(
@@ -300,6 +328,12 @@ export default function PainelPage() {
     useState<string | null>(null);
 
   const [invoicesError, setInvoicesError] =
+    useState<string | null>(null);
+
+  const [renewalLoading, setRenewalLoading] =
+    useState(false);
+
+  const [renewalError, setRenewalError] =
     useState<string | null>(null);
 
   useEffect(() => {
@@ -454,6 +488,19 @@ export default function PainelPage() {
   const primaryProduct =
     activeProducts[0] ?? products[0] ?? null;
 
+  const renewalDays =
+    daysUntilLocalDate(
+      primaryProduct?.renewalDate ?? null
+    );
+
+  const canActivateStripeRenewal =
+    primaryProduct?.status === "ACTIVE" &&
+    primaryProduct.currency === "USD" &&
+    primaryProduct.billingProvider !== "STRIPE" &&
+    renewalDays !== null &&
+    renewalDays > 0 &&
+    renewalDays <= 14;
+
   const normalizedInvoices = useMemo(
     () =>
       invoices.map((invoice) => ({
@@ -522,7 +569,11 @@ export default function PainelPage() {
           ? formatShortDate(nextInvoice.dueDate, locale)
           : "—",
         detail: nextInvoice
-          ? formatCurrency(nextInvoice.amount, locale)
+          ? formatCurrency(
+              nextInvoice.amount,
+              locale,
+              nextInvoice.currency
+            )
           : "Nenhuma cobrança pendente",
         icon: CalendarDays,
       },
@@ -592,6 +643,116 @@ export default function PainelPage() {
       },
     ];
   }, [primaryProduct]);
+
+  async function activateStripeRenewal() {
+    if (
+      !primaryProduct ||
+      renewalLoading
+    ) {
+      return;
+    }
+
+    try {
+      setRenewalLoading(true);
+      setRenewalError(null);
+
+      const csrfResponse = await fetch(
+        `${API_URL}/api/auth/csrf`,
+        {
+          credentials: "include",
+          cache: "no-store",
+        }
+      );
+
+      if (!csrfResponse.ok) {
+        throw new Error(
+          text(
+            "Não foi possível validar sua sessão.",
+            "We could not validate your session."
+          )
+        );
+      }
+
+      const csrfData: {
+        token: string;
+        headerName: string;
+      } = await csrfResponse.json();
+
+      const response = await fetch(
+        `${API_URL}/api/client/products/${primaryProduct.id}/stripe-renewal`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            [csrfData.headerName]: csrfData.token,
+          },
+          body: JSON.stringify({
+            accepted: true,
+            termsVersion: TERMS_VERSION,
+          }),
+        }
+      );
+
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+        window.location.href = "/login";
+        return;
+      }
+
+      if (!response.ok) {
+        let message = text(
+          "Não foi possível ativar a renovação automática.",
+          "We could not enable automatic renewal."
+        );
+
+        try {
+          const data = await response.json();
+          message =
+            data.message ??
+            data.error ??
+            data.detail ??
+            message;
+        } catch {
+          // Mantém a mensagem padrão.
+        }
+
+        throw new Error(message);
+      }
+
+      const data: {
+        paymentUrl?: string;
+      } = await response.json();
+
+      if (!data.paymentUrl) {
+        throw new Error(
+          text(
+            "A Stripe não retornou uma URL válida.",
+            "Stripe did not return a valid checkout URL."
+          )
+        );
+      }
+
+      window.location.href =
+        data.paymentUrl;
+
+    } catch (error) {
+      setRenewalError(
+        error instanceof Error
+          ? error.message
+          : text(
+              "Não foi possível ativar a renovação automática.",
+              "We could not enable automatic renewal."
+            )
+      );
+
+    } finally {
+      setRenewalLoading(false);
+    }
+  }
 
   return (
     <div className="relative overflow-hidden">
@@ -822,7 +983,8 @@ export default function PainelPage() {
                         <div className="mt-3 text-sm text-white/70">
                           {formatCurrency(
                             primaryProduct.monthlyPrice,
-                            locale
+                            locale,
+                            primaryProduct.currency
                           )}
                         </div>
                       </div>
@@ -839,6 +1001,56 @@ export default function PainelPage() {
                         </div>
                       </div>
                     </div>
+
+                    {canActivateStripeRenewal ? (
+                      <div className="rounded-2xl border border-violet-300/[0.12] bg-violet-300/[0.045] p-4">
+                        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                          <div>
+                            <div className="flex items-center gap-2 text-xs font-medium text-violet-100/80">
+                              <CreditCard size={14} />
+                              {text(
+                                "Ative a renovação automática",
+                                "Enable automatic renewal"
+                              )}
+                            </div>
+
+                            <p className="mt-2 max-w-xl text-[11px] leading-5 text-white/30">
+                              {text(
+                                `Seu período atual já está pago. Cadastre o cartão agora e a primeira cobrança Stripe acontecerá somente em ${formatDate(primaryProduct.renewalDate, locale)}.`,
+                                `Your current period is already paid. Add your card now and the first Stripe charge will only happen on ${formatDate(primaryProduct.renewalDate, locale)}.`
+                              )}
+                            </p>
+
+                            {renewalError ? (
+                              <p className="mt-2 text-[10px] text-red-200/60">
+                                {renewalError}
+                              </p>
+                            ) : null}
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={renewalLoading}
+                            onClick={activateStripeRenewal}
+                            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-4 text-xs font-semibold text-[#07101c] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {renewalLoading ? (
+                              <Loader2
+                                size={14}
+                                className="animate-spin"
+                              />
+                            ) : (
+                              <CreditCard size={14} />
+                            )}
+
+                            {text(
+                              "Ativar renovação",
+                              "Enable renewal"
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
 
                     <div className="flex flex-col justify-between gap-4 border-t border-white/[0.05] pt-5 sm:flex-row sm:items-center">
                       <div className="flex items-center gap-2 text-xs text-white/25">
@@ -1089,7 +1301,8 @@ export default function PainelPage() {
                       <span className="text-xs text-white/55">
                         {formatCurrency(
                           invoice.amount,
-                          locale
+                          locale,
+                          invoice.currency
                         )}
                       </span>
 
@@ -1150,7 +1363,8 @@ export default function PainelPage() {
                   <div className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
                     {formatCurrency(
                       nextInvoice.amount,
-                      locale
+                      locale,
+                      nextInvoice.currency
                     )}
                   </div>
 

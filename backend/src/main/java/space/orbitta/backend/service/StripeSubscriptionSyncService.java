@@ -366,20 +366,34 @@ public class StripeSubscriptionSyncService {
                                                 : BigDecimal.ZERO
                                 );
 
-        ensureInvoice(
-                checkout,
-                product,
-                invoiceId != null
-                        ? invoiceId
-                        : getString(
-                                session,
-                                "id"
-                        ),
-                amount,
-                checkout.getCurrency(),
-                InvoiceStatus.PAID,
-                true
-        );
+        /*
+         * Checkout com billing_cycle_anchor + proration_behavior=none
+         * conclui com no_payment_required. Nessa etapa só cadastramos
+         * a recorrência; ainda não existe cobrança para registrar.
+         */
+        if (
+                "paid".equalsIgnoreCase(
+                        paymentStatus
+                ) &&
+                amount.compareTo(
+                        BigDecimal.ZERO
+                ) > 0
+        ) {
+            ensureInvoice(
+                    checkout,
+                    product,
+                    invoiceId != null
+                            ? invoiceId
+                            : getString(
+                                    session,
+                                    "id"
+                            ),
+                    amount,
+                    checkout.getCurrency(),
+                    InvoiceStatus.PAID,
+                    true
+            );
+        }
 
         checkout.setPaymentProvider(
                 PROVIDER
@@ -822,6 +836,14 @@ public class StripeSubscriptionSyncService {
 
         product.setMonthlyPrice(
                 checkout.getMonthlyPrice()
+        );
+
+        product.setCurrency(
+                checkout.getCurrency()
+        );
+
+        product.setBillingProvider(
+                PROVIDER
         );
 
         product.setStatus(

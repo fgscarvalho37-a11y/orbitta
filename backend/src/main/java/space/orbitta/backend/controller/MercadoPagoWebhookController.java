@@ -132,6 +132,12 @@ public class MercadoPagoWebhookController {
                      */
                 }
 
+                case "payment" ->
+
+                        syncService.syncOneTimePaymentById(
+                                dataId
+                        );
+
                 default -> {
 
                     /*

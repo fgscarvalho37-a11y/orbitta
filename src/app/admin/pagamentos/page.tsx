@@ -153,8 +153,8 @@ export default function AdminPaymentsPage() {
 
             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/30">
               {text(
-                "Acompanhe os gateways usados nas assinaturas e edite os preços internacionais do catálogo.",
-                "Monitor subscription gateways and edit international catalog pricing."
+                "Acompanhe o Mercado Pago como gateway principal e mantenha a Stripe conectada para a migração recorrente futura.",
+                "Use Mercado Pago as the primary gateway while keeping Stripe connected for the future recurring migration."
               )}
             </p>
           </div>
@@ -218,8 +218,8 @@ export default function AdminPaymentsPage() {
 
                 <p className="mt-2 text-sm leading-6 text-white/30">
                   {text(
-                    "Gateway principal para assinaturas cobradas em BRL.",
-                    "Primary gateway for subscriptions billed in BRL."
+                    "Gateway principal da Orbitta agora: Brasil em BRL e primeiro pagamento dos EUA convertido de USD para BRL.",
+                    "Orbitta's primary gateway now: Brazil in BRL and the first US payment converted from USD to BRL."
                   )}
                 </p>
 
@@ -239,7 +239,7 @@ export default function AdminPaymentsPage() {
                       "Roteamento",
                       "Routing"
                     )}
-                    value="BRL"
+                    value="BRL + USD → BRL"
                   />
                 </div>
               </article>
@@ -292,8 +292,8 @@ export default function AdminPaymentsPage() {
 
                 <p className="mt-2 text-sm leading-6 text-white/30">
                   {text(
-                    "Gateway das assinaturas internacionais do Orbitta.",
-                    "Gateway for Orbitta international subscriptions."
+                    "Permanece conectada e pronta, mas fica fora do primeiro pagamento por enquanto. Será usada na migração para recorrência automática.",
+                    "Remains connected and ready, but stays out of the first payment for now. It will be used when customers migrate to automatic recurring billing."
                   )}
                 </p>
 
@@ -312,8 +312,8 @@ export default function AdminPaymentsPage() {
                       "Routing"
                     )}
                     value={text(
-                      "Moedas diferentes de BRL",
-                      "Currencies other than BRL"
+                      "Reserva / recorrência futura",
+                      "Standby / future recurring billing"
                     )}
                   />
                 </div>
@@ -342,8 +342,8 @@ export default function AdminPaymentsPage() {
 
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-white/30">
                     {text(
-                      "Cada plano pode ter sua própria moeda, mensalidade e taxa inicial. BRL vai para Mercado Pago; USD, EUR, GBP, CAD e outras moedas vão para Stripe.",
-                      "Each plan can have its own currency, monthly price and setup fee. BRL routes to Mercado Pago; USD, EUR, GBP, CAD and other currencies route to Stripe."
+                      "Por enquanto só Brasil e Estados Unidos estão ativos. BRL vai direto ao Mercado Pago; nos EUA o preço é exibido em USD e convertido para BRL no checkout do Mercado Pago.",
+                      "For now, only Brazil and the United States are active. BRL goes directly to Mercado Pago; in the US the price is shown in USD and converted to BRL at Mercado Pago checkout."
                     )}
                   </p>
                 </div>

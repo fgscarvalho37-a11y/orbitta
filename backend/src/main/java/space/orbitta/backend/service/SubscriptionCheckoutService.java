@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import space.orbitta.backend.dto.CreateSubscriptionRequest;
+import space.orbitta.backend.dto.MercadoPagoOneTimeResponse;
 import space.orbitta.backend.dto.MercadoPagoSubscriptionResponse;
 import space.orbitta.backend.dto.SubscriptionCheckoutResponse;
 import space.orbitta.backend.dto.SubscriptionPaymentResponse;
@@ -36,6 +37,9 @@ public class SubscriptionCheckoutService {
     private static final String MERCADO_PAGO_PROVIDER =
             "MERCADO_PAGO";
 
+    private static final String MERCADO_PAGO_ONE_TIME_PROVIDER =
+            "MERCADO_PAGO_ONE_TIME";
+
     private static final String STRIPE_PROVIDER =
             StripeSubscriptionSyncService.PROVIDER;
 
@@ -52,7 +56,11 @@ public class SubscriptionCheckoutService {
 
     private final MercadoPagoSubscriptionService mercadoPagoSubscriptionService;
 
+    private final MercadoPagoOneTimeService mercadoPagoOneTimeService;
+
     private final MercadoPagoSubscriptionSyncService mercadoPagoSubscriptionSyncService;
+
+    private final FxRateService fxRateService;
 
     private final StripeSubscriptionService stripeSubscriptionService;
 
@@ -64,7 +72,9 @@ public class SubscriptionCheckoutService {
             UserService userService,
             CatalogService catalogService,
             MercadoPagoSubscriptionService mercadoPagoSubscriptionService,
+            MercadoPagoOneTimeService mercadoPagoOneTimeService,
             MercadoPagoSubscriptionSyncService mercadoPagoSubscriptionSyncService,
+            FxRateService fxRateService,
             StripeSubscriptionService stripeSubscriptionService,
             StripeSubscriptionSyncService stripeSubscriptionSyncService
     ) {
@@ -83,8 +93,14 @@ public class SubscriptionCheckoutService {
         this.mercadoPagoSubscriptionService =
                 mercadoPagoSubscriptionService;
 
+        this.mercadoPagoOneTimeService =
+                mercadoPagoOneTimeService;
+
         this.mercadoPagoSubscriptionSyncService =
                 mercadoPagoSubscriptionSyncService;
+
+        this.fxRateService =
+                fxRateService;
 
         this.stripeSubscriptionService =
                 stripeSubscriptionService;
@@ -251,7 +267,23 @@ public class SubscriptionCheckoutService {
                                         currency
                                 );
 
-                if (samePrice) {
+                boolean settlementReady =
+                        !"USD".equalsIgnoreCase(
+                                currency
+                        )
+                                ||
+                                (
+                                        checkout.getSettlementAmount() != null &&
+                                        "BRL".equalsIgnoreCase(
+                                                checkout.getSettlementCurrency()
+                                        ) &&
+                                        checkout.getFxRate() != null
+                                );
+
+                if (
+                        samePrice &&
+                        settlementReady
+                ) {
                     return SubscriptionCheckoutResponse.from(
                             checkout
                     );
@@ -301,6 +333,60 @@ public class SubscriptionCheckoutService {
         checkout.setCurrency(
                 currency
         );
+
+        BigDecimal totalPrice =
+                monthlyPrice.add(
+                        setupPrice
+                );
+
+        if (
+                "USD".equalsIgnoreCase(
+                        currency
+                )
+        ) {
+            FxRateService.FxQuote quote =
+                    fxRateService
+                            .quoteUsdToBrl(
+                                    totalPrice
+                            );
+
+            checkout.setSettlementAmount(
+                    quote.settlementAmount()
+            );
+
+            checkout.setSettlementCurrency(
+                    quote.settlementCurrency()
+            );
+
+            checkout.setFxRate(
+                    quote.rate()
+            );
+
+            checkout.setFxQuotedAt(
+                    quote.quotedAt()
+            );
+
+        } else if (
+                "BRL".equalsIgnoreCase(
+                        currency
+                )
+        ) {
+            checkout.setSettlementAmount(
+                    totalPrice
+            );
+
+            checkout.setSettlementCurrency(
+                    "BRL"
+            );
+
+            checkout.setFxRate(
+                    BigDecimal.ONE
+            );
+
+            checkout.setFxQuotedAt(
+                    LocalDateTime.now()
+            );
+        }
 
         checkout.setStatus(
                 SubscriptionCheckoutStatus.PENDING
@@ -654,6 +740,26 @@ public class SubscriptionCheckoutService {
             }
 
             if (
+                    MERCADO_PAGO_ONE_TIME_PROVIDER.equalsIgnoreCase(
+                            checkout.getPaymentProvider()
+                    )
+            ) {
+                String paymentUrl =
+                        mercadoPagoOneTimeService
+                                .getPreferenceCheckoutUrl(
+                                        checkout.getExternalPaymentId()
+                                );
+
+                return new SubscriptionPaymentResponse(
+                        checkout.getId(),
+                        checkout.getStatus().name(),
+                        MERCADO_PAGO_ONE_TIME_PROVIDER,
+                        checkout.getExternalPaymentId(),
+                        paymentUrl
+                );
+            }
+
+            if (
                     STRIPE_PROVIDER.equalsIgnoreCase(
                             checkout.getPaymentProvider()
                     )
@@ -739,6 +845,44 @@ public class SubscriptionCheckoutService {
 
             throw new IllegalArgumentException(
                     "Esta contratação expirou."
+            );
+        }
+
+        if (
+                shouldUseMercadoPagoOneTime(
+                        checkout
+                )
+        ) {
+            MercadoPagoOneTimeResponse mercadoPagoResponse =
+                    mercadoPagoOneTimeService
+                            .createPreference(
+                                    checkout,
+                                    user.getEmail()
+                            );
+
+            checkout.setPaymentProvider(
+                    MERCADO_PAGO_ONE_TIME_PROVIDER
+            );
+
+            checkout.setExternalPaymentId(
+                    mercadoPagoResponse.id()
+            );
+
+            checkout.setStatus(
+                    SubscriptionCheckoutStatus.PAYMENT_PENDING
+            );
+
+            SubscriptionCheckout saved =
+                    checkoutRepository.save(
+                            checkout
+                    );
+
+            return new SubscriptionPaymentResponse(
+                    saved.getId(),
+                    saved.getStatus().name(),
+                    MERCADO_PAGO_ONE_TIME_PROVIDER,
+                    mercadoPagoResponse.id(),
+                    mercadoPagoResponse.initPoint()
             );
         }
 
@@ -832,6 +976,18 @@ public class SubscriptionCheckoutService {
 
         if (
                 checkout != null &&
+                MERCADO_PAGO_ONE_TIME_PROVIDER.equalsIgnoreCase(
+                        checkout.getPaymentProvider()
+                )
+        ) {
+            return mercadoPagoSubscriptionSyncService
+                    .syncOneTimeCheckout(
+                            checkout
+                    );
+        }
+
+        if (
+                checkout != null &&
                 STRIPE_PROVIDER.equalsIgnoreCase(
                         checkout.getPaymentProvider()
                 )
@@ -848,6 +1004,20 @@ public class SubscriptionCheckoutService {
                 );
     }
 
+    private boolean shouldUseMercadoPagoOneTime(
+            SubscriptionCheckout checkout
+    ) {
+
+        return checkout != null &&
+                "USD".equalsIgnoreCase(
+                        checkout.getCurrency()
+                ) &&
+                checkout.getSettlementAmount() != null &&
+                "BRL".equalsIgnoreCase(
+                        checkout.getSettlementCurrency()
+                );
+    }
+
     private boolean shouldUseStripe(
             SubscriptionCheckout checkout
     ) {
@@ -860,12 +1030,23 @@ public class SubscriptionCheckoutService {
         }
 
         /*
-         * Mantemos Mercado Pago para BRL/Brasil.
-         * Planos internacionais do catálogo usam Stripe.
+         * BRL continua na assinatura Mercado Pago.
+         *
+         * USD usa, temporariamente, o primeiro mês como
+         * pagamento único Mercado Pago convertido para BRL.
+         *
+         * Stripe permanece conectada como fallback para
+         * outras moedas e para a migração recorrente futura.
          */
+        String currency =
+                checkout.getCurrency();
+
         return !"BRL".equalsIgnoreCase(
-                checkout.getCurrency()
-        );
+                currency
+        ) &&
+                !"USD".equalsIgnoreCase(
+                        currency
+                );
     }
 
     private String getMapString(

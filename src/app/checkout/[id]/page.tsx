@@ -40,6 +40,10 @@ type SubscriptionCheckout = {
   setupPrice: number;
   totalPrice: number;
   currency: string;
+  settlementAmount: number | null;
+  settlementCurrency: string | null;
+  fxRate: number | null;
+  fxQuotedAt: string | null;
   status: CheckoutStatus;
   paymentProvider: string | null;
   externalReference: string | null;
@@ -357,10 +361,17 @@ export default function CheckoutPage({
   );
 
   const gatewayName =
-    checkout.paymentProvider === "STRIPE" ||
-    checkout.currency.toUpperCase() !== "BRL"
+    checkout.paymentProvider === "STRIPE"
       ? "Stripe"
       : "Mercado Pago";
+
+  const isUsdCheckout =
+    checkout.currency.toUpperCase() === "USD";
+
+  const hasBrlSettlement =
+    isUsdCheckout &&
+    checkout.settlementAmount !== null &&
+    checkout.settlementCurrency?.toUpperCase() === "BRL";
 
   const canPay =
     checkout.status === "PENDING" ||
@@ -442,7 +453,15 @@ export default function CheckoutPage({
                     </div>
 
                     <div className="mt-1 text-[10px] text-white/20">
-                      {text("Cobrança recorrente mensal", "Recurring monthly charge")}
+                      {isUsdCheckout
+                        ? text(
+                            "Primeiro mês pago uma vez; renovação recorrente será ativada depois.",
+                            "First month is a one-time payment; recurring renewal will be activated later."
+                          )
+                        : text(
+                            "Cobrança recorrente mensal",
+                            "Recurring monthly charge"
+                          )}
                     </div>
                   </div>
 
@@ -476,6 +495,44 @@ export default function CheckoutPage({
                       : text("Grátis", "Free")}
                   </div>
                 </div>
+
+                {hasBrlSettlement ? (
+                  <div className="rounded-2xl border border-cyan-300/[0.08] bg-cyan-300/[0.025] px-5 py-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="text-xs text-white/55">
+                          {text(
+                            "Cobrança no Mercado Pago",
+                            "Mercado Pago charge"
+                          )}
+                        </div>
+
+                        <div className="mt-1 text-[10px] leading-4 text-white/25">
+                          {text(
+                            "US$ 79,90 é convertido para reais no início deste checkout e o valor fica travado até ele expirar.",
+                            "US$79.90 is converted to BRL when this checkout starts, and the converted amount stays locked until it expires."
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        <div className="text-sm font-semibold text-cyan-100/80">
+                          {formatCurrency(
+                            checkout.settlementAmount ?? 0,
+                            "BRL",
+                            "pt-BR"
+                          )}
+                        </div>
+
+                        {checkout.fxRate ? (
+                          <div className="mt-1 text-[9px] text-white/20">
+                            1 USD = {Number(checkout.fxRate).toFixed(4)} BRL
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
 
               </div>
             </div>
@@ -611,7 +668,15 @@ export default function CheckoutPage({
                     >
                       {text("Política de Privacidade", "Privacy Policy")}
                     </Link>
-                    . {text("Estou ciente da cobrança recorrente mensal e da taxa inicial indicada neste checkout.", "I understand the recurring monthly charge and the setup fee shown in this checkout.")}
+                    . {isUsdCheckout
+                      ? text(
+                          "Estou ciente de que o primeiro mês será pago uma única vez pelo Mercado Pago em BRL, após conversão do valor exibido em USD.",
+                          "I understand that the first month will be paid once through Mercado Pago in BRL after converting the displayed USD amount."
+                        )
+                      : text(
+                          "Estou ciente da cobrança recorrente mensal e da taxa inicial indicada neste checkout.",
+                          "I understand the recurring monthly charge and the setup fee shown in this checkout."
+                        )}
                   </span>
                 </label>
 
@@ -632,7 +697,15 @@ export default function CheckoutPage({
                 ) : (
                   <>
                     <CreditCard size={16} />
-                    {text("Ir para pagamento", "Continue to payment")}
+                    {gatewayName === "Mercado Pago"
+                      ? text(
+                          "Pagar com Mercado Pago",
+                          "Pay with Mercado Pago"
+                        )
+                      : text(
+                          "Ir para pagamento",
+                          "Continue to payment"
+                        )}
                   </>
                 )}
                 </button>
@@ -660,7 +733,15 @@ export default function CheckoutPage({
               </p>
             ) : canPay ? (
               <p className="mt-3 text-center text-[10px] leading-4 text-white/20">
-                {text(`Você será redirecionado para ${gatewayName} para concluir a assinatura.`, `You will be redirected to ${gatewayName} to complete your subscription.`)}
+                {isUsdCheckout
+                  ? text(
+                      `Você será redirecionado para ${gatewayName}. A primeira cobrança será processada em BRL.`,
+                      `You will be redirected to ${gatewayName}. The first charge will be processed in BRL.`
+                    )
+                  : text(
+                      `Você será redirecionado para ${gatewayName} para concluir a assinatura.`,
+                      `You will be redirected to ${gatewayName} to complete your subscription.`
+                    )}
               </p>
             ) : null}
 

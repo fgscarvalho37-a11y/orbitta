@@ -103,6 +103,31 @@ public class SubscriptionCheckout {
     )
     private String currency;
 
+    @Column(
+            name = "settlement_amount",
+            precision = 12,
+            scale = 2
+    )
+    private BigDecimal settlementAmount;
+
+    @Column(
+            name = "settlement_currency",
+            length = 3
+    )
+    private String settlementCurrency;
+
+    @Column(
+            name = "fx_rate",
+            precision = 18,
+            scale = 8
+    )
+    private BigDecimal fxRate;
+
+    @Column(
+            name = "fx_quoted_at"
+    )
+    private LocalDateTime fxQuotedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(
             nullable = false,
@@ -262,6 +287,50 @@ public class SubscriptionCheckout {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public BigDecimal getSettlementAmount() {
+        return settlementAmount;
+    }
+
+    public void setSettlementAmount(
+            BigDecimal settlementAmount
+    ) {
+        this.settlementAmount =
+                settlementAmount;
+    }
+
+    public String getSettlementCurrency() {
+        return settlementCurrency;
+    }
+
+    public void setSettlementCurrency(
+            String settlementCurrency
+    ) {
+        this.settlementCurrency =
+                settlementCurrency;
+    }
+
+    public BigDecimal getFxRate() {
+        return fxRate;
+    }
+
+    public void setFxRate(
+            BigDecimal fxRate
+    ) {
+        this.fxRate =
+                fxRate;
+    }
+
+    public LocalDateTime getFxQuotedAt() {
+        return fxQuotedAt;
+    }
+
+    public void setFxQuotedAt(
+            LocalDateTime fxQuotedAt
+    ) {
+        this.fxQuotedAt =
+                fxQuotedAt;
     }
 
     public SubscriptionCheckoutStatus getStatus() {

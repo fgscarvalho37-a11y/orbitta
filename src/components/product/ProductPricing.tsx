@@ -69,10 +69,7 @@ type ProductPricingProps = {
 
 type MarketCode =
   | "BR"
-  | "US"
-  | "EU"
-  | "GB"
-  | "CA";
+  | "US";
 
 const MARKETS: Array<{
   code: MarketCode;
@@ -92,48 +89,7 @@ const MARKETS: Array<{
     en: "United States",
     currency: "USD",
   },
-  {
-    code: "EU",
-    pt: "Europa",
-    en: "Europe",
-    currency: "EUR",
-  },
-  {
-    code: "GB",
-    pt: "Reino Unido",
-    en: "United Kingdom",
-    currency: "GBP",
-  },
-  {
-    code: "CA",
-    pt: "Canadá",
-    en: "Canada",
-    currency: "CAD",
-  },
 ];
-
-const EU_COUNTRIES = new Set([
-  "AT",
-  "BE",
-  "CY",
-  "DE",
-  "EE",
-  "ES",
-  "FI",
-  "FR",
-  "GR",
-  "HR",
-  "IE",
-  "IT",
-  "LT",
-  "LU",
-  "LV",
-  "MT",
-  "NL",
-  "PT",
-  "SI",
-  "SK",
-]);
 
 function detectMarket(): MarketCode {
   const languages =
@@ -162,20 +118,6 @@ function detectMarket(): MarketCode {
 
     if (region === "US") {
       return "US";
-    }
-
-    if (region === "GB") {
-      return "GB";
-    }
-
-    if (region === "CA") {
-      return "CA";
-    }
-
-    if (
-      EU_COUNTRIES.has(region)
-    ) {
-      return "EU";
     }
   }
 

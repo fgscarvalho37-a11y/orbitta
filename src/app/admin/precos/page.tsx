@@ -68,28 +68,7 @@ const MARKETS = [
     currency: "USD",
     pt: "Estados Unidos",
     en: "United States",
-    gateway: "Stripe",
-  },
-  {
-    code: "EU",
-    currency: "EUR",
-    pt: "Europa / Zona do Euro",
-    en: "Europe / Eurozone",
-    gateway: "Stripe",
-  },
-  {
-    code: "GB",
-    currency: "GBP",
-    pt: "Reino Unido",
-    en: "United Kingdom",
-    gateway: "Stripe",
-  },
-  {
-    code: "CA",
-    currency: "CAD",
-    pt: "Canadá",
-    en: "Canada",
-    gateway: "Stripe",
+    gateway: "Mercado Pago",
   },
 ] as const;
 
@@ -433,8 +412,8 @@ export default function AdminRegionalPricingPage() {
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-white/30">
               {text(
-                "Um único plano pode ter valores diferentes por mercado. O Brasil usa Mercado Pago; preços internacionais são cobrados pela Stripe.",
-                "One plan can have different prices by market. Brazil uses Mercado Pago; international prices are billed through Stripe."
+                "Por enquanto a Orbitta vende apenas no Brasil e nos Estados Unidos. Brasil cobra em BRL; nos EUA o preço comercial é em USD e o primeiro pagamento é convertido para BRL no Mercado Pago.",
+                "For now, Orbitta sells only in Brazil and the United States. Brazil is billed in BRL; in the US the commercial price is shown in USD and the first payment is converted to BRL for Mercado Pago."
               )}
             </p>
           </div>
@@ -464,8 +443,8 @@ export default function AdminRegionalPricingPage() {
 
         <div className="mt-6 rounded-2xl border border-cyan-300/[0.08] bg-cyan-300/[0.025] px-5 py-4 text-xs leading-6 text-white/35">
           {text(
-            "O site tenta detectar o mercado pelo idioma/região do navegador, e o visitante também pode trocar a região manualmente. Nenhum câmbio automático é aplicado: você define o preço comercial de cada mercado.",
-            "The website tries to detect the market from the browser language/region, and visitors can also switch markets manually. No automatic FX conversion is applied: you set the commercial price for each market."
+            "O site detecta Brasil ou Estados Unidos pelo navegador e permite troca manual. O preço comercial continua fixo em cada moeda; apenas o checkout dos EUA converte o valor para BRL no momento da cobrança pelo Mercado Pago.",
+            "The website detects Brazil or the United States from the browser and allows manual switching. The commercial price remains fixed in each currency; only the US checkout converts the amount to BRL when charging through Mercado Pago."
           )}
         </div>
 

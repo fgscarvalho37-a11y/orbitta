@@ -47,6 +47,15 @@ public class MercadoPagoSubscriptionSyncService {
     private static final String AUTHORIZED_PAYMENT_URL =
             "https://api.mercadopago.com/authorized_payments/";
 
+    private static final String PAYMENT_URL =
+            "https://api.mercadopago.com/v1/payments/";
+
+    private static final String PAYMENT_SEARCH_URL =
+            "https://api.mercadopago.com/v1/payments/search";
+
+    private static final String ONE_TIME_PROVIDER =
+            "MERCADO_PAGO_ONE_TIME";
+
     private final RestTemplate restTemplate;
 
     private final SubscriptionCheckoutRepository checkoutRepository;
@@ -101,6 +110,16 @@ public class MercadoPagoSubscriptionSyncService {
         }
 
         validateConfiguration();
+
+        if (
+                ONE_TIME_PROVIDER.equalsIgnoreCase(
+                        checkout.getPaymentProvider()
+                )
+        ) {
+            return syncOneTimeCheckout(
+                    checkout
+            );
+        }
 
         /*
          * Se já foi aprovado anteriormente, o externalPaymentId
@@ -191,6 +210,334 @@ public class MercadoPagoSubscriptionSyncService {
                 checkout,
                 subscription,
                 approvedPayment
+        );
+    }
+
+    /*
+     * =========================================================
+     * PAGAMENTO ÚNICO INTERNACIONAL - MERCADO PAGO
+     * =========================================================
+     */
+    @Transactional
+    public SubscriptionCheckout syncOneTimeCheckout(
+            SubscriptionCheckout checkout
+    ) {
+
+        if (checkout == null) {
+            throw new IllegalArgumentException(
+                    "Checkout é obrigatório."
+            );
+        }
+
+        validateConfiguration();
+
+        if (
+                checkout.getStatus()
+                        == SubscriptionCheckoutStatus.APPROVED
+        ) {
+            return checkout;
+        }
+
+        if (
+                checkout.getExternalReference() == null ||
+                checkout.getExternalReference().isBlank()
+        ) {
+            return checkout;
+        }
+
+        Map<?, ?> payment =
+                findApprovedOneTimePayment(
+                        checkout.getExternalReference()
+                );
+
+        if (payment == null) {
+            return checkout;
+        }
+
+        return finalizeApprovedOneTimePayment(
+                checkout,
+                payment
+        );
+    }
+
+    @Transactional
+    public void syncOneTimePaymentById(
+            String paymentId
+    ) {
+
+        validateConfiguration();
+
+        if (
+                paymentId == null ||
+                paymentId.isBlank()
+        ) {
+            return;
+        }
+
+        Map<?, ?> payment =
+                getOneTimePayment(
+                        paymentId
+                );
+
+        if (
+                payment == null ||
+                !"approved".equalsIgnoreCase(
+                        getString(
+                                payment,
+                                "status"
+                        )
+                )
+        ) {
+            return;
+        }
+
+        String externalReference =
+                getString(
+                        payment,
+                        "external_reference"
+                );
+
+        if (
+                externalReference == null ||
+                externalReference.isBlank()
+        ) {
+            return;
+        }
+
+        SubscriptionCheckout checkout =
+                checkoutRepository
+                        .findByExternalReference(
+                                externalReference
+                        )
+                        .orElse(
+                                null
+                        );
+
+        if (
+                checkout == null ||
+                !ONE_TIME_PROVIDER.equalsIgnoreCase(
+                        checkout.getPaymentProvider()
+                )
+        ) {
+            return;
+        }
+
+        finalizeApprovedOneTimePayment(
+                checkout,
+                payment
+        );
+    }
+
+    private SubscriptionCheckout finalizeApprovedOneTimePayment(
+            SubscriptionCheckout checkout,
+            Map<?, ?> payment
+    ) {
+
+        if (
+                checkout.getStatus()
+                        == SubscriptionCheckoutStatus.APPROVED
+        ) {
+            return checkout;
+        }
+
+        String status =
+                getString(
+                        payment,
+                        "status"
+                );
+
+        if (
+                !"approved".equalsIgnoreCase(
+                        status
+                )
+        ) {
+            return checkout;
+        }
+
+        String externalReference =
+                getString(
+                        payment,
+                        "external_reference"
+                );
+
+        if (
+                externalReference == null ||
+                !externalReference.equals(
+                        checkout.getExternalReference()
+                )
+        ) {
+            throw new IllegalStateException(
+                    "Pagamento Mercado Pago não pertence a este checkout."
+            );
+        }
+
+        String currency =
+                getString(
+                        payment,
+                        "currency_id"
+                );
+
+        BigDecimal amount =
+                getBigDecimal(
+                        payment,
+                        "transaction_amount"
+                );
+
+        if (
+                !"BRL".equalsIgnoreCase(
+                        currency
+                ) ||
+                amount == null ||
+                checkout.getSettlementAmount() == null ||
+                amount.compareTo(
+                        checkout.getSettlementAmount()
+                ) != 0
+        ) {
+            throw new IllegalStateException(
+                    "Valor recebido no Mercado Pago não corresponde ao checkout."
+            );
+        }
+
+        LocalDate paidDate =
+                parseDate(
+                        getString(
+                                payment,
+                                "date_approved"
+                        )
+                );
+
+        if (paidDate == null) {
+            paidDate =
+                    LocalDate.now();
+        }
+
+        ClientProduct product =
+                ensureClientProduct(
+                        checkout,
+                        Map.of(
+                                "next_payment_date",
+                                paidDate
+                                        .plusMonths(1)
+                                        .toString()
+                        )
+                );
+
+        ensureInvoice(
+                checkout,
+                product,
+                payment
+        );
+
+        checkout.setStatus(
+                SubscriptionCheckoutStatus.APPROVED
+        );
+
+        if (
+                checkout.getApprovedAt() == null
+        ) {
+            checkout.setApprovedAt(
+                    LocalDateTime.now()
+            );
+        }
+
+        String paymentId =
+                getString(
+                        payment,
+                        "id"
+                );
+
+        if (
+                paymentId != null &&
+                !paymentId.isBlank()
+        ) {
+            checkout.setExternalPaymentId(
+                    paymentId
+            );
+        }
+
+        checkout.setPaymentProvider(
+                ONE_TIME_PROVIDER
+        );
+
+        return checkoutRepository.save(
+                checkout
+        );
+    }
+
+    private Map<?, ?> findApprovedOneTimePayment(
+            String externalReference
+    ) {
+
+        String url =
+                PAYMENT_SEARCH_URL
+                        + "?sort=date_created"
+                        + "&criteria=desc"
+                        + "&status=approved"
+                        + "&external_reference="
+                        + encode(
+                                externalReference
+                        );
+
+        Map<?, ?> body =
+                getMap(
+                        url
+                );
+
+        if (body == null) {
+            return null;
+        }
+
+        Object resultsValue =
+                body.get(
+                        "results"
+                );
+
+        if (!(resultsValue instanceof List<?> results)) {
+            return null;
+        }
+
+        for (Object item : results) {
+
+            if (!(item instanceof Map<?, ?> payment)) {
+                continue;
+            }
+
+            String status =
+                    getString(
+                            payment,
+                            "status"
+                    );
+
+            String paymentReference =
+                    getString(
+                            payment,
+                            "external_reference"
+                    );
+
+            if (
+                    "approved".equalsIgnoreCase(
+                            status
+                    ) &&
+                    externalReference.equals(
+                            paymentReference
+                    )
+            ) {
+                return payment;
+            }
+        }
+
+        return null;
+    }
+
+    private Map<?, ?> getOneTimePayment(
+            String paymentId
+    ) {
+
+        return getMap(
+                PAYMENT_URL
+                        + encode(
+                                paymentId
+                        )
         );
     }
 
@@ -1210,8 +1557,17 @@ public class MercadoPagoSubscriptionSyncService {
                 amount
         );
 
+        String paymentCurrency =
+                getString(
+                        authorizedPayment,
+                        "currency_id"
+                );
+
         invoice.setCurrency(
-                checkout.getCurrency()
+                paymentCurrency == null ||
+                paymentCurrency.isBlank()
+                        ? checkout.getCurrency()
+                        : paymentCurrency
         );
 
         invoice.setDueDate(

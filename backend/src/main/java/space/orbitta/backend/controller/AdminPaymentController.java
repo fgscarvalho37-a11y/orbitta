@@ -47,23 +47,20 @@ public class AdminPaymentController {
                                 "Mercado Pago",
                                 mercadoPagoConfigured,
                                 true,
-                                "BRL / Brasil"
+                                "BRL + primeiro pagamento USD"
                         ),
                         new AdminPaymentStatusResponse.GatewayStatus(
                                 "STRIPE",
                                 "Stripe",
                                 stripeConfigured,
                                 stripeWebhookReady,
-                                "Cobranças internacionais"
+                                "Conectada para migração recorrente futura"
                         ),
                         List.of(
                                 "BRL",
-                                "USD",
-                                "EUR",
-                                "GBP",
-                                "CAD"
+                                "USD"
                         ),
-                        "BRL -> Mercado Pago | outras moedas -> Stripe"
+                        "BRL -> Mercado Pago recorrente | USD -> Mercado Pago no primeiro mês (convertido para BRL) | Stripe reservada para recorrência futura"
                 )
         );
     }

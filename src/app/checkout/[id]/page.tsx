@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { motion } from "motion/react";
+import { useLanguage } from "@/i18n/LanguageProvider";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import {
   ArrowLeft,
   Check,
@@ -53,21 +55,28 @@ type CheckoutPageProps = {
   }>;
 };
 
-function formatCurrency(value: number, currency: string) {
-  return new Intl.NumberFormat("pt-BR", {
+function formatCurrency(
+  value: number,
+  currency: string,
+  locale: string
+) {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currency || "BRL",
   }).format(value);
 }
 
-function formatDateTime(value: string) {
+function formatDateTime(
+  value: string,
+  locale: string
+) {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return "-";
   }
 
-  return new Intl.DateTimeFormat("pt-BR", {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -76,46 +85,49 @@ function formatDateTime(value: string) {
   }).format(date);
 }
 
-function getStatusInfo(status: CheckoutStatus) {
+function getStatusInfo(
+  status: CheckoutStatus,
+  isEnglish: boolean
+) {
   switch (status) {
     case "PENDING":
       return {
-        label: "Aguardando pagamento",
+        label: isEnglish ? "Awaiting payment" : "Aguardando pagamento",
         className:
           "border-amber-300/10 bg-amber-300/[0.05] text-amber-200/70",
       };
 
     case "PAYMENT_PENDING":
       return {
-        label: "Pagamento em processamento",
+        label: isEnglish ? "Payment processing" : "Pagamento em processamento",
         className:
           "border-blue-300/10 bg-blue-300/[0.05] text-blue-200/70",
       };
 
     case "APPROVED":
       return {
-        label: "Pagamento aprovado",
+        label: isEnglish ? "Payment approved" : "Pagamento aprovado",
         className:
           "border-emerald-300/10 bg-emerald-300/[0.05] text-emerald-200/70",
       };
 
     case "REJECTED":
       return {
-        label: "Pagamento recusado",
+        label: isEnglish ? "Payment declined" : "Pagamento recusado",
         className:
           "border-red-300/10 bg-red-300/[0.05] text-red-200/70",
       };
 
     case "CANCELLED":
       return {
-        label: "Checkout cancelado",
+        label: isEnglish ? "Checkout canceled" : "Checkout cancelado",
         className:
           "border-white/10 bg-white/[0.04] text-white/50",
       };
 
     case "EXPIRED":
       return {
-        label: "Checkout expirado",
+        label: isEnglish ? "Checkout expired" : "Checkout expirado",
         className:
           "border-red-300/10 bg-red-300/[0.05] text-red-200/70",
       };
@@ -133,6 +145,8 @@ export default function CheckoutPage({
   params,
 }: CheckoutPageProps) {
   const { id } = use(params);
+  const { locale, isEnglish, text } =
+    useLanguage();
 
   const [checkout, setCheckout] =
     useState<SubscriptionCheckout | null>(null);
@@ -169,7 +183,7 @@ export default function CheckoutPage({
       if (response.status === 404) {
         setCheckout(null);
         setError(
-          "Este checkout não existe ou não pertence à sua conta."
+          text("Este checkout não existe ou não pertence à sua conta.", "This checkout does not exist or does not belong to your account.")
         );
         return;
       }
@@ -194,7 +208,7 @@ export default function CheckoutPage({
       console.error("Erro ao carregar checkout:", err);
       setCheckout(null);
       setError(
-        "Não foi possível carregar os dados desta contratação."
+        text("Não foi possível carregar os dados desta contratação.", "We could not load this subscription.")
       );
     } finally {
       setLoading(false);
@@ -210,7 +224,10 @@ export default function CheckoutPage({
 
     if (!termsAccepted) {
       setPaymentError(
-        "Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar."
+        text(
+          "Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.",
+          "You must accept the Terms of Use and Privacy Policy to continue."
+        )
       );
       return;
     }
@@ -228,7 +245,7 @@ export default function CheckoutPage({
       });
 
       if (!csrfResponse.ok) {
-        throw new Error("Não foi possível preparar o pagamento.");
+        throw new Error(text("Não foi possível preparar o pagamento.", "We could not prepare the payment."));
       }
 
       const csrfData: { token: string; headerName: string } =
@@ -259,7 +276,7 @@ export default function CheckoutPage({
       }
 
       if (!response.ok) {
-        let message = "Não foi possível iniciar o pagamento.";
+        let message = text("Não foi possível iniciar o pagamento.", "We could not start the payment.");
 
         try {
           const data = await response.json();
@@ -275,7 +292,7 @@ export default function CheckoutPage({
       const data: { paymentUrl?: string } = await response.json();
 
       if (!data.paymentUrl) {
-        throw new Error("O provedor de pagamento não retornou uma URL válida.");
+        throw new Error(text("O provedor de pagamento não retornou uma URL válida.", "The payment provider did not return a valid checkout URL."));
       }
 
       window.location.href = data.paymentUrl;
@@ -284,7 +301,7 @@ export default function CheckoutPage({
       setPaymentError(
         err instanceof Error
           ? err.message
-          : "Não foi possível iniciar o pagamento."
+          : text("Não foi possível iniciar o pagamento.", "We could not start the payment.")
       );
       setPaymentLoading(false);
     }
@@ -300,7 +317,7 @@ export default function CheckoutPage({
           />
 
           <p className="mt-4 text-xs text-white/30">
-            Preparando seu checkout...
+            {text("Preparando seu checkout...", "Preparing your checkout...")}
           </p>
         </div>
       </main>
@@ -316,25 +333,28 @@ export default function CheckoutPage({
           </div>
 
           <h1 className="mt-5 text-xl font-semibold">
-            Não foi possível abrir o checkout
+            {text("Não foi possível abrir o checkout", "We could not open the checkout")}
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-white/35">
-            {error ?? "Checkout não encontrado."}
+            {error ?? text("Checkout não encontrado.", "Checkout not found.")}
           </p>
 
           <Link
             href="/produtos"
             className="mt-7 inline-flex h-11 items-center justify-center rounded-xl bg-white px-5 text-xs font-semibold text-[#07101c]"
           >
-            Voltar aos produtos
+            {text("Voltar aos produtos", "Back to products")}
           </Link>
         </div>
       </main>
     );
   }
 
-  const status = getStatusInfo(checkout.status);
+  const status = getStatusInfo(
+    checkout.status,
+    isEnglish
+  );
 
   const gatewayName =
     checkout.paymentProvider === "STRIPE" ||
@@ -358,11 +378,14 @@ export default function CheckoutPage({
             className="flex items-center gap-2 text-xs text-white/35 transition hover:text-white/70"
           >
             <ArrowLeft size={14} />
-            Voltar
+            {text("Voltar", "Back")}
           </Link>
 
-          <div className="text-[11px] font-medium uppercase tracking-[0.28em] text-white/25">
-            ORBITTA
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher compact />
+            <div className="text-[11px] font-medium uppercase tracking-[0.28em] text-white/25">
+              ORBITTA
+            </div>
           </div>
         </div>
 
@@ -375,7 +398,7 @@ export default function CheckoutPage({
             <div className="flex flex-col justify-between gap-5 border-b border-white/[0.06] pb-7 sm:flex-row sm:items-start">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.18em] text-white/20">
-                  Finalizar contratação
+                  {text("Finalizar contratação", "Complete subscription")}
                 </p>
 
                 <h1 className="mt-3 text-3xl font-semibold tracking-[-0.045em]">
@@ -383,7 +406,7 @@ export default function CheckoutPage({
                 </h1>
 
                 <p className="mt-2 text-sm text-white/35">
-                  Revise os dados antes de continuar com o pagamento.
+                  {text("Revise os dados antes de continuar com o pagamento.", "Review the details before continuing to payment.")}
                 </p>
               </div>
 
@@ -402,7 +425,7 @@ export default function CheckoutPage({
 
                 <div>
                   <div className="text-[10px] uppercase tracking-[0.15em] text-white/20">
-                    Plano selecionado
+                    {text("Plano selecionado", "Selected plan")}
                   </div>
 
                   <div className="mt-1 text-sm font-medium text-white/75">
@@ -415,18 +438,19 @@ export default function CheckoutPage({
                 <div className="flex items-center justify-between rounded-2xl border border-white/[0.05] bg-white/[0.018] px-5 py-4">
                   <div>
                     <div className="text-xs text-white/55">
-                      Mensalidade
+                      {text("Mensalidade", "Monthly price")}
                     </div>
 
                     <div className="mt-1 text-[10px] text-white/20">
-                      Cobrança recorrente mensal
+                      {text("Cobrança recorrente mensal", "Recurring monthly charge")}
                     </div>
                   </div>
 
                   <div className="text-sm font-medium text-white/75">
                     {formatCurrency(
                       checkout.monthlyPrice,
-                      checkout.currency
+                      checkout.currency,
+                      locale
                     )}
                   </div>
                 </div>
@@ -434,11 +458,11 @@ export default function CheckoutPage({
                 <div className="flex items-center justify-between rounded-2xl border border-white/[0.05] bg-white/[0.018] px-5 py-4">
                   <div>
                     <div className="text-xs text-white/55">
-                      Taxa de implantação
+                      {text("Taxa de implantação", "Setup fee")}
                     </div>
 
                     <div className="mt-1 text-[10px] text-white/20">
-                      Pagamento único
+                      {text("Pagamento único", "One-time charge")}
                     </div>
                   </div>
 
@@ -446,9 +470,10 @@ export default function CheckoutPage({
                     {checkout.setupPrice > 0
                       ? formatCurrency(
                           checkout.setupPrice,
-                          checkout.currency
+                          checkout.currency,
+                          locale
                         )
-                      : "Grátis"}
+                      : text("Grátis", "Free")}
                   </div>
                 </div>
 
@@ -458,11 +483,11 @@ export default function CheckoutPage({
             <div className="mt-8 rounded-2xl border border-white/[0.05] bg-black/10 p-5">
               <div className="flex items-center gap-2 text-xs text-white/45">
                 <Clock3 size={14} />
-                Checkout reservado até
+                {text("Checkout reservado até", "Checkout reserved until")}
               </div>
 
               <div className="mt-2 text-sm font-medium text-white/70">
-                {formatDateTime(checkout.expiresAt)}
+                {formatDateTime(checkout.expiresAt, locale)}
               </div>
             </div>
 
@@ -474,12 +499,11 @@ export default function CheckoutPage({
 
               <div>
                 <div className="text-xs font-medium text-white/60">
-                  Contratação protegida
+                  {text("Contratação protegida", "Protected subscription")}
                 </div>
 
                 <p className="mt-1 text-[11px] leading-5 text-white/25">
-                  Os valores desta contratação foram registrados no
-                  servidor no momento em que o checkout foi criado.
+                  {text("Os valores desta contratação foram registrados no servidor no momento em que o checkout foi criado.", "The price and currency were locked on the server when this checkout was created.")}
                 </p>
               </div>
             </div>
@@ -495,7 +519,7 @@ export default function CheckoutPage({
               <ReceiptText size={16} className="text-white/40" />
 
               <h2 className="text-sm font-medium text-white/70">
-                Resumo
+                {text("Resumo", "Summary")}
               </h2>
             </div>
 
@@ -515,16 +539,21 @@ export default function CheckoutPage({
 
               <div className="flex justify-between gap-4 text-xs">
                 <span className="text-white/30">
-                  Implantação
+                  {text("Implantação", "Setup")}
                 </span>
 
                 <span className="text-white/60">
                   {checkout.setupPrice > 0
                     ? formatCurrency(
                         checkout.setupPrice,
-                        checkout.currency
+                        checkout.currency,
+                        locale
                       )
-                    : "R$ 0,00"}
+                    : formatCurrency(
+                        0,
+                        checkout.currency,
+                        locale
+                      )}
                 </span>
               </div>
 
@@ -533,18 +562,19 @@ export default function CheckoutPage({
             <div className="flex items-end justify-between gap-4 py-6">
               <div>
                 <div className="text-xs text-white/30">
-                  Total hoje
+                  {text("Total hoje", "Total today")}
                 </div>
 
                 <div className="mt-1 text-[10px] text-white/20">
-                  Primeira cobrança
+                  {text("Primeira cobrança", "First charge")}
                 </div>
               </div>
 
               <div className="text-2xl font-semibold tracking-[-0.04em]">
                 {formatCurrency(
                   checkout.totalPrice,
-                  checkout.currency
+                  checkout.currency,
+                  locale
                 )}
               </div>
             </div>
@@ -564,23 +594,23 @@ export default function CheckoutPage({
                   />
 
                   <span className="text-[11px] leading-5 text-white/35">
-                    Li e aceito os{" "}
+                    {text("Li e aceito os", "I have read and accept the")}{" "}
                     <Link
                       href="/termos"
                       target="_blank"
                       className="text-cyan-200/70 underline underline-offset-2"
                     >
-                      Termos de Uso
+                      {text("Termos de Uso", "Terms of Use")}
                     </Link>
-                    {" "}e a{" "}
+                    {" "}{text("e a", "and the")}{" "}
                     <Link
                       href="/privacidade"
                       target="_blank"
                       className="text-cyan-200/70 underline underline-offset-2"
                     >
-                      Política de Privacidade
+                      {text("Política de Privacidade", "Privacy Policy")}
                     </Link>
-                    . Estou ciente da cobrança recorrente mensal e da taxa inicial indicada neste checkout.
+                    . {text("Estou ciente da cobrança recorrente mensal e da taxa inicial indicada neste checkout.", "I understand the recurring monthly charge and the setup fee shown in this checkout.")}
                   </span>
                 </label>
 
@@ -596,12 +626,12 @@ export default function CheckoutPage({
                 {paymentLoading ? (
                   <>
                     <LoaderCircle size={16} className="animate-spin" />
-                    Redirecionando...
+                    {text("Redirecionando...", "Redirecting...")}
                   </>
                 ) : (
                   <>
                     <CreditCard size={16} />
-                    Ir para pagamento
+                    {text("Ir para pagamento", "Continue to payment")}
                   </>
                 )}
                 </button>
@@ -612,14 +642,14 @@ export default function CheckoutPage({
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-[#07101c] transition hover:bg-white/90"
               >
                 <Check size={16} />
-                Acessar meus produtos
+                {text("Acessar meus produtos", "Access my products")}
               </Link>
             ) : (
               <Link
                 href="/produtos"
                 className="flex h-12 w-full items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.025] text-sm font-medium text-white/55 transition hover:bg-white/[0.05]"
               >
-                Escolher outro plano
+                {text("Escolher outro plano", "Choose another plan")}
               </Link>
             )}
 
@@ -629,13 +659,13 @@ export default function CheckoutPage({
               </p>
             ) : canPay ? (
               <p className="mt-3 text-center text-[10px] leading-4 text-white/20">
-                Você será redirecionado para {gatewayName} para concluir a assinatura.
+                {text(`Você será redirecionado para ${gatewayName} para concluir a assinatura.`, `You will be redirected to ${gatewayName} to complete your subscription.`)}
               </p>
             ) : null}
 
             <div className="mt-6 flex items-center justify-center gap-2 border-t border-white/[0.05] pt-5 text-[10px] text-white/20">
               <LockKeyhole size={11} />
-              Ambiente seguro Orbitta
+              {text("Ambiente seguro Orbitta", "Secure Orbitta checkout")}
             </div>
           </motion.aside>
         </div>

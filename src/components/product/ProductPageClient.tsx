@@ -28,8 +28,13 @@ import {
 } from "lucide-react";
 
 import { motion } from "motion/react";
-import type { OrbittaProduct } from "@/data/products";
+import {
+  localizeProduct,
+  type OrbittaProduct,
+} from "@/data/products";
 import ProductPricing from "@/components/product/ProductPricing";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 type ProductPageClientProps = {
   product: OrbittaProduct;
@@ -101,23 +106,60 @@ const sectionTexts: Record<string, string> = {
     "Do cardápio à comanda, toda a operação conectada.",
 };
 
+const heroTextsEn: Record<string, string> = {
+  pizzasystem:
+    "Your delivery operation in one platform.",
+  condoflow:
+    "Your condominium connected in one experience.",
+  vitalsync:
+    "Healthcare routines connected between professionals and patients.",
+  cafeflow:
+    "Your café operation organized in one place.",
+};
+
+const sectionTextsEn: Record<string, string> = {
+  pizzasystem:
+    "A connected operation from order to delivery.",
+  condoflow:
+    "Front desk teams, residents and management working together.",
+  vitalsync:
+    "Care, follow-up and management in one experience.",
+  cafeflow:
+    "From menu to tabs, the whole operation connected.",
+};
+
 export default function ProductPageClient({
   product,
 }: ProductPageClientProps) {
+  const { locale, isEnglish, text } =
+    useLanguage();
+
+  const displayProduct =
+    localizeProduct(
+      product,
+      locale
+    );
+
   const icons =
-    productIcons[product.slug as keyof typeof productIcons] ??
+    productIcons[displayProduct.slug as keyof typeof productIcons] ??
     productIcons.pizzasystem;
 
   const heroText =
-    heroTexts[product.slug] ?? product.shortDescription;
+    (isEnglish
+      ? heroTextsEn[displayProduct.slug]
+      : heroTexts[displayProduct.slug]) ??
+    displayProduct.shortDescription;
 
   const sectionText =
-    sectionTexts[product.slug] ?? product.shortDescription;
+    (isEnglish
+      ? sectionTextsEn[displayProduct.slug]
+      : sectionTexts[displayProduct.slug]) ??
+    displayProduct.shortDescription;
 
   const previewAvailable =
-    (product.status === "preview" ||
-      product.status === "available") &&
-    Boolean(product.previewUrl);
+    (displayProduct.status === "preview" ||
+      displayProduct.status === "available") &&
+    Boolean(displayProduct.previewUrl);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050914] text-white">
@@ -137,20 +179,24 @@ export default function ProductPageClient({
           </Link>
 
           <div className="hidden text-xs font-medium uppercase tracking-[0.22em] text-white/35 sm:block">
-            Produto Orbitta
+            {text("Produto Orbitta", "Orbitta Product")}
           </div>
 
-          {product.status === "development" ? (
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher compact />
+
+          {displayProduct.status === "development" ? (
             <div className="flex items-center gap-2 rounded-full border border-amber-300/10 bg-amber-300/[0.05] px-4 py-2 text-xs text-amber-100/60">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
-              Em desenvolvimento
+              {text("Em desenvolvimento", "In development")}
             </div>
           ) : (
             <div className="flex items-center gap-2 rounded-full border border-emerald-300/10 bg-emerald-300/[0.05] px-4 py-2 text-xs text-emerald-100/60">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-              Disponível
+              {text("Disponível", "Available")}
             </div>
           )}
+          </div>
         </div>
       </header>
 
@@ -169,7 +215,7 @@ export default function ProductPageClient({
           >
             <span>Orbitta</span>
             <span className="text-white/15">/</span>
-            <span>{product.category}</span>
+            <span>{displayProduct.category}</span>
           </motion.div>
 
           <motion.h1
@@ -182,7 +228,7 @@ export default function ProductPageClient({
             className="mt-8 break-words text-[clamp(4rem,10vw,10rem)] font-semibold leading-[0.82] tracking-[-0.075em]"
           >
             <span className="bg-gradient-to-r from-white via-cyan-300 to-violet-400 bg-clip-text text-transparent">
-              {product.name}.
+              {displayProduct.name}.
             </span>
           </motion.h1>
 
@@ -203,7 +249,7 @@ export default function ProductPageClient({
               className="max-w-xl lg:justify-self-end"
             >
               <p className="text-base leading-7 text-white/45 sm:text-lg">
-                {product.description}
+                {displayProduct.description}
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -211,7 +257,7 @@ export default function ProductPageClient({
                   href="#conhecer"
                   className="group flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
                 >
-                  Conhecer o sistema
+                  {text("Conhecer o sistema", "Explore the system")}
 
                   <ArrowRight
                     size={16}
@@ -219,24 +265,24 @@ export default function ProductPageClient({
                   />
                 </a>
 
-                {product.accessUrl && (
+                {displayProduct.accessUrl && (
                   <Link
-                    href={`/produtos/${product.slug}/acessar`}
+                    href={`/produtos/${displayProduct.slug}/acessar`}
                     className="group flex items-center gap-3 rounded-full border border-cyan-300/30 bg-cyan-300/[0.08] px-6 py-3.5 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300/50 hover:bg-cyan-300/[0.12]"
                   >
-                    Acessar produto
+                    {text("Acessar produto", "Access product")}
                     <ExternalLink size={15} />
                   </Link>
                 )}
 
-                {previewAvailable && product.previewUrl ? (
+                {previewAvailable && displayProduct.previewUrl ? (
                   <a
-                    href={product.previewUrl}
+                    href={displayProduct.previewUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group flex items-center gap-3 rounded-full border border-cyan-300/20 bg-cyan-300/[0.06] px-6 py-3.5 text-sm text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-300/[0.1]"
                   >
-                    Abrir preview
+                    {text("Abrir preview", "Open preview")}
 
                     <ExternalLink
                       size={15}
@@ -248,11 +294,11 @@ export default function ProductPageClient({
                     disabled
                     className="flex cursor-not-allowed items-center gap-3 rounded-full border border-white/[0.08] bg-white/[0.025] px-6 py-3.5 text-sm text-white/25"
                   >
-                    Abrir preview
+                    {text("Abrir preview", "Open preview")}
                     <ExternalLink size={15} />
 
                     <span className="text-[10px] uppercase tracking-wider">
-                      Em breve
+                      {text("Em breve", "Coming soon")}
                     </span>
                   </button>
                 )}
@@ -292,17 +338,20 @@ export default function ProductPageClient({
             </div>
 
             <div className="mx-auto max-w-[55vw] truncate rounded-full bg-white/[0.035] px-6 py-1.5 text-[10px] text-white/25 sm:px-12">
-              {previewAvailable && product.previewUrl
-                ? product.previewUrl.replace(/^https?:\/\//, "")
-                : `${product.slug}.orbitta.space`}
+              {previewAvailable && displayProduct.previewUrl
+                ? displayProduct.previewUrl.replace(/^https?:\/\//, "")
+                : `${displayProduct.slug}.orbitta.space`}
             </div>
           </div>
 
-          {previewAvailable && product.previewUrl ? (
+          {previewAvailable && displayProduct.previewUrl ? (
             <div className="relative h-[620px] bg-[#f6f3ee] sm:h-[700px] lg:h-[760px]">
               <iframe
-                src={product.previewUrl}
-                title={`Preview do ${product.name}`}
+                src={displayProduct.previewUrl}
+                title={text(
+                  `Preview do ${displayProduct.name}`,
+                  `${displayProduct.name} preview`
+                )}
                 loading="lazy"
                 className="h-full w-full border-0"
               />
@@ -313,11 +362,11 @@ export default function ProductPageClient({
                 <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-cyan-300 to-violet-500 opacity-70" />
 
                 <p className="mt-6 text-sm font-medium text-white/55">
-                  Preview em preparação
+                  {text("Preview em preparação", "Preview in progress")}
                 </p>
 
                 <p className="mt-2 text-xs leading-5 text-white/25">
-                  A demonstração desta plataforma será publicada em breve.
+                  {text("A demonstração desta plataforma será publicada em breve.", "A live demonstration of this platform will be available soon.")}
                 </p>
               </div>
             </div>
@@ -325,8 +374,14 @@ export default function ProductPageClient({
 
           <div className="border-t border-white/[0.05] px-6 py-4 text-center text-[10px] uppercase tracking-[0.2em] text-white/25">
             {previewAvailable
-              ? "Preview navegável do produto"
-              : "Preview em desenvolvimento"}
+              ? text(
+                  "Preview navegável do produto",
+                  "Interactive product preview"
+                )
+              : text(
+                  "Preview em desenvolvimento",
+                  "Preview in development"
+                )}
           </div>
         </motion.div>
       </section>
@@ -340,7 +395,7 @@ export default function ProductPageClient({
           <div>
             <div className="sticky top-28">
               <p className="text-xs uppercase tracking-[0.25em] text-cyan-300/55">
-                Plataforma
+                {text("Plataforma", "Platform")}
               </p>
 
               <h2 className="mt-6 max-w-md text-4xl font-semibold leading-[1.05] tracking-[-0.045em] sm:text-5xl">
@@ -350,7 +405,7 @@ export default function ProductPageClient({
           </div>
 
           <div className="grid gap-px overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.06] sm:grid-cols-2">
-            {product.features.map((feature, index) => {
+            {displayProduct.features.map((feature, index) => {
               const Icon = icons[index] ?? Settings2;
 
               return (
@@ -382,8 +437,10 @@ export default function ProductPageClient({
                   </h3>
 
                   <p className="mt-3 leading-7 text-white/35">
-                    Recurso integrado à plataforma {product.name} para
-                    simplificar e centralizar a operação.
+                    {text(
+                      `Recurso integrado à plataforma ${displayProduct.name} para simplificar e centralizar a operação.`,
+                      `An integrated ${displayProduct.name} feature designed to simplify and centralize your operation.`
+                    )}
                   </p>
                 </motion.div>
               );
@@ -392,7 +449,7 @@ export default function ProductPageClient({
         </div>
       </section>
 
-      <ProductPricing slug={product.slug} />
+      <ProductPricing slug={displayProduct.slug} />
 
       {/* CTA */}
       <section className="border-t border-white/[0.06]">
@@ -401,16 +458,22 @@ export default function ProductPageClient({
             <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-cyan-400/[0.08] blur-[120px]" />
 
             <p className="text-xs uppercase tracking-[0.25em] text-white/30">
-              {product.name} × Orbitta
+              {displayProduct.name} × Orbitta
             </p>
 
             <h2 className="relative mt-6 max-w-4xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-6xl lg:text-7xl">
-              {product.status === "development"
-                ? `${product.name} está sendo construído.`
-                : `Conheça o ${product.name}.`}
+              {displayProduct.status === "development"
+                ? text(
+                    `${displayProduct.name} está sendo construído.`,
+                    `${displayProduct.name} is being built.`
+                  )
+                : text(
+                    `Conheça o ${displayProduct.name}.`,
+                    `Meet ${displayProduct.name}.`
+                  )}
 
               <span className="block text-white/30">
-                Tecnologia criada pela Orbitta.
+                {text("Tecnologia criada pela Orbitta.", "Technology built by Orbitta.")}
               </span>
             </h2>
 
@@ -419,7 +482,7 @@ export default function ProductPageClient({
                 href="/"
                 className="group flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c]"
               >
-                Voltar para Orbitta
+                {text("Voltar para Orbitta", "Back to Orbitta")}
 
                 <ArrowRight
                   size={16}
@@ -427,14 +490,14 @@ export default function ProductPageClient({
                 />
               </Link>
 
-              {previewAvailable && product.previewUrl && (
+              {previewAvailable && displayProduct.previewUrl && (
                 <a
-                  href={product.previewUrl}
+                  href={displayProduct.previewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center gap-3 rounded-full border border-white/[0.1] bg-white/[0.04] px-6 py-3.5 text-sm text-white/70 transition hover:bg-white/[0.08] hover:text-white"
                 >
-                  Abrir preview
+                  {text("Abrir preview", "Open preview")}
                   <ExternalLink size={15} />
                 </a>
               )}

@@ -2,10 +2,13 @@ package space.orbitta.backend.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import space.orbitta.backend.dto.CatalogPlanPriceResponse;
 import space.orbitta.backend.dto.CatalogPlanResponse;
 import space.orbitta.backend.dto.CatalogProductResponse;
 import space.orbitta.backend.entity.CatalogPlan;
+import space.orbitta.backend.entity.CatalogPlanPrice;
 import space.orbitta.backend.entity.CatalogProduct;
+import space.orbitta.backend.repository.CatalogPlanPriceRepository;
 import space.orbitta.backend.repository.CatalogPlanRepository;
 import space.orbitta.backend.repository.CatalogProductRepository;
 
@@ -16,13 +19,16 @@ public class CatalogService {
 
     private final CatalogProductRepository catalogProductRepository;
     private final CatalogPlanRepository catalogPlanRepository;
+    private final CatalogPlanPriceRepository catalogPlanPriceRepository;
 
     public CatalogService(
             CatalogProductRepository catalogProductRepository,
-            CatalogPlanRepository catalogPlanRepository
+            CatalogPlanRepository catalogPlanRepository,
+            CatalogPlanPriceRepository catalogPlanPriceRepository
     ) {
         this.catalogProductRepository = catalogProductRepository;
         this.catalogPlanRepository = catalogPlanRepository;
+        this.catalogPlanPriceRepository = catalogPlanPriceRepository;
     }
 
     @Transactional(readOnly = true)
@@ -73,6 +79,30 @@ public class CatalogService {
         return plan;
     }
 
+    @Transactional(readOnly = true)
+    public CatalogPlanPrice getActivePlanPriceEntity(
+            Long planId,
+            Long priceId
+    ) {
+        if (
+                priceId == null
+        ) {
+            return null;
+        }
+
+        return catalogPlanPriceRepository
+                .findByIdAndPlanIdAndActiveTrue(
+                        priceId,
+                        planId
+                )
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        "Preço regional não encontrado ou indisponível."
+                                )
+                );
+    }
+
     private CatalogProductResponse toPublicProductResponse(
             CatalogProduct product
     ) {
@@ -99,6 +129,15 @@ public class CatalogService {
     }
 
     private CatalogPlanResponse toPlanResponse(CatalogPlan plan) {
+        List<CatalogPlanPriceResponse> regionalPrices =
+                catalogPlanPriceRepository
+                        .findByPlanIdAndActiveTrueOrderByDisplayOrderAscRegionCodeAsc(
+                                plan.getId()
+                        )
+                        .stream()
+                        .map(CatalogPlanPriceResponse::from)
+                        .toList();
+
         return new CatalogPlanResponse(
                 plan.getId(),
                 plan.getName(),
@@ -108,7 +147,8 @@ public class CatalogService {
                 plan.getSetupPrice(),
                 plan.getCurrency(),
                 plan.isActive(),
-                plan.getDisplayOrder()
+                plan.getDisplayOrder(),
+                regionalPrices
         );
     }
 }

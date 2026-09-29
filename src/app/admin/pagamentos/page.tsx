@@ -349,12 +349,12 @@ export default function AdminPaymentsPage() {
                 </div>
 
                 <Link
-                  href="/admin/produtos"
+                  href="/admin/precos"
                   className="flex h-11 shrink-0 items-center justify-center rounded-xl bg-white px-5 text-xs font-semibold text-[#07101c] transition hover:bg-violet-50"
                 >
                   {text(
-                    "Editar produtos e preços",
-                    "Edit products and prices"
+                    "Editar preços regionais",
+                    "Edit regional pricing"
                   )}
                 </Link>
               </div>

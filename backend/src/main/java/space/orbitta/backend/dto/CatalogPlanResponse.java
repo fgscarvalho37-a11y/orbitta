@@ -1,6 +1,7 @@
 package space.orbitta.backend.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public record CatalogPlanResponse(
         Long id,
@@ -11,6 +12,7 @@ public record CatalogPlanResponse(
         BigDecimal setupPrice,
         String currency,
         boolean active,
-        int displayOrder
+        int displayOrder,
+        List<CatalogPlanPriceResponse> regionalPrices
 ) {
 }

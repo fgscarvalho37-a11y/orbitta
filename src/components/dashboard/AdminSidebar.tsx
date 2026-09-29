@@ -10,6 +10,7 @@ import {
   CircleHelp,
   CreditCard,
   FileText,
+  Globe2,
   LayoutDashboard,
   LogOut,
   Orbit,
@@ -37,6 +38,11 @@ const navigation = [
     name: "Produtos",
     href: "/admin/produtos",
     icon: Boxes,
+  },
+  {
+    name: "Preços regionais",
+    href: "/admin/precos",
+    icon: Globe2,
   },
   {
     name: "Faturas",
@@ -67,6 +73,7 @@ const NAV_EN: Record<string, string> = {
   "Visão geral": "Overview",
   "Clientes": "Clients",
   "Produtos": "Products",
+  "Preços regionais": "Regional pricing",
   "Faturas": "Invoices",
   "Pagamentos": "Payments",
   "Suporte": "Support",

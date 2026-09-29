@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { LoaderCircle, AlertCircle, ArrowLeft } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 const API_URL = "/backend";
 
@@ -19,7 +20,10 @@ async function readMessage(response: Response) {
   const text = await response.text();
 
   if (!text) {
-    return "Não foi possível iniciar a contratação.";
+    return text(
+              "Não foi possível iniciar a contratação.",
+              "We could not start your subscription."
+            );
   }
 
   try {
@@ -31,6 +35,7 @@ async function readMessage(response: Response) {
 }
 
 export default function CheckoutStartPage() {
+  const { text } = useLanguage();
   const started = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +52,12 @@ export default function CheckoutStartPage() {
         const planId = Number(params.get("planId"));
 
         if (!Number.isInteger(planId) || planId <= 0) {
-          throw new Error("Plano inválido.");
+          throw new Error(
+            text(
+              "Plano inválido.",
+              "Invalid plan."
+            )
+          );
         }
 
         const currentPath =
@@ -77,7 +87,10 @@ export default function CheckoutStartPage() {
 
         if (!meResponse.ok) {
           throw new Error(
-            "Não foi possível validar sua sessão."
+            text(
+              "Não foi possível validar sua sessão.",
+              "We could not validate your session."
+            )
           );
         }
 
@@ -134,7 +147,10 @@ export default function CheckoutStartPage() {
 
         if (!csrfResponse.ok) {
           throw new Error(
-            "Não foi possível preparar a contratação."
+            text(
+              "Não foi possível preparar a contratação.",
+              "We could not prepare your subscription."
+            )
           );
         }
 
@@ -201,7 +217,10 @@ export default function CheckoutStartPage() {
             </div>
 
             <h1 className="mt-5 text-xl font-semibold">
-              Não foi possível continuar
+              {text(
+                "Não foi possível continuar",
+                "We could not continue"
+              )}
             </h1>
 
             <p className="mt-3 text-sm leading-6 text-white/40">
@@ -213,7 +232,10 @@ export default function CheckoutStartPage() {
               className="mt-7 inline-flex items-center gap-2 text-sm text-cyan-200/70 hover:text-cyan-100"
             >
               <ArrowLeft size={15} />
-              Voltar para Orbitta
+              {text(
+                "Voltar para Orbitta",
+                "Back to Orbitta"
+              )}
             </Link>
           </>
         ) : (
@@ -224,11 +246,17 @@ export default function CheckoutStartPage() {
             />
 
             <h1 className="mt-5 text-xl font-semibold">
-              Preparando seu checkout
+              {text(
+                "Preparando seu checkout",
+                "Preparing your checkout"
+              )}
             </h1>
 
             <p className="mt-3 text-sm text-white/35">
-              Você será levado diretamente para a contratação.
+              {text(
+                "Você será levado diretamente para a contratação.",
+                "You will be taken directly to your subscription checkout."
+              )}
             </p>
           </>
         )}

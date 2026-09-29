@@ -3,12 +3,14 @@ package space.orbitta.backend.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import space.orbitta.backend.dto.CatalogPlanPriceResponse;
 import space.orbitta.backend.dto.CatalogPlanResponse;
 import space.orbitta.backend.dto.CatalogProductResponse;
 import space.orbitta.backend.dto.CreateCatalogPlanRequest;
 import space.orbitta.backend.dto.CreateCatalogProductRequest;
 import space.orbitta.backend.dto.UpdateCatalogPlanRequest;
 import space.orbitta.backend.dto.UpdateCatalogProductRequest;
+import space.orbitta.backend.dto.UpsertCatalogPlanPriceRequest;
 import space.orbitta.backend.service.AdminCatalogService;
 
 import java.util.List;
@@ -114,6 +116,36 @@ public class AdminCatalogController {
         return ResponseEntity.ok(
                 adminCatalogService.updatePlan(
                         id,
+                        request
+                )
+        );
+    }
+
+    // =========================================================
+    // REGIONAL PRICES
+    // =========================================================
+
+    @GetMapping("/plans/{planId}/prices")
+    public ResponseEntity<List<CatalogPlanPriceResponse>> getPlanPrices(
+            @PathVariable Long planId
+    ) {
+        return ResponseEntity.ok(
+                adminCatalogService.getPlanPrices(
+                        planId
+                )
+        );
+    }
+
+    @PutMapping("/plans/{planId}/prices/{regionCode}")
+    public ResponseEntity<CatalogPlanPriceResponse> upsertPlanPrice(
+            @PathVariable Long planId,
+            @PathVariable String regionCode,
+            @RequestBody UpsertCatalogPlanPriceRequest request
+    ) {
+        return ResponseEntity.ok(
+                adminCatalogService.upsertPlanPrice(
+                        planId,
+                        regionCode,
                         request
                 )
         );

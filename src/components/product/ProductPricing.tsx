@@ -3,15 +3,29 @@
 import {
   ArrowRight,
   Check,
+  Globe2,
   Loader2,
 } from "lucide-react";
 import {
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 const API_URL = "/backend";
+const MARKET_STORAGE_KEY = "orbitta-market";
+
+type RegionalPrice = {
+  id: number;
+  regionCode: string;
+  currency: string;
+  monthlyPrice: number;
+  setupPrice: number;
+  active: boolean;
+  displayOrder: number;
+};
 
 type CatalogPlan = {
   id: number;
@@ -23,6 +37,7 @@ type CatalogPlan = {
   currency: string;
   active: boolean;
   displayOrder: number;
+  regionalPrices: RegionalPrice[];
 };
 
 type CatalogProduct = {
@@ -46,59 +61,214 @@ type CsrfResponse = {
 
 type CheckoutResponse = {
   id: number;
-  productId: number;
-  planId: number;
-  productName: string;
-  planName: string;
-  monthlyPrice: number;
-  setupPrice: number;
-  totalPrice: number;
-  currency: string;
-  status: string;
-  externalReference: string;
-  expiresAt: string | null;
-  createdAt: string;
 };
 
 type ProductPricingProps = {
   slug: string;
 };
 
+type MarketCode =
+  | "BR"
+  | "US"
+  | "EU"
+  | "GB"
+  | "CA";
+
+const MARKETS: Array<{
+  code: MarketCode;
+  pt: string;
+  en: string;
+  currency: string;
+}> = [
+  {
+    code: "BR",
+    pt: "Brasil",
+    en: "Brazil",
+    currency: "BRL",
+  },
+  {
+    code: "US",
+    pt: "Estados Unidos",
+    en: "United States",
+    currency: "USD",
+  },
+  {
+    code: "EU",
+    pt: "Europa",
+    en: "Europe",
+    currency: "EUR",
+  },
+  {
+    code: "GB",
+    pt: "Reino Unido",
+    en: "United Kingdom",
+    currency: "GBP",
+  },
+  {
+    code: "CA",
+    pt: "Canadá",
+    en: "Canada",
+    currency: "CAD",
+  },
+];
+
+const EU_COUNTRIES = new Set([
+  "AT",
+  "BE",
+  "CY",
+  "DE",
+  "EE",
+  "ES",
+  "FI",
+  "FR",
+  "GR",
+  "HR",
+  "IE",
+  "IT",
+  "LT",
+  "LU",
+  "LV",
+  "MT",
+  "NL",
+  "PT",
+  "SI",
+  "SK",
+]);
+
+function detectMarket(): MarketCode {
+  const languages =
+    typeof navigator !== "undefined"
+      ? navigator.languages?.length
+        ? navigator.languages
+        : [navigator.language]
+      : [];
+
+  for (const language of languages) {
+    const parts =
+      language
+        .replace("_", "-")
+        .split("-");
+
+    const region =
+      parts.length > 1
+        ? parts[
+            parts.length - 1
+          ].toUpperCase()
+        : "";
+
+    if (region === "BR") {
+      return "BR";
+    }
+
+    if (region === "US") {
+      return "US";
+    }
+
+    if (region === "GB") {
+      return "GB";
+    }
+
+    if (region === "CA") {
+      return "CA";
+    }
+
+    if (
+      EU_COUNTRIES.has(region)
+    ) {
+      return "EU";
+    }
+  }
+
+  const primary =
+    languages[0]
+      ?.toLowerCase() ?? "";
+
+  return primary.startsWith("pt")
+    ? "BR"
+    : "US";
+}
+
+function isMarketCode(
+  value: string | null
+): value is MarketCode {
+  return MARKETS.some(
+    (market) =>
+      market.code === value
+  );
+}
+
 function formatMoney(
   value: number,
-  currency: string
+  currency: string,
+  locale: string
 ) {
   try {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency,
-    }).format(value);
+    return new Intl.NumberFormat(
+      locale,
+      {
+        style: "currency",
+        currency,
+      }
+    ).format(value);
   } catch {
     return `${currency} ${value.toFixed(2)}`;
   }
 }
 
+function englishPlanName(
+  plan: CatalogPlan
+) {
+  const normalized =
+    plan.name
+      .trim()
+      .toLowerCase();
+
+  if (
+    normalized === "essencial"
+  ) {
+    return "Essential";
+  }
+
+  if (
+    normalized === "profissional"
+  ) {
+    return "Professional";
+  }
+
+  if (
+    normalized === "completo"
+  ) {
+    return "Complete";
+  }
+
+  return plan.name;
+}
+
 async function readErrorMessage(
   response: Response
 ) {
-  const text = await response.text();
+  const responseText =
+    await response.text();
 
-  if (!text) {
+  if (!responseText) {
     return "Não foi possível concluir a solicitação.";
   }
 
   try {
-    const data = JSON.parse(text);
+    const data =
+      JSON.parse(responseText);
 
     if (
-      typeof data?.message === "string" &&
+      typeof data?.message ===
+        "string" &&
       data.message.trim()
     ) {
       return data.message;
     }
 
     if (
-      typeof data?.error === "string" &&
+      typeof data?.error ===
+        "string" &&
       data.error.trim()
     ) {
       return data.error;
@@ -107,7 +277,7 @@ async function readErrorMessage(
     // A resposta não era JSON.
   }
 
-  return text;
+  return responseText;
 }
 
 export default function ProductPricing({
@@ -115,8 +285,16 @@ export default function ProductPricing({
 }: ProductPricingProps) {
   const router = useRouter();
 
+  const {
+    locale,
+    isEnglish,
+    text,
+  } = useLanguage();
+
   const [product, setProduct] =
-    useState<CatalogProduct | null>(null);
+    useState<CatalogProduct | null>(
+      null
+    );
 
   const [loading, setLoading] =
     useState(true);
@@ -124,11 +302,39 @@ export default function ProductPricing({
   const [unavailable, setUnavailable] =
     useState(false);
 
-  const [contractingPlanId, setContractingPlanId] =
-    useState<number | null>(null);
+  const [
+    contractingPlanId,
+    setContractingPlanId,
+  ] = useState<number | null>(null);
 
-  const [checkoutError, setCheckoutError] =
-    useState<string | null>(null);
+  const [
+    checkoutError,
+    setCheckoutError,
+  ] = useState<string | null>(null);
+
+  const [market, setMarket] =
+    useState<MarketCode>("BR");
+
+  useEffect(() => {
+    const saved =
+      window.localStorage.getItem(
+        MARKET_STORAGE_KEY
+      );
+
+    const detected =
+      isMarketCode(saved)
+        ? saved
+        : detectMarket();
+
+    setMarket(detected);
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      MARKET_STORAGE_KEY,
+      market
+    );
+  }, [market]);
 
   useEffect(() => {
     let cancelled = false;
@@ -138,16 +344,18 @@ export default function ProductPricing({
         setLoading(true);
         setUnavailable(false);
 
-        const response = await fetch(
-          `${API_URL}/api/catalog/products/${slug}`,
-          {
-            method: "GET",
-            cache: "no-store",
-            headers: {
-              Accept: "application/json",
-            },
-          }
-        );
+        const response =
+          await fetch(
+            `${API_URL}/api/catalog/products/${slug}`,
+            {
+              method: "GET",
+              cache: "no-store",
+              headers: {
+                Accept:
+                  "application/json",
+              },
+            }
+          );
 
         if (!response.ok) {
           if (!cancelled) {
@@ -157,7 +365,8 @@ export default function ProductPricing({
           return;
         }
 
-        const data: CatalogProduct =
+        const data:
+          CatalogProduct =
           await response.json();
 
         if (!cancelled) {
@@ -179,49 +388,109 @@ export default function ProductPricing({
       }
     }
 
-    loadProduct();
+    void loadProduct();
 
     return () => {
       cancelled = true;
     };
   }, [slug]);
 
-  async function handleContract(
+  const currentMarket =
+    useMemo(
+      () =>
+        MARKETS.find(
+          (item) =>
+            item.code === market
+        ) ?? MARKETS[0],
+      [market]
+    );
+
+  function selectedPrice(
     plan: CatalogPlan
+  ): RegionalPrice | null {
+    const prices =
+      plan.regionalPrices ?? [];
+
+    const regional =
+      prices.find(
+        (price) =>
+          price.active &&
+          price.regionCode === market
+      );
+
+    if (regional) {
+      return regional;
+    }
+
+    if (
+      market === "BR" &&
+      prices.length === 0
+    ) {
+      return {
+        id: 0,
+        regionCode: "BR",
+        currency:
+          plan.currency,
+        monthlyPrice:
+          plan.monthlyPrice,
+        setupPrice:
+          plan.setupPrice,
+        active: plan.active,
+        displayOrder: 0,
+      };
+    }
+
+    return null;
+  }
+
+  async function handleContract(
+    plan: CatalogPlan,
+    price: RegionalPrice
   ) {
-    if (contractingPlanId !== null) {
+    if (
+      contractingPlanId !== null
+    ) {
       return;
     }
 
     try {
-      setContractingPlanId(plan.id);
+      setContractingPlanId(
+        plan.id
+      );
       setCheckoutError(null);
 
-      /*
-       * Primeiro verificamos se existe uma sessão válida.
-       *
-       * O endpoint /api/auth/me já faz parte do fluxo
-       * de autenticação do Orbitta.
-       */
-      const meResponse = await fetch(
-        `${API_URL}/api/auth/me`,
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
+      const priceId =
+        price.id > 0
+          ? price.id
+          : null;
+
+      const returnUrl =
+        `/checkout/start?planId=${plan.id}${
+          priceId
+            ? `&priceId=${priceId}`
+            : ""
+        }`;
+
+      const meResponse =
+        await fetch(
+          `${API_URL}/api/auth/me`,
+          {
+            method: "GET",
+            credentials:
+              "include",
+            cache: "no-store",
+            headers: {
+              Accept:
+                "application/json",
+            },
+          }
+        );
 
       if (
-        meResponse.status === 401 ||
+        meResponse.status ===
+          401 ||
         meResponse.status === 403
       ) {
-        const returnUrl =
-          `/checkout/start?planId=${plan.id}`;
-
         router.push(
           `/login?returnUrl=${encodeURIComponent(
             returnUrl
@@ -233,27 +502,24 @@ export default function ProductPricing({
 
       if (!meResponse.ok) {
         throw new Error(
-          "Não foi possível verificar sua sessão."
+          text(
+            "Não foi possível verificar sua sessão.",
+            "We could not verify your session."
+          )
         );
       }
 
-      /*
-       * Cliente que já pagou e possui produto ativo
-       * não deve abrir um segundo checkout do mesmo SaaS.
-       *
-       * Além de melhorar a experiência, isso evita que um
-       * erro de regra de negócio apareça como "Internal Server Error"
-       * caso o backend ainda esteja em uma versão anterior.
-       */
       const activeProductsResponse =
         await fetch(
           `${API_URL}/api/client/products/active`,
           {
             method: "GET",
-            credentials: "include",
+            credentials:
+              "include",
             cache: "no-store",
             headers: {
-              Accept: "application/json",
+              Accept:
+                "application/json",
             },
           }
         );
@@ -264,7 +530,6 @@ export default function ProductPricing({
         const activeProducts:
           Array<{
             name?: string;
-            planName?: string;
           }> =
           await activeProductsResponse.json();
 
@@ -283,101 +548,85 @@ export default function ProductPricing({
           router.push(
             "/painel"
           );
-
           return;
         }
       }
 
-      /*
-       * Busca o token CSRF.
-       */
-      const csrfResponse = await fetch(
-        `${API_URL}/api/csrf`,
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
+      const csrfResponse =
+        await fetch(
+          `${API_URL}/api/csrf`,
+          {
+            method: "GET",
+            credentials:
+              "include",
+            cache: "no-store",
+            headers: {
+              Accept:
+                "application/json",
+            },
+          }
+        );
 
       if (!csrfResponse.ok) {
         throw new Error(
-          "Não foi possível iniciar a contratação."
+          text(
+            "Não foi possível iniciar a contratação.",
+            "We could not start your subscription."
+          )
         );
       }
 
       const csrf: CsrfResponse =
         await csrfResponse.json();
 
-      if (
-        !csrf.token ||
-        !csrf.headerName
-      ) {
-        throw new Error(
-          "Token de segurança inválido."
+      const checkoutResponse =
+        await fetch(
+          `${API_URL}/api/checkout/subscriptions`,
+          {
+            method: "POST",
+            credentials:
+              "include",
+            headers: {
+              "Content-Type":
+                "application/json",
+              Accept:
+                "application/json",
+              [csrf.headerName]:
+                csrf.token,
+            },
+            body: JSON.stringify({
+              planId: plan.id,
+              priceId,
+            }),
+          }
         );
-      }
-
-      /*
-       * O frontend envia SOMENTE o ID do plano.
-       *
-       * Produto, preço, moeda e demais informações
-       * são resolvidos novamente pelo backend.
-       */
-      const checkoutResponse = await fetch(
-        `${API_URL}/api/checkout/subscriptions`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            [csrf.headerName]: csrf.token,
-          },
-          body: JSON.stringify({
-            planId: plan.id,
-          }),
-        }
-      );
 
       if (
-        checkoutResponse.status === 401 ||
-        checkoutResponse.status === 403
+        checkoutResponse.status ===
+          401 ||
+        checkoutResponse.status ===
+          403
       ) {
-        const returnUrl =
-          `/checkout/start?planId=${plan.id}`;
-
         router.push(
           `/login?returnUrl=${encodeURIComponent(
             returnUrl
           )}`
         );
-
         return;
       }
 
       if (!checkoutResponse.ok) {
-        const message =
+        throw new Error(
           await readErrorMessage(
             checkoutResponse
-          );
-
-        throw new Error(message);
+          )
+        );
       }
 
-      const checkout: CheckoutResponse =
+      const checkout:
+        CheckoutResponse =
         await checkoutResponse.json();
 
-      /*
-       * Próxima tela:
-       * /checkout/[id]
-       *
-       * Ela será responsável pelo resumo da compra
-       * e posteriormente pelo Mercado Pago.
-       */
       router.push(
         `/checkout/${checkout.id}`
       );
@@ -390,10 +639,15 @@ export default function ProductPricing({
       setCheckoutError(
         error instanceof Error
           ? error.message
-          : "Não foi possível iniciar a contratação."
+          : text(
+              "Não foi possível iniciar a contratação.",
+              "We could not start your subscription."
+            )
       );
     } finally {
-      setContractingPlanId(null);
+      setContractingPlanId(
+        null
+      );
     }
   }
 
@@ -411,7 +665,10 @@ export default function ProductPricing({
             />
 
             <span className="text-[10px] uppercase tracking-[0.2em] text-white/20">
-              Carregando planos
+              {text(
+                "Carregando planos",
+                "Loading plans"
+              )}
             </span>
           </div>
         </div>
@@ -433,21 +690,78 @@ export default function ProductPricing({
       className="border-t border-white/[0.06]"
     >
       <div className="mx-auto max-w-[1440px] px-6 py-32 lg:px-12 lg:py-40">
-        <div className="max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.25em] text-cyan-300/55">
-            Planos
-          </p>
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-xs uppercase tracking-[0.25em] text-cyan-300/55">
+              {text(
+                "Planos",
+                "Plans"
+              )}
+            </p>
 
-          <h2 className="mt-6 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">
-            Escolha como usar o{" "}
-            {product.name}.
-          </h2>
+            <h2 className="mt-6 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">
+              {text(
+                `Escolha como usar o ${product.name}.`,
+                `Choose your ${product.name} plan.`
+              )}
+            </h2>
 
-          <p className="mt-5 max-w-2xl text-base leading-7 text-white/35">
-            Planos configurados diretamente
-            pela Orbitta para contratação da
-            plataforma.
-          </p>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-white/35">
+              {text(
+                "O valor abaixo é o preço comercial definido para o seu mercado.",
+                "The price below is the commercial price configured for your market."
+              )}
+            </p>
+          </div>
+
+          <label className="min-w-[240px]">
+            <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-white/25">
+              <Globe2 size={12} />
+              {text(
+                "Região de cobrança",
+                "Billing region"
+              )}
+            </span>
+
+            <select
+              value={market}
+              onChange={(event) =>
+                setMarket(
+                  event.target
+                    .value as MarketCode
+                )
+              }
+              className="mt-2 h-11 w-full rounded-xl border border-white/[0.08] bg-[#08101d] px-4 text-sm text-white/65 outline-none"
+            >
+              {MARKETS.map(
+                (item) => (
+                  <option
+                    key={
+                      item.code
+                    }
+                    value={
+                      item.code
+                    }
+                  >
+                    {isEnglish
+                      ? item.en
+                      : item.pt}{" "}
+                    —{" "}
+                    {
+                      item.currency
+                    }
+                  </option>
+                )
+              )}
+            </select>
+
+            <div className="mt-2 text-[10px] text-white/20">
+              {text(
+                "Detectado automaticamente; você pode alterar.",
+                "Detected automatically; you can change it."
+              )}
+            </div>
+          </label>
         </div>
 
         {checkoutError && (
@@ -465,132 +779,199 @@ export default function ProductPricing({
                 : "lg:grid-cols-3"
           }`}
         >
-          {product.plans.map((plan) => {
-            const contracting =
-              contractingPlanId === plan.id;
+          {product.plans.map(
+            (plan) => {
+              const price =
+                selectedPrice(
+                  plan
+                );
 
-            return (
-              <article
-                key={plan.id}
-                className="relative overflow-hidden rounded-[28px] border border-white/[0.07] bg-[#08101d] p-7 sm:p-8"
-              >
-                <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-cyan-400/[0.055] blur-[70px]" />
+              const contracting =
+                contractingPlanId ===
+                plan.id;
 
-                <div className="relative">
-                  <div className="flex items-start justify-between gap-5">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-300/45">
-                        {product.name}
-                      </p>
+              return (
+                <article
+                  key={plan.id}
+                  className="relative overflow-hidden rounded-[28px] border border-white/[0.07] bg-[#08101d] p-7 sm:p-8"
+                >
+                  <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-cyan-400/[0.055] blur-[70px]" />
 
-                      <h3 className="mt-3 text-xl font-semibold tracking-[-0.025em]">
-                        {plan.name}
-                      </h3>
+                  <div className="relative">
+                    <div className="flex items-start justify-between gap-5">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-300/45">
+                          {
+                            product.name
+                          }
+                        </p>
+
+                        <h3 className="mt-3 text-xl font-semibold tracking-[-0.025em]">
+                          {isEnglish
+                            ? englishPlanName(
+                                plan
+                              )
+                            : plan.name}
+                        </h3>
+                      </div>
+
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full border border-emerald-300/10 bg-emerald-300/[0.04] text-emerald-200/60">
+                        <Check
+                          size={15}
+                        />
+                      </div>
                     </div>
 
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-emerald-300/10 bg-emerald-300/[0.04] text-emerald-200/60">
-                      <Check size={15} />
-                    </div>
-                  </div>
-
-                  {plan.description && (
                     <p className="mt-5 min-h-[48px] text-sm leading-6 text-white/30">
-                      {plan.description}
+                      {isEnglish
+                        ? "A monthly Orbitta plan with platform access, updates and support included."
+                        : plan.description ||
+                          "Plano mensal Orbitta com acesso à plataforma, atualizações e suporte incluídos."}
                     </p>
-                  )}
 
-                  <div className="mt-8">
-                    <div className="flex items-end gap-2">
-                      <span className="text-4xl font-semibold tracking-[-0.05em] text-white">
-                        {formatMoney(
-                          Number(
-                            plan.monthlyPrice
-                          ),
-                          plan.currency
-                        )}
-                      </span>
+                    <div className="mt-8">
+                      {price ? (
+                        <>
+                          <div className="flex items-end gap-2">
+                            <span className="text-4xl font-semibold tracking-[-0.05em] text-white">
+                              {formatMoney(
+                                Number(
+                                  price.monthlyPrice
+                                ),
+                                price.currency,
+                                locale
+                              )}
+                            </span>
 
-                      <span className="pb-1 text-xs text-white/25">
-                        / mês
-                      </span>
+                            <span className="pb-1 text-xs text-white/25">
+                              {text(
+                                "/ mês",
+                                "/ month"
+                              )}
+                            </span>
+                          </div>
+
+                          {Number(
+                            price.setupPrice
+                          ) > 0 && (
+                            <p className="mt-2 text-[11px] text-white/25">
+                              +{" "}
+                              {formatMoney(
+                                Number(
+                                  price.setupPrice
+                                ),
+                                price.currency,
+                                locale
+                              )}{" "}
+                              {text(
+                                "de taxa inicial",
+                                "setup fee"
+                              )}
+                            </p>
+                          )}
+
+                          <p className="mt-3 text-[10px] uppercase tracking-[0.14em] text-cyan-200/35">
+                            {isEnglish
+                              ? currentMarket.en
+                              : currentMarket.pt}{" "}
+                            ·{" "}
+                            {
+                              price.currency
+                            }
+                          </p>
+                        </>
+                      ) : (
+                        <div className="rounded-2xl border border-amber-300/[0.08] bg-amber-300/[0.035] px-4 py-4 text-sm text-amber-100/60">
+                          {text(
+                            "Preço ainda não cadastrado para esta região.",
+                            "Pricing is not available for this region yet."
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    {Number(plan.setupPrice) >
-                      0 && (
-                      <p className="mt-2 text-[11px] text-white/25">
-                        +{" "}
-                        {formatMoney(
-                          Number(
-                            plan.setupPrice
-                          ),
-                          plan.currency
-                        )}{" "}
-                        de taxa inicial
-                      </p>
-                    )}
+                    <div className="my-8 h-px bg-white/[0.06]" />
+
+                    <div className="space-y-3">
+                      {[
+                        text(
+                          "Acesso à plataforma",
+                          "Platform access"
+                        ),
+                        text(
+                          "Atualizações incluídas",
+                          "Updates included"
+                        ),
+                        text(
+                          "Suporte Orbitta",
+                          "Orbitta support"
+                        ),
+                      ].map(
+                        (feature) => (
+                          <div
+                            key={
+                              feature
+                            }
+                            className="flex items-center gap-3 text-xs text-white/45"
+                          >
+                            <Check
+                              size={14}
+                              className="text-cyan-300/60"
+                            />
+                            {
+                              feature
+                            }
+                          </div>
+                        )
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        price &&
+                        void handleContract(
+                          plan,
+                          price
+                        )
+                      }
+                      disabled={
+                        contractingPlanId !==
+                          null ||
+                        !price
+                      }
+                      className="group mt-8 flex h-12 w-full items-center justify-center gap-3 rounded-full bg-white text-sm font-semibold text-[#07101c] transition hover:scale-[1.01] hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:scale-100"
+                    >
+                      {contracting ? (
+                        <>
+                          <Loader2
+                            size={15}
+                            className="animate-spin"
+                          />
+                          {text(
+                            "Iniciando...",
+                            "Starting..."
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {text(
+                            "Contratar",
+                            "Subscribe"
+                          )}
+
+                          <ArrowRight
+                            size={15}
+                            className="transition-transform group-hover:translate-x-1"
+                          />
+                        </>
+                      )}
+                    </button>
                   </div>
-
-                  <div className="my-8 h-px bg-white/[0.06]" />
-
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-xs text-white/45">
-                      <Check
-                        size={14}
-                        className="text-cyan-300/60"
-                      />
-                      Acesso à plataforma
-                    </div>
-
-                    <div className="flex items-center gap-3 text-xs text-white/45">
-                      <Check
-                        size={14}
-                        className="text-cyan-300/60"
-                      />
-                      Atualizações incluídas
-                    </div>
-
-                    <div className="flex items-center gap-3 text-xs text-white/45">
-                      <Check
-                        size={14}
-                        className="text-cyan-300/60"
-                      />
-                      Suporte Orbitta
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleContract(plan)
-                    }
-                    disabled={
-                      contractingPlanId !== null
-                    }
-                    className="group mt-8 flex h-12 w-full items-center justify-center gap-3 rounded-full bg-white text-sm font-semibold text-[#07101c] transition hover:scale-[1.01] hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
-                  >
-                    {contracting ? (
-                      <>
-                        <Loader2
-                          size={15}
-                          className="animate-spin"
-                        />
-                        Iniciando...
-                      </>
-                    ) : (
-                      <>
-                        Contratar
-
-                        <ArrowRight
-                          size={15}
-                          className="transition-transform group-hover:translate-x-1"
-                        />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </article>
-            );
-          })}
+                </article>
+              );
+            }
+          )}
         </div>
       </div>
     </section>

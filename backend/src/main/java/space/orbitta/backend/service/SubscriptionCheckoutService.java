@@ -10,6 +10,7 @@ import space.orbitta.backend.dto.SubscriptionCheckoutResponse;
 import space.orbitta.backend.dto.SubscriptionPaymentResponse;
 import space.orbitta.backend.dto.TermsAcceptanceRequest;
 import space.orbitta.backend.entity.CatalogPlan;
+import space.orbitta.backend.entity.CatalogPlanPrice;
 import space.orbitta.backend.entity.CatalogProduct;
 import space.orbitta.backend.entity.ProductStatus;
 import space.orbitta.backend.entity.SubscriptionCheckout;
@@ -126,6 +127,41 @@ public class SubscriptionCheckoutService {
         CatalogProduct product =
                 plan.getProduct();
 
+        CatalogPlanPrice regionalPrice =
+                catalogService
+                        .getActivePlanPriceEntity(
+                                plan.getId(),
+                                request.priceId()
+                        );
+
+        BigDecimal monthlyPrice =
+                requireNonNegativePrice(
+                        regionalPrice != null
+                                ? regionalPrice.getMonthlyPrice()
+                                : plan.getMonthlyPrice(),
+                        "Valor mensal"
+                );
+
+        BigDecimal selectedSetupPrice =
+                regionalPrice != null
+                        ? regionalPrice.getSetupPrice()
+                        : plan.getSetupPrice();
+
+        BigDecimal setupPrice =
+                selectedSetupPrice != null
+                        ? requireNonNegativePrice(
+                                selectedSetupPrice,
+                                "Taxa de implantação"
+                        )
+                        : BigDecimal.ZERO;
+
+        String currency =
+                normalizeCurrency(
+                        regionalPrice != null
+                                ? regionalPrice.getCurrency()
+                                : plan.getCurrency()
+                );
+
         boolean alreadySubscribed =
                 clientProductRepository
                         .existsByUserIdAndCatalogPlanIdAndStatus(
@@ -201,9 +237,25 @@ public class SubscriptionCheckoutService {
 
             if (!isExpired(checkout)) {
 
-                return SubscriptionCheckoutResponse.from(
-                        checkout
-                );
+                boolean samePrice =
+                        checkout.getMonthlyPrice()
+                                .compareTo(
+                                        monthlyPrice
+                                ) == 0 &&
+                        checkout.getSetupPrice()
+                                .compareTo(
+                                        setupPrice
+                                ) == 0 &&
+                        checkout.getCurrency()
+                                .equalsIgnoreCase(
+                                        currency
+                                );
+
+                if (samePrice) {
+                    return SubscriptionCheckoutResponse.from(
+                            checkout
+                    );
+                }
             }
 
             checkout.setStatus(
@@ -214,25 +266,6 @@ public class SubscriptionCheckoutService {
                     checkout
             );
         }
-
-        BigDecimal monthlyPrice =
-                requireNonNegativePrice(
-                        plan.getMonthlyPrice(),
-                        "Valor mensal"
-                );
-
-        BigDecimal setupPrice =
-                plan.getSetupPrice() != null
-                        ? requireNonNegativePrice(
-                                plan.getSetupPrice(),
-                                "Taxa de implantação"
-                        )
-                        : BigDecimal.ZERO;
-
-        String currency =
-                normalizeCurrency(
-                        plan.getCurrency()
-                );
 
         SubscriptionCheckout checkout =
                 new SubscriptionCheckout();

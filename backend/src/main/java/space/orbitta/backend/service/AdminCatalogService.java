@@ -2,14 +2,18 @@ package space.orbitta.backend.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import space.orbitta.backend.dto.CatalogPlanPriceResponse;
 import space.orbitta.backend.dto.CatalogPlanResponse;
 import space.orbitta.backend.dto.CatalogProductResponse;
 import space.orbitta.backend.dto.CreateCatalogPlanRequest;
 import space.orbitta.backend.dto.CreateCatalogProductRequest;
 import space.orbitta.backend.dto.UpdateCatalogPlanRequest;
 import space.orbitta.backend.dto.UpdateCatalogProductRequest;
+import space.orbitta.backend.dto.UpsertCatalogPlanPriceRequest;
 import space.orbitta.backend.entity.CatalogPlan;
+import space.orbitta.backend.entity.CatalogPlanPrice;
 import space.orbitta.backend.entity.CatalogProduct;
+import space.orbitta.backend.repository.CatalogPlanPriceRepository;
 import space.orbitta.backend.repository.CatalogPlanRepository;
 import space.orbitta.backend.repository.CatalogProductRepository;
 
@@ -22,13 +26,16 @@ public class AdminCatalogService {
 
     private final CatalogProductRepository catalogProductRepository;
     private final CatalogPlanRepository catalogPlanRepository;
+    private final CatalogPlanPriceRepository catalogPlanPriceRepository;
 
     public AdminCatalogService(
             CatalogProductRepository catalogProductRepository,
-            CatalogPlanRepository catalogPlanRepository
+            CatalogPlanRepository catalogPlanRepository,
+            CatalogPlanPriceRepository catalogPlanPriceRepository
     ) {
         this.catalogProductRepository = catalogProductRepository;
         this.catalogPlanRepository = catalogPlanRepository;
+        this.catalogPlanPriceRepository = catalogPlanPriceRepository;
     }
 
     // =========================================================
@@ -270,6 +277,10 @@ public class AdminCatalogService {
         CatalogPlan saved =
                 catalogPlanRepository.save(plan);
 
+        syncBrazilPrice(
+                saved
+        );
+
         return toPlanResponse(saved);
     }
 
@@ -348,7 +359,128 @@ public class AdminCatalogService {
         CatalogPlan saved =
                 catalogPlanRepository.save(plan);
 
+        syncBrazilPrice(
+                saved
+        );
+
         return toPlanResponse(saved);
+    }
+
+    // =========================================================
+    // REGIONAL PRICES
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public List<CatalogPlanPriceResponse> getPlanPrices(
+            Long planId
+    ) {
+        findPlan(planId);
+
+        return catalogPlanPriceRepository
+                .findByPlanIdOrderByDisplayOrderAscRegionCodeAsc(
+                        planId
+                )
+                .stream()
+                .map(CatalogPlanPriceResponse::from)
+                .toList();
+    }
+
+    @Transactional
+    public CatalogPlanPriceResponse upsertPlanPrice(
+            Long planId,
+            String regionCode,
+            UpsertCatalogPlanPriceRequest request
+    ) {
+        CatalogPlan plan =
+                findPlan(
+                        planId
+                );
+
+        String region =
+                normalizeRegion(
+                        regionCode
+                );
+
+        BigDecimal monthlyPrice =
+                validateMoney(
+                        request.monthlyPrice(),
+                        "Valor mensal"
+                );
+
+        BigDecimal setupPrice =
+                request.setupPrice() == null
+                        ? BigDecimal.ZERO
+                        : validateMoney(
+                                request.setupPrice(),
+                                "Taxa inicial"
+                        );
+
+        CatalogPlanPrice price =
+                catalogPlanPriceRepository
+                        .findByPlanIdAndRegionCodeIgnoreCase(
+                                planId,
+                                region
+                        )
+                        .orElseGet(
+                                CatalogPlanPrice::new
+                        );
+
+        price.setPlan(
+                plan
+        );
+        price.setRegionCode(
+                region
+        );
+        price.setCurrency(
+                currencyForRegion(
+                        region
+                )
+        );
+        price.setMonthlyPrice(
+                monthlyPrice
+        );
+        price.setSetupPrice(
+                setupPrice
+        );
+        price.setActive(
+                request.active() == null ||
+                request.active()
+        );
+        price.setDisplayOrder(
+                displayOrderForRegion(
+                        region
+                )
+        );
+
+        CatalogPlanPrice saved =
+                catalogPlanPriceRepository
+                        .save(
+                                price
+                        );
+
+        if (
+                "BR".equals(
+                        region
+                )
+        ) {
+            plan.setMonthlyPrice(
+                    monthlyPrice
+            );
+            plan.setSetupPrice(
+                    setupPrice
+            );
+            plan.setCurrency(
+                    "BRL"
+            );
+
+            catalogPlanRepository.save(
+                    plan
+            );
+        }
+
+        return CatalogPlanPriceResponse.from(
+                saved
+        );
     }
 
     // =========================================================
@@ -404,6 +536,15 @@ public class AdminCatalogService {
     private CatalogPlanResponse toPlanResponse(
             CatalogPlan plan
     ) {
+        List<CatalogPlanPriceResponse> regionalPrices =
+                catalogPlanPriceRepository
+                        .findByPlanIdOrderByDisplayOrderAscRegionCodeAsc(
+                                plan.getId()
+                        )
+                        .stream()
+                        .map(CatalogPlanPriceResponse::from)
+                        .toList();
+
         return new CatalogPlanResponse(
                 plan.getId(),
                 plan.getName(),
@@ -413,7 +554,8 @@ public class AdminCatalogService {
                 plan.getSetupPrice(),
                 plan.getCurrency(),
                 plan.isActive(),
-                plan.getDisplayOrder()
+                plan.getDisplayOrder(),
+                regionalPrices
         );
     }
 
@@ -449,6 +591,115 @@ public class AdminCatalogService {
                 .replaceAll("[^a-z0-9-]", "-")
                 .replaceAll("-+", "-")
                 .replaceAll("^-|-$", "");
+    }
+
+    private void syncBrazilPrice(
+            CatalogPlan plan
+    ) {
+        CatalogPlanPrice price =
+                catalogPlanPriceRepository
+                        .findByPlanIdAndRegionCodeIgnoreCase(
+                                plan.getId(),
+                                "BR"
+                        )
+                        .orElseGet(
+                                CatalogPlanPrice::new
+                        );
+
+        price.setPlan(
+                plan
+        );
+        price.setRegionCode(
+                "BR"
+        );
+        price.setCurrency(
+                "BRL"
+        );
+        price.setMonthlyPrice(
+                plan.getMonthlyPrice()
+        );
+        price.setSetupPrice(
+                plan.getSetupPrice() != null
+                        ? plan.getSetupPrice()
+                        : BigDecimal.ZERO
+        );
+        price.setActive(
+                plan.isActive()
+        );
+        price.setDisplayOrder(
+                0
+        );
+
+        catalogPlanPriceRepository.save(
+                price
+        );
+    }
+
+    private String normalizeRegion(
+            String regionCode
+    ) {
+        if (
+                regionCode == null ||
+                regionCode.isBlank()
+        ) {
+            throw new IllegalArgumentException(
+                    "Região é obrigatória."
+            );
+        }
+
+        String region =
+                regionCode
+                        .trim()
+                        .toUpperCase(
+                                Locale.ROOT
+                        );
+
+        if (
+                !List.of(
+                        "BR",
+                        "US",
+                        "EU",
+                        "GB",
+                        "CA"
+                ).contains(
+                        region
+                )
+        ) {
+            throw new IllegalArgumentException(
+                    "Região não suportada."
+            );
+        }
+
+        return region;
+    }
+
+    private String currencyForRegion(
+            String region
+    ) {
+        return switch (region) {
+            case "BR" -> "BRL";
+            case "US" -> "USD";
+            case "EU" -> "EUR";
+            case "GB" -> "GBP";
+            case "CA" -> "CAD";
+            default ->
+                    throw new IllegalArgumentException(
+                            "Região não suportada."
+                    );
+        };
+    }
+
+    private int displayOrderForRegion(
+            String region
+    ) {
+        return switch (region) {
+            case "BR" -> 0;
+            case "US" -> 10;
+            case "EU" -> 20;
+            case "GB" -> 30;
+            case "CA" -> 40;
+            default -> 99;
+        };
     }
 
     private String normalizeCurrency(String currency) {

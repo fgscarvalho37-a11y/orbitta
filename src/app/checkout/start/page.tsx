@@ -16,21 +16,30 @@ type CheckoutResponse = {
   id: number;
 };
 
-async function readMessage(response: Response) {
-  const text = await response.text();
+async function readMessage(
+  response: Response,
+  fallback: string
+) {
+  const responseText =
+    await response.text();
 
-  if (!text) {
-    return text(
-              "Não foi possível iniciar a contratação.",
-              "We could not start your subscription."
-            );
+  if (!responseText) {
+    return fallback;
   }
 
   try {
-    const data = JSON.parse(text);
-    return data?.message ?? data?.error ?? text;
+    const data =
+      JSON.parse(
+        responseText
+      );
+
+    return (
+      data?.message ??
+      data?.error ??
+      responseText
+    );
   } catch {
-    return text;
+    return responseText;
   }
 }
 
@@ -185,7 +194,13 @@ export default function CheckoutStartPage() {
 
         if (!checkoutResponse.ok) {
           throw new Error(
-            await readMessage(checkoutResponse)
+            await readMessage(
+              checkoutResponse,
+              text(
+                "Não foi possível iniciar a contratação.",
+                "We could not start your subscription."
+              )
+            )
           );
         }
 

@@ -532,7 +532,8 @@ export default function CheckoutPage({
                 <span className="text-white/60">
                   {formatCurrency(
                     checkout.monthlyPrice,
-                    checkout.currency
+                    checkout.currency,
+                    locale
                   )}
                 </span>
               </div>

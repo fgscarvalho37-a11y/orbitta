@@ -121,7 +121,8 @@ public class SecurityConfig {
                         .ignoringRequestMatchers(
                                 "/api/auth/**",
                                 "/api/admin/**",
-                                "/api/webhooks/**"
+                                "/api/webhooks/**",
+                                "/api/internal/renewal-emails/**"
                         )
                 )
 
@@ -138,7 +139,8 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/api/webhooks/mercadopago",
-                                "/api/webhooks/stripe"
+                                "/api/webhooks/stripe",
+                                "/api/internal/renewal-emails/**"
                         )
                         .permitAll()
 

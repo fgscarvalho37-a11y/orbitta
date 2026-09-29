@@ -1390,7 +1390,7 @@ public class StripeSubscriptionSyncService {
                             == ProductStatus.ACTIVE
             ) {
                 pizzaSystemProvisionService
-                        .reactivate(
+                        .provision(
                                 product
                         );
 

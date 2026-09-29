@@ -1101,10 +1101,17 @@ public class MercadoPagoSubscriptionSyncService {
 
                 } else {
 
-                    pizzaSystemProvisionService
-                            .reactivate(
-                                    savedProduct
-                            );
+                    savedProduct =
+                            pizzaSystemProvisionService
+                                    .provision(
+                                            savedProduct
+                                    );
+
+                    savedProduct =
+                            clientProductRepository
+                                    .save(
+                                            savedProduct
+                                    );
                 }
 
             } catch (RuntimeException exception) {
@@ -1405,7 +1412,7 @@ public class MercadoPagoSubscriptionSyncService {
                             == ProductStatus.ACTIVE
             ) {
                 pizzaSystemProvisionService
-                        .reactivate(
+                        .provision(
                                 product
                         );
 

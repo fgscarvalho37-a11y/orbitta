@@ -54,6 +54,9 @@ public class DemoAccountBootstrapConfig {
                 return;
             }
 
+            final Long demoId =
+                    demo.getId();
+
             userRepository
                     .findFirstByRoleAndDemoAccountTrue(
                             User.Role.CLIENT
@@ -63,7 +66,7 @@ public class DemoAccountBootstrapConfig {
                                 if (
                                         !current.getId()
                                                 .equals(
-                                                        demo.getId()
+                                                        demoId
                                                 )
                                 ) {
                                     current.setDemoAccount(
@@ -91,7 +94,7 @@ public class DemoAccountBootstrapConfig {
                     )
             );
 
-            demo =
+            User savedDemo =
                     userRepository.save(
                             demo
                     );
@@ -99,7 +102,7 @@ public class DemoAccountBootstrapConfig {
             try {
                 pizzaSystemProvisionService
                         .syncUser(
-                                demo
+                                savedDemo
                         );
 
                 System.out.println(

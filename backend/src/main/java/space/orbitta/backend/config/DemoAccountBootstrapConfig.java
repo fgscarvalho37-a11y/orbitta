@@ -12,10 +12,10 @@ import space.orbitta.backend.service.PizzaSystemProvisionService;
 @Configuration
 public class DemoAccountBootstrapConfig {
 
-    @Value("${orbitta.demo-account.email:demo@orbitta.space}")
+    @Value("${ORBITTA_DEMO_ACCOUNT_EMAIL:demo@orbitta.space}")
     private String demoEmail;
 
-    @Value("${orbitta.demo-account.password:}")
+    @Value("${ORBITTA_DEMO_ACCOUNT_PASSWORD:}")
     private String demoPassword;
 
     @Bean

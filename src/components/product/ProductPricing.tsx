@@ -3,8 +3,12 @@
 import {
   ArrowRight,
   Check,
+  ChevronDown,
+  ChevronUp,
+  Flame,
   Globe2,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import {
   useEffect,
@@ -15,7 +19,6 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/i18n/LanguageProvider";
 
 const API_URL = "/backend";
-const MARKET_STORAGE_KEY = "orbitta-market";
 
 type RegionalPrice = {
   id: number;
@@ -56,7 +59,6 @@ type CatalogProduct = {
 type CsrfResponse = {
   token: string;
   headerName: string;
-  parameterName: string;
 };
 
 type CheckoutResponse = {
@@ -67,76 +69,138 @@ type ProductPricingProps = {
   slug: string;
 };
 
-type MarketCode =
-  | "BR"
-  | "US";
+type MarketCode = "BR" | "US";
+type BillingCycle = "MONTHLY" | "ANNUAL";
 
-const MARKETS: Array<{
-  code: MarketCode;
-  pt: string;
-  en: string;
-  currency: string;
-}> = [
+const MARKET_META: Record<
+  MarketCode,
   {
-    code: "BR",
+    pt: string;
+    en: string;
+    currency: string;
+  }
+> = {
+  BR: {
     pt: "Brasil",
     en: "Brazil",
     currency: "BRL",
   },
-  {
-    code: "US",
-    pt: "Estados Unidos",
-    en: "United States",
+  US: {
+    pt: "Internacional",
+    en: "International",
     currency: "USD",
   },
-];
+};
 
-function detectMarket(): MarketCode {
-  const languages =
-    typeof navigator !== "undefined"
-      ? navigator.languages?.length
-        ? navigator.languages
-        : [navigator.language]
-      : [];
+const PACKAGE_FEATURES: Record<
+  string,
+  {
+    pt: string[];
+    en: string[];
+  }
+> = {
+  pizzasystem: {
+    pt: [
+      "Cardápio online com fotos e ingredientes",
+      "Categorias e organização do cardápio",
+      "Produtos, adicionais, observações e complementos",
+      "Bordas configuráveis",
+      "Pedidos online em tempo real",
+      "Checkout próprio da pizzaria",
+      "Pix e cartão no Brasil",
+      "Stripe Connect para operação internacional",
+      "Dinheiro na entrega",
+      "Cupons e promoções",
+      "Taxa de entrega fixa ou por distância",
+      "Faixas de entrega por quilômetro",
+      "Quilometragem grátis configurável",
+      "Cálculo de rota e distância",
+      "Painel de pedidos",
+      "Painel de cozinha",
+      "Fluxo Recebido → Preparando → Pronto → Entregue",
+      "Controle de entregas",
+      "Caixa",
+      "Histórico de pedidos",
+      "Relatórios de vendas",
+      "Horários de funcionamento",
+      "Personalização da loja",
+      "Domínio e endereço público da loja",
+      "Painel administrativo protegido",
+      "Atualizações incluídas",
+      "Suporte Orbitta",
+    ],
+    en: [
+      "Online menu with photos and ingredients",
+      "Menu categories and organization",
+      "Products, add-ons, notes and extras",
+      "Configurable crusts",
+      "Real-time online orders",
+      "Restaurant-owned checkout",
+      "Brazilian Pix and card payments",
+      "Stripe Connect for international operations",
+      "Cash on delivery",
+      "Coupons and promotions",
+      "Fixed or distance-based delivery fees",
+      "Delivery distance bands",
+      "Configurable free-delivery radius",
+      "Route and distance calculation",
+      "Orders dashboard",
+      "Kitchen dashboard",
+      "Received → Preparing → Ready → Delivered workflow",
+      "Delivery management",
+      "Cash register",
+      "Order history",
+      "Sales reports",
+      "Business hours",
+      "Store personalization",
+      "Public store domain and URL",
+      "Protected admin dashboard",
+      "Updates included",
+      "Orbitta support",
+    ],
+  },
+  condoflow: {
+    pt: [
+      "Painel do síndico",
+      "Acesso da portaria",
+      "Correspondências",
+      "Cadastro de múltiplas correspondências",
+      "Reservas de espaços",
+      "Controle de utilização",
+      "Ocorrências",
+      "Logs administrativos",
+      "Horários personalizados",
+      "Operação multi-condomínio",
+      "Web e Android",
+      "Atualizações incluídas",
+    ],
+    en: [
+      "Manager dashboard",
+      "Front desk access",
+      "Deliveries and parcels",
+      "Multiple parcel registration",
+      "Space reservations",
+      "Usage checkout",
+      "Incidents",
+      "Administrative logs",
+      "Custom schedules",
+      "Multi-condominium operation",
+      "Web and Android",
+      "Updates included",
+    ],
+  },
+};
 
-  for (const language of languages) {
-    const parts =
-      language
-        .replace("_", "-")
-        .split("-");
-
-    const region =
-      parts.length > 1
-        ? parts[
-            parts.length - 1
-          ].toUpperCase()
-        : "";
-
-    if (region === "BR") {
-      return "BR";
-    }
-
-    if (region === "US") {
-      return "US";
-    }
+function fallbackMarket(): MarketCode {
+  if (typeof navigator === "undefined") {
+    return "BR";
   }
 
-  const primary =
-    languages[0]
-      ?.toLowerCase() ?? "";
-
-  return primary.startsWith("pt")
+  return navigator.language
+    .toLowerCase()
+    .startsWith("pt")
     ? "BR"
     : "US";
-}
-
-function isMarketCode(
-  value: string | null
-): value is MarketCode {
-  return MARKETS.some(
-    (market) =>
-      market.code === value
-  );
 }
 
 function formatMoney(
@@ -145,138 +209,105 @@ function formatMoney(
   locale: string
 ) {
   try {
-    return new Intl.NumberFormat(
-      locale,
-      {
-        style: "currency",
-        currency,
-      }
-    ).format(value);
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+    }).format(value);
   } catch {
     return `${currency} ${value.toFixed(2)}`;
   }
 }
 
-function englishPlanName(
-  plan: CatalogPlan
-) {
-  const normalized =
-    plan.name
-      .trim()
-      .toLowerCase();
+function englishPlanName(plan: CatalogPlan) {
+  const normalized = plan.name.trim().toLowerCase();
 
-  if (
-    normalized === "essencial"
-  ) {
-    return "Essential";
-  }
-
-  if (
-    normalized === "profissional"
-  ) {
-    return "Professional";
-  }
-
-  if (
-    normalized === "completo"
-  ) {
-    return "Complete";
-  }
+  if (normalized === "essencial") return "Essential";
+  if (normalized === "profissional") return "Professional";
+  if (normalized === "completo") return "Complete";
 
   return plan.name;
 }
 
-async function readErrorMessage(
-  response: Response
-) {
-  const responseText =
-    await response.text();
+async function readErrorMessage(response: Response) {
+  const responseText = await response.text();
 
   if (!responseText) {
     return "Não foi possível concluir a solicitação.";
   }
 
   try {
-    const data =
-      JSON.parse(responseText);
+    const data = JSON.parse(responseText);
 
-    if (
-      typeof data?.message ===
-        "string" &&
-      data.message.trim()
-    ) {
+    if (typeof data?.message === "string" && data.message.trim()) {
       return data.message;
     }
 
-    if (
-      typeof data?.error ===
-        "string" &&
-      data.error.trim()
-    ) {
+    if (typeof data?.error === "string" && data.error.trim()) {
       return data.error;
     }
   } catch {
-    // A resposta não era JSON.
+    // resposta não JSON
   }
 
-  return responseText;
+  return "Não foi possível concluir a solicitação.";
 }
 
 export default function ProductPricing({
   slug,
 }: ProductPricingProps) {
   const router = useRouter();
-
-  const {
-    locale,
-    isEnglish,
-    text,
-  } = useLanguage();
+  const { locale, isEnglish, text } = useLanguage();
 
   const [product, setProduct] =
-    useState<CatalogProduct | null>(
-      null
-    );
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [unavailable, setUnavailable] =
-    useState(false);
-
-  const [
-    contractingPlanId,
-    setContractingPlanId,
-  ] = useState<number | null>(null);
-
-  const [
-    checkoutError,
-    setCheckoutError,
-  ] = useState<string | null>(null);
-
-  const [market, setMarket] =
-    useState<MarketCode>("BR");
+    useState<CatalogProduct | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [unavailable, setUnavailable] = useState(false);
+  const [market, setMarket] = useState<MarketCode>("BR");
+  const [billingCycle, setBillingCycle] =
+    useState<BillingCycle>("MONTHLY");
+  const [expanded, setExpanded] = useState(false);
+  const [contractingPlanId, setContractingPlanId] =
+    useState<number | null>(null);
+  const [checkoutError, setCheckoutError] =
+    useState<string | null>(null);
 
   useEffect(() => {
-    const saved =
-      window.localStorage.getItem(
-        MARKET_STORAGE_KEY
-      );
+    let cancelled = false;
 
-    const detected =
-      isMarketCode(saved)
-        ? saved
-        : detectMarket();
+    async function detectMarket() {
+      try {
+        const response = await fetch("/api/market", {
+          cache: "no-store",
+        });
 
-    setMarket(detected);
+        if (!response.ok) {
+          throw new Error("market");
+        }
+
+        const data: {
+          marketCode?: string;
+        } = await response.json();
+
+        if (
+          !cancelled &&
+          (data.marketCode === "BR" ||
+            data.marketCode === "US")
+        ) {
+          setMarket(data.marketCode);
+        }
+      } catch {
+        if (!cancelled) {
+          setMarket(fallbackMarket());
+        }
+      }
+    }
+
+    void detectMarket();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      MARKET_STORAGE_KEY,
-      market
-    );
-  }, [market]);
 
   useEffect(() => {
     let cancelled = false;
@@ -286,40 +317,31 @@ export default function ProductPricing({
         setLoading(true);
         setUnavailable(false);
 
-        const response =
-          await fetch(
-            `${API_URL}/api/catalog/products/${slug}`,
-            {
-              method: "GET",
-              cache: "no-store",
-              headers: {
-                Accept:
-                  "application/json",
-              },
-            }
-          );
+        const response = await fetch(
+          `${API_URL}/api/catalog/products/${slug}`,
+          {
+            method: "GET",
+            cache: "no-store",
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
           if (!cancelled) {
             setUnavailable(true);
           }
-
           return;
         }
 
-        const data:
-          CatalogProduct =
+        const data: CatalogProduct =
           await response.json();
 
         if (!cancelled) {
           setProduct(data);
         }
-      } catch (error) {
-        console.error(
-          "Erro ao carregar planos:",
-          error
-        );
-
+      } catch {
         if (!cancelled) {
           setUnavailable(true);
         }
@@ -337,46 +359,41 @@ export default function ProductPricing({
     };
   }, [slug]);
 
-  const currentMarket =
-    useMemo(
-      () =>
-        MARKETS.find(
-          (item) =>
-            item.code === market
-        ) ?? MARKETS[0],
-      [market]
-    );
+  const marketMeta = MARKET_META[market];
+
+  const features = useMemo(() => {
+    const list =
+      PACKAGE_FEATURES[slug] ??
+      PACKAGE_FEATURES.pizzasystem;
+
+    return isEnglish ? list.en : list.pt;
+  }, [slug, isEnglish]);
+
+  const visibleFeatures =
+    expanded ? features : features.slice(0, 8);
 
   function selectedPrice(
     plan: CatalogPlan
   ): RegionalPrice | null {
-    const prices =
-      plan.regionalPrices ?? [];
+    const prices = plan.regionalPrices ?? [];
 
-    const regional =
-      prices.find(
-        (price) =>
-          price.active &&
-          price.regionCode === market
-      );
+    const regional = prices.find(
+      (price) =>
+        price.active &&
+        price.regionCode === market
+    );
 
     if (regional) {
       return regional;
     }
 
-    if (
-      market === "BR" &&
-      prices.length === 0
-    ) {
+    if (market === "BR" && prices.length === 0) {
       return {
         id: 0,
         regionCode: "BR",
-        currency:
-          plan.currency,
-        monthlyPrice:
-          plan.monthlyPrice,
-        setupPrice:
-          plan.setupPrice,
+        currency: plan.currency,
+        monthlyPrice: plan.monthlyPrice,
+        setupPrice: plan.setupPrice,
         active: plan.active,
         displayOrder: 0,
       };
@@ -389,48 +406,36 @@ export default function ProductPricing({
     plan: CatalogPlan,
     price: RegionalPrice
   ) {
-    if (
-      contractingPlanId !== null
-    ) {
+    if (contractingPlanId !== null) {
       return;
     }
 
     try {
-      setContractingPlanId(
-        plan.id
-      );
+      setContractingPlanId(plan.id);
       setCheckoutError(null);
 
       const priceId =
-        price.id > 0
-          ? price.id
-          : null;
+        price.id > 0 ? price.id : null;
 
       const returnUrl =
-        `/checkout/start?planId=${plan.id}${
-          priceId
-            ? `&priceId=${priceId}`
-            : ""
-        }`;
+        `/checkout/start?planId=${plan.id}` +
+        `${priceId ? `&priceId=${priceId}` : ""}` +
+        `&billingCycle=${billingCycle}`;
 
-      const meResponse =
-        await fetch(
-          `${API_URL}/api/auth/me`,
-          {
-            method: "GET",
-            credentials:
-              "include",
-            cache: "no-store",
-            headers: {
-              Accept:
-                "application/json",
-            },
-          }
-        );
+      const meResponse = await fetch(
+        `${API_URL}/api/auth/me`,
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
 
       if (
-        meResponse.status ===
-          401 ||
+        meResponse.status === 401 ||
         meResponse.status === 403
       ) {
         router.push(
@@ -438,7 +443,6 @@ export default function ProductPricing({
             returnUrl
           )}`
         );
-
         return;
       }
 
@@ -451,29 +455,22 @@ export default function ProductPricing({
         );
       }
 
-      const activeProductsResponse =
-        await fetch(
-          `${API_URL}/api/client/products/active`,
-          {
-            method: "GET",
-            credentials:
-              "include",
-            cache: "no-store",
-            headers: {
-              Accept:
-                "application/json",
-            },
-          }
-        );
+      const activeProductsResponse = await fetch(
+        `${API_URL}/api/client/products/active`,
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
 
-      if (
-        activeProductsResponse.ok
-      ) {
-        const activeProducts:
-          Array<{
-            name?: string;
-          }> =
-          await activeProductsResponse.json();
+      if (activeProductsResponse.ok) {
+        const activeProducts: Array<{
+          name?: string;
+        }> = await activeProductsResponse.json();
 
         const alreadyHasProduct =
           activeProducts.some(
@@ -487,27 +484,22 @@ export default function ProductPricing({
           );
 
         if (alreadyHasProduct) {
-          router.push(
-            "/painel"
-          );
+          router.push("/painel");
           return;
         }
       }
 
-      const csrfResponse =
-        await fetch(
-          `${API_URL}/api/csrf`,
-          {
-            method: "GET",
-            credentials:
-              "include",
-            cache: "no-store",
-            headers: {
-              Accept:
-                "application/json",
-            },
-          }
-        );
+      const csrfResponse = await fetch(
+        `${API_URL}/api/csrf`,
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
 
       if (!csrfResponse.ok) {
         throw new Error(
@@ -521,33 +513,27 @@ export default function ProductPricing({
       const csrf: CsrfResponse =
         await csrfResponse.json();
 
-      const checkoutResponse =
-        await fetch(
-          `${API_URL}/api/checkout/subscriptions`,
-          {
-            method: "POST",
-            credentials:
-              "include",
-            headers: {
-              "Content-Type":
-                "application/json",
-              Accept:
-                "application/json",
-              [csrf.headerName]:
-                csrf.token,
-            },
-            body: JSON.stringify({
-              planId: plan.id,
-              priceId,
-            }),
-          }
-        );
+      const checkoutResponse = await fetch(
+        `${API_URL}/api/checkout/subscriptions`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            [csrf.headerName]: csrf.token,
+          },
+          body: JSON.stringify({
+            planId: plan.id,
+            priceId,
+            billingCycle,
+          }),
+        }
+      );
 
       if (
-        checkoutResponse.status ===
-          401 ||
-        checkoutResponse.status ===
-          403
+        checkoutResponse.status === 401 ||
+        checkoutResponse.status === 403
       ) {
         router.push(
           `/login?returnUrl=${encodeURIComponent(
@@ -559,25 +545,15 @@ export default function ProductPricing({
 
       if (!checkoutResponse.ok) {
         throw new Error(
-          await readErrorMessage(
-            checkoutResponse
-          )
+          await readErrorMessage(checkoutResponse)
         );
       }
 
-      const checkout:
-        CheckoutResponse =
+      const checkout: CheckoutResponse =
         await checkoutResponse.json();
 
-      router.push(
-        `/checkout/${checkout.id}`
-      );
+      router.push(`/checkout/${checkout.id}`);
     } catch (error) {
-      console.error(
-        "Erro ao iniciar contratação:",
-        error
-      );
-
       setCheckoutError(
         error instanceof Error
           ? error.message
@@ -587,9 +563,7 @@ export default function ProductPricing({
             )
       );
     } finally {
-      setContractingPlanId(
-        null
-      );
+      setContractingPlanId(null);
     }
   }
 
@@ -605,12 +579,8 @@ export default function ProductPricing({
               size={21}
               className="animate-spin text-cyan-300/50"
             />
-
             <span className="text-[10px] uppercase tracking-[0.2em] text-white/20">
-              {text(
-                "Carregando planos",
-                "Loading plans"
-              )}
+              {text("Carregando planos", "Loading plans")}
             </span>
           </div>
         </div>
@@ -629,291 +599,296 @@ export default function ProductPricing({
   return (
     <section
       id="planos"
-      className="border-t border-white/[0.06]"
+      className="relative overflow-hidden border-t border-white/[0.06] bg-[#050914]"
     >
-      <div className="mx-auto max-w-[1440px] px-6 py-32 lg:px-12 lg:py-40">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.25em] text-cyan-300/55">
-              {text(
-                "Planos",
-                "Plans"
-              )}
-            </p>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,rgba(249,115,22,0.12),transparent_24%),radial-gradient(circle_at_54%_44%,rgba(239,68,68,0.075),transparent_34%),radial-gradient(circle_at_46%_48%,rgba(251,191,36,0.055),transparent_42%)]" />
+      <div className="pointer-events-none absolute left-1/2 top-[31%] h-[420px] w-[720px] -translate-x-1/2 rounded-[50%] bg-orange-500/[0.04] blur-[110px]" />
 
-            <h2 className="mt-6 text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">
-              {text(
-                `Escolha como usar o ${product.name}.`,
-                `Choose your ${product.name} plan.`
-              )}
-            </h2>
-
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/35">
-              {text(
-                "O valor abaixo é o preço comercial definido para o seu mercado.",
-                "The price below is the commercial price configured for your market."
-              )}
-            </p>
+      <div className="relative mx-auto max-w-[1440px] px-6 py-32 lg:px-12 lg:py-40">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-orange-300/15 bg-orange-300/[0.05] px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-orange-100/60">
+            <Flame size={13} />
+            {text("Plano completo", "Complete plan")}
           </div>
 
-          <label className="min-w-[240px]">
-            <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-white/25">
-              <Globe2 size={12} />
-              {text(
-                "Região de cobrança",
-                "Billing region"
-              )}
-            </span>
+          <h2 className="mt-6 text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">
+            {text(
+              `Tudo do ${product.name}, sem esconder recurso em plano mais caro.`,
+              `Everything in ${product.name}, without locking features behind a higher tier.`
+            )}
+          </h2>
 
-            <select
-              value={market}
-              onChange={(event) =>
-                setMarket(
-                  event.target
-                    .value as MarketCode
-                )
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-white/40">
+            {text(
+              "Escolha mensal ou anual. No anual você recebe 12 meses de acesso e paga o equivalente a 10 mensalidades.",
+              "Choose monthly or annual. The annual option gives you 12 months of access for the price of 10 monthly payments."
+            )}
+          </p>
+
+          <div className="mt-8 inline-flex rounded-full border border-white/[0.08] bg-black/20 p-1.5 backdrop-blur-xl">
+            <button
+              type="button"
+              onClick={() => setBillingCycle("MONTHLY")}
+              className={
+                billingCycle === "MONTHLY"
+                  ? "rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-[#07101c]"
+                  : "rounded-full px-5 py-2.5 text-xs text-white/40 transition hover:text-white/70"
               }
-              className="mt-2 h-11 w-full rounded-xl border border-white/[0.08] bg-[#08101d] px-4 text-sm text-white/65 outline-none"
             >
-              {MARKETS.map(
-                (item) => (
-                  <option
-                    key={
-                      item.code
-                    }
-                    value={
-                      item.code
-                    }
-                  >
-                    {isEnglish
-                      ? item.en
-                      : item.pt}{" "}
-                    —{" "}
-                    {
-                      item.currency
-                    }
-                  </option>
-                )
-              )}
-            </select>
+              {text("Mensal", "Monthly")}
+            </button>
 
-            <div className="mt-2 text-[10px] text-white/20">
-              {text(
-                "Detectado automaticamente; você pode alterar.",
-                "Detected automatically; you can change it."
-              )}
-            </div>
-          </label>
+            <button
+              type="button"
+              onClick={() => setBillingCycle("ANNUAL")}
+              className={
+                billingCycle === "ANNUAL"
+                  ? "flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-[#07101c]"
+                  : "flex items-center gap-2 rounded-full px-5 py-2.5 text-xs text-white/40 transition hover:text-white/70"
+              }
+            >
+              {text("Anual", "Annual")}
+              <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-[9px] text-orange-700">
+                {text("2 meses grátis", "2 months free")}
+              </span>
+            </button>
+          </div>
+
+          <div className="mt-5 inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-white/25">
+            <Globe2 size={12} />
+            {text(
+              `Preço ajustado automaticamente para ${marketMeta.pt}`,
+              `Price automatically adjusted for ${marketMeta.en}`
+            )}
+          </div>
         </div>
 
         {checkoutError && (
-          <div className="mt-8 max-w-xl rounded-2xl border border-red-400/10 bg-red-400/[0.05] px-5 py-4 text-sm leading-6 text-red-200/70">
+          <div className="mx-auto mt-8 max-w-xl rounded-2xl border border-red-400/10 bg-red-400/[0.05] px-5 py-4 text-sm leading-6 text-red-200/70">
             {checkoutError}
           </div>
         )}
 
         <div
-          className={`mt-14 grid gap-5 ${
+          className={`mx-auto mt-14 grid gap-5 ${
             product.plans.length === 1
-              ? "max-w-xl"
+              ? "max-w-2xl"
               : product.plans.length === 2
                 ? "max-w-5xl md:grid-cols-2"
                 : "lg:grid-cols-3"
           }`}
         >
-          {product.plans.map(
-            (plan) => {
-              const price =
-                selectedPrice(
-                  plan
-                );
+          {product.plans.map((plan) => {
+            const price = selectedPrice(plan);
+            const contracting =
+              contractingPlanId === plan.id;
 
-              const contracting =
-                contractingPlanId ===
-                plan.id;
+            const monthlyValue =
+              Number(price?.monthlyPrice ?? 0);
+            const annualValue =
+              monthlyValue * 10;
+            const displayedValue =
+              billingCycle === "ANNUAL"
+                ? annualValue
+                : monthlyValue;
+            const regularMonthly =
+              price?.currency === "BRL"
+                ? 99
+                : 99;
 
-              return (
-                <article
-                  key={plan.id}
-                  className="relative overflow-hidden rounded-[28px] border border-white/[0.07] bg-[#08101d] p-7 sm:p-8"
-                >
-                  <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-cyan-400/[0.055] blur-[70px]" />
-
-                  <div className="relative">
-                    <div className="flex items-start justify-between gap-5">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-300/45">
-                          {
-                            product.name
-                          }
-                        </p>
-
-                        <h3 className="mt-3 text-xl font-semibold tracking-[-0.025em]">
-                          {isEnglish
-                            ? englishPlanName(
-                                plan
-                              )
-                            : plan.name}
-                        </h3>
-                      </div>
-
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full border border-emerald-300/10 bg-emerald-300/[0.04] text-emerald-200/60">
-                        <Check
-                          size={15}
-                        />
-                      </div>
+            return (
+              <article
+                key={plan.id}
+                className="relative overflow-hidden rounded-[32px] border border-orange-300/[0.14] bg-[#09101b]/95 p-7 shadow-[0_30px_100px_rgba(249,115,22,0.08)] sm:p-9"
+              >
+                <div className="pointer-events-none absolute inset-x-10 top-0 h-24 bg-gradient-to-b from-orange-400/[0.08] to-transparent blur-2xl" />
+                <div className="relative">
+                  <div className="flex items-start justify-between gap-5">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-orange-200/55">
+                        {product.name}
+                      </p>
+                      <h3 className="mt-3 text-2xl font-semibold tracking-[-0.03em]">
+                        {isEnglish
+                          ? englishPlanName(plan)
+                          : plan.name}
+                      </h3>
                     </div>
 
-                    <p className="mt-5 min-h-[48px] text-sm leading-6 text-white/30">
-                      {isEnglish
-                        ? "A monthly Orbitta plan with platform access, updates and support included."
-                        : plan.description ||
-                          "Plano mensal Orbitta com acesso à plataforma, atualizações e suporte incluídos."}
-                    </p>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-300/15 bg-orange-300/[0.06] text-orange-100/70">
+                      <Sparkles size={16} />
+                    </div>
+                  </div>
 
-                    <div className="mt-8">
-                      {price ? (
-                        <>
-                          <div className="flex items-end gap-2">
-                            <span className="text-4xl font-semibold tracking-[-0.05em] text-white">
-                              {formatMoney(
-                                Number(
-                                  price.monthlyPrice
-                                ),
-                                price.currency,
-                                locale
-                              )}
-                            </span>
+                  <p className="mt-5 text-sm leading-6 text-white/35">
+                    {isEnglish
+                      ? "One package with the complete product, updates and Orbitta support included."
+                      : plan.description ||
+                        "Pacote completo com acesso à plataforma, atualizações e suporte Orbitta incluídos."}
+                  </p>
 
-                            <span className="pb-1 text-xs text-white/25">
-                              {text(
-                                "/ mês",
-                                "/ month"
-                              )}
-                            </span>
-                          </div>
-
-                          {Number(
-                            price.setupPrice
-                          ) > 0 && (
-                            <p className="mt-2 text-[11px] text-white/25">
-                              +{" "}
-                              {formatMoney(
-                                Number(
-                                  price.setupPrice
-                                ),
-                                price.currency,
-                                locale
-                              )}{" "}
-                              {text(
-                                "de taxa inicial",
-                                "setup fee"
-                              )}
-                            </p>
-                          )}
-
-                          <p className="mt-3 text-[10px] uppercase tracking-[0.14em] text-cyan-200/35">
-                            {isEnglish
-                              ? currentMarket.en
-                              : currentMarket.pt}{" "}
-                            ·{" "}
-                            {
-                              price.currency
-                            }
-                          </p>
-                        </>
-                      ) : (
-                        <div className="rounded-2xl border border-amber-300/[0.08] bg-amber-300/[0.035] px-4 py-4 text-sm text-amber-100/60">
-                          {text(
-                            "Preço ainda não cadastrado para esta região.",
-                            "Pricing is not available for this region yet."
-                          )}
+                  <div className="mt-8">
+                    {price ? (
+                      <>
+                        <div className="text-xs text-white/25">
+                          <span className="line-through">
+                            {formatMoney(
+                              regularMonthly,
+                              price.currency,
+                              locale
+                            )}
+                            {text(" / mês", " / month")}
+                          </span>
+                          <span className="ml-2 text-orange-200/55">
+                            {text("preço regular", "regular price")}
+                          </span>
                         </div>
-                      )}
-                    </div>
 
-                    <div className="my-8 h-px bg-white/[0.06]" />
+                        <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1">
+                          <span className="text-5xl font-semibold tracking-[-0.055em] text-white">
+                            {formatMoney(
+                              displayedValue,
+                              price.currency,
+                              locale
+                            )}
+                          </span>
+                          <span className="pb-1 text-xs text-white/30">
+                            {billingCycle === "ANNUAL"
+                              ? text("/ ano", "/ year")
+                              : text("/ mês", "/ month")}
+                          </span>
+                        </div>
 
-                    <div className="space-y-3">
-                      {[
-                        text(
-                          "Acesso à plataforma",
-                          "Platform access"
-                        ),
-                        text(
-                          "Atualizações incluídas",
-                          "Updates included"
-                        ),
-                        text(
-                          "Suporte Orbitta",
-                          "Orbitta support"
-                        ),
-                      ].map(
-                        (feature) => (
-                          <div
-                            key={
-                              feature
-                            }
-                            className="flex items-center gap-3 text-xs text-white/45"
-                          >
-                            <Check
-                              size={14}
-                              className="text-cyan-300/60"
-                            />
-                            {
-                              feature
-                            }
-                          </div>
-                        )
-                      )}
-                    </div>
+                        {billingCycle === "ANNUAL" && (
+                          <p className="mt-3 text-xs leading-5 text-emerald-200/65">
+                            {text(
+                              `12 meses por ${formatMoney(
+                                annualValue,
+                                price.currency,
+                                locale
+                              )} — você economiza 2 mensalidades.`,
+                              `12 months for ${formatMoney(
+                                annualValue,
+                                price.currency,
+                                locale
+                              )} — you save 2 monthly payments.`
+                            )}
+                          </p>
+                        )}
 
+                        <p className="mt-3 text-[10px] uppercase tracking-[0.14em] text-orange-100/35">
+                          {isEnglish
+                            ? marketMeta.en
+                            : marketMeta.pt}{" "}
+                          · {price.currency}
+                        </p>
+                      </>
+                    ) : (
+                      <div className="rounded-2xl border border-amber-300/[0.08] bg-amber-300/[0.035] px-4 py-4 text-sm text-amber-100/60">
+                        {text(
+                          "Preço ainda não cadastrado para sua região.",
+                          "Pricing is not available for your region yet."
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="my-8 h-px bg-white/[0.06]" />
+
+                  <div className="space-y-3">
+                    {visibleFeatures.map((feature) => (
+                      <div
+                        key={feature}
+                        className="flex items-start gap-3 text-xs leading-5 text-white/48"
+                      >
+                        <Check
+                          size={14}
+                          className="mt-0.5 shrink-0 text-orange-200/65"
+                        />
+                        {feature}
+                      </div>
+                    ))}
+                  </div>
+
+                  {features.length > 8 && (
                     <button
                       type="button"
                       onClick={() =>
-                        price &&
-                        void handleContract(
-                          plan,
-                          price
-                        )
+                        setExpanded((current) => !current)
                       }
-                      disabled={
-                        contractingPlanId !==
-                          null ||
-                        !price
-                      }
-                      className="group mt-8 flex h-12 w-full items-center justify-center gap-3 rounded-full bg-white text-sm font-semibold text-[#07101c] transition hover:scale-[1.01] hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:scale-100"
+                      className="mt-5 flex items-center gap-2 text-xs font-medium text-orange-100/55 transition hover:text-orange-100"
                     >
-                      {contracting ? (
-                        <>
-                          <Loader2
-                            size={15}
-                            className="animate-spin"
-                          />
-                          {text(
-                            "Iniciando...",
-                            "Starting..."
+                      {expanded
+                        ? text(
+                            "Mostrar menos",
+                            "Show less"
+                          )
+                        : text(
+                            `Mostrar todas as ${features.length} funcionalidades`,
+                            `Show all ${features.length} features`
                           )}
-                        </>
+                      {expanded ? (
+                        <ChevronUp size={14} />
                       ) : (
-                        <>
-                          {text(
-                            "Contratar",
-                            "Subscribe"
-                          )}
-
-                          <ArrowRight
-                            size={15}
-                            className="transition-transform group-hover:translate-x-1"
-                          />
-                        </>
+                        <ChevronDown size={14} />
                       )}
                     </button>
-                  </div>
-                </article>
-              );
-            }
-          )}
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      price &&
+                      void handleContract(plan, price)
+                    }
+                    disabled={
+                      contractingPlanId !== null ||
+                      !price
+                    }
+                    className="group mt-8 flex h-13 w-full items-center justify-center gap-3 rounded-full bg-white px-6 text-sm font-semibold text-[#07101c] transition hover:scale-[1.01] hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:scale-100"
+                  >
+                    {contracting ? (
+                      <>
+                        <Loader2
+                          size={15}
+                          className="animate-spin"
+                        />
+                        {text("Iniciando...", "Starting...")}
+                      </>
+                    ) : (
+                      <>
+                        {billingCycle === "ANNUAL"
+                          ? text(
+                              "Contratar anual",
+                              "Choose annual"
+                            )
+                          : text(
+                              "Contratar mensal",
+                              "Choose monthly"
+                            )}
+                        <ArrowRight
+                          size={15}
+                          className="transition-transform group-hover:translate-x-1"
+                        />
+                      </>
+                    )}
+                  </button>
+
+                  <p className="mt-4 text-center text-[10px] leading-4 text-white/20">
+                    {billingCycle === "ANNUAL"
+                      ? text(
+                          "Pagamento anual antecipado. Acesso válido por 12 meses.",
+                          "Annual prepaid billing. Access is valid for 12 months."
+                        )
+                      : text(
+                          "Cobrança mensal conforme o meio de pagamento disponível.",
+                          "Monthly billing through the available payment method."
+                        )}
+                  </p>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

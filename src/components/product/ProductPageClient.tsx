@@ -54,7 +54,7 @@ const productIcons = {
 
 const heroTexts: Record<string, string> = {
   pizzasystem:
-    "Sua operação de delivery em uma única plataforma.",
+    "Venda pelo seu próprio canal. Do cardápio à entrega.",
 
   condoflow:
     "O condomínio conectado em uma única experiência.",
@@ -72,7 +72,7 @@ const sectionTexts: Record<string, string> = {
 
 const heroTextsEn: Record<string, string> = {
   pizzasystem:
-    "Your delivery operation in one platform.",
+    "Sell through your own channel. From menu to delivery.",
   condoflow:
     "Your condominium connected in one experience.",
 };
@@ -366,6 +366,181 @@ export default function ProductPageClient({
         </motion.div>
       </section>
 
+      {displayProduct.slug === "pizzasystem" && (
+        <>
+          <section className="mx-auto max-w-[1440px] px-6 pb-10 pt-28 lg:px-12 lg:pb-16 lg:pt-36">
+            <div className="grid overflow-hidden rounded-[32px] border border-white/[0.07] bg-[#08101d] lg:grid-cols-3">
+              {[
+                {
+                  icon: ShoppingBag,
+                  value: text(
+                    "Sem comissão Orbitta por pedido",
+                    "No Orbitta per-order commission"
+                  ),
+                  detail: text(
+                    "A mensalidade é previsível. As vendas continuam sendo da própria loja.",
+                    "Predictable subscription pricing. Your store keeps its own sales."
+                  ),
+                },
+                {
+                  icon: CreditCard,
+                  value: text(
+                    "Recebimento na conta da loja",
+                    "Payments to the store's account"
+                  ),
+                  detail: text(
+                    "Pix e cartão no Brasil; Stripe para a operação internacional.",
+                    "Pix and cards in Brazil; Stripe for international operations."
+                  ),
+                },
+                {
+                  icon: Settings2,
+                  value: text(
+                    "Uma operação, um painel",
+                    "One operation, one dashboard"
+                  ),
+                  detail: text(
+                    "Cardápio, pedidos, cozinha, entregas, caixa e relatórios centralizados.",
+                    "Menu, orders, kitchen, delivery, cash register and reports in one place."
+                  ),
+                },
+              ].map((item, index) => {
+                const Icon = item.icon;
+
+                return (
+                  <div
+                    key={item.value}
+                    className={
+                      index === 0
+                        ? "p-7 sm:p-9"
+                        : "border-t border-white/[0.06] p-7 sm:p-9 lg:border-l lg:border-t-0"
+                    }
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-300/10 bg-cyan-300/[0.04] text-cyan-200/70">
+                      <Icon size={17} />
+                    </div>
+
+                    <h3 className="mt-5 text-lg font-semibold tracking-[-0.025em] text-white/90">
+                      {item.value}
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-6 text-white/35">
+                      {item.detail}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section
+            id="como-funciona"
+            className="mx-auto max-w-[1440px] px-6 py-24 lg:px-12 lg:py-32"
+          >
+            <div className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
+              <div>
+                <p className="text-xs uppercase tracking-[0.25em] text-cyan-300/55">
+                  {text("Como funciona", "How it works")}
+                </p>
+
+                <h2 className="mt-6 max-w-lg text-4xl font-semibold leading-[1.04] tracking-[-0.05em] sm:text-5xl">
+                  {text(
+                    "Do primeiro clique ao pedido na cozinha.",
+                    "From the first click to the kitchen."
+                  )}
+                </h2>
+
+                <p className="mt-5 max-w-lg text-base leading-7 text-white/38">
+                  {text(
+                    "Você configura uma vez e passa a operar pelo seu próprio canal, com o cliente comprando direto da sua marca.",
+                    "Set it up once and run your own sales channel, with customers ordering directly from your brand."
+                  )}
+                </p>
+
+                <a
+                  href="#planos"
+                  className="group mt-8 inline-flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
+                >
+                  {text("Ver planos", "View pricing")}
+                  <ArrowRight
+                    size={15}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                </a>
+              </div>
+
+              <div className="grid gap-4">
+                {[
+                  {
+                    number: "01",
+                    icon: ShoppingBag,
+                    title: text(
+                      "Monte seu cardápio",
+                      "Build your menu"
+                    ),
+                    description: text(
+                      "Cadastre produtos, fotos, categorias, adicionais, bordas, cupons, horários e regras de entrega.",
+                      "Add products, photos, categories, extras, crusts, coupons, hours and delivery rules."
+                    ),
+                  },
+                  {
+                    number: "02",
+                    icon: ChefHat,
+                    title: text(
+                      "Receba e produza",
+                      "Receive and prepare"
+                    ),
+                    description: text(
+                      "O pedido entra no painel em tempo real e segue o fluxo da cozinha do recebido ao pronto.",
+                      "Orders arrive in real time and move through the kitchen workflow from received to ready."
+                    ),
+                  },
+                  {
+                    number: "03",
+                    icon: Bike,
+                    title: text(
+                      "Entregue e acompanhe",
+                      "Deliver and track"
+                    ),
+                    description: text(
+                      "Controle entrega, pagamento, caixa, histórico e relatórios sem espalhar a operação em vários sistemas.",
+                      "Manage delivery, payment, cash register, history and reports without splitting operations across multiple systems."
+                    ),
+                  },
+                ].map((step) => {
+                  const Icon = step.icon;
+
+                  return (
+                    <div
+                      key={step.number}
+                      className="group grid gap-5 rounded-[26px] border border-white/[0.06] bg-white/[0.018] p-6 transition hover:border-cyan-300/[0.12] hover:bg-[#08101d] sm:grid-cols-[58px_1fr] sm:p-7"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.025] text-cyan-200/70">
+                        <Icon size={19} />
+                      </div>
+
+                      <div>
+                        <div className="text-[10px] uppercase tracking-[0.22em] text-white/22">
+                          {step.number}
+                        </div>
+
+                        <h3 className="mt-2 text-xl font-medium tracking-[-0.025em] text-white/85">
+                          {step.title}
+                        </h3>
+
+                        <p className="mt-2 text-sm leading-6 text-white/35">
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
       {/* FUNCIONALIDADES */}
       <section
         id="conhecer"
@@ -474,17 +649,40 @@ export default function ProductPageClient({
             </h2>
 
             <div className="relative mt-10 flex flex-wrap gap-4">
-              <Link
-                href="/"
-                className="group flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c]"
-              >
-                {text("Voltar para Orbitta", "Back to Orbitta")}
+              {displayProduct.slug === "pizzasystem" ? (
+                <>
+                  <a
+                    href="#planos"
+                    className="group flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
+                  >
+                    {text("Ver planos e começar", "View pricing and get started")}
+                    <ArrowRight
+                      size={16}
+                      className="transition-transform group-hover:translate-x-1"
+                    />
+                  </a>
 
-                <ArrowRight
-                  size={16}
-                  className="transition-transform group-hover:translate-x-1"
-                />
-              </Link>
+                  <Link
+                    href="/login"
+                    className="group flex items-center gap-3 rounded-full border border-white/[0.1] bg-white/[0.04] px-6 py-3.5 text-sm text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+                  >
+                    {text("Já sou cliente", "I'm already a client")}
+                    <ArrowRight size={15} />
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href="/"
+                  className="group flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c]"
+                >
+                  {text("Voltar para Orbitta", "Back to Orbitta")}
+
+                  <ArrowRight
+                    size={16}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                </Link>
+              )}
 
               {previewAvailable && displayProduct.previewUrl && (
                 <a

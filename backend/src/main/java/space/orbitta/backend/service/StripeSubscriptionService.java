@@ -165,7 +165,7 @@ public class StripeSubscriptionService {
                 "line_items[0][price_data][unit_amount]",
                 String.valueOf(
                         toMinorUnits(
-                                checkout.getMonthlyPrice(),
+                                checkout.getBillingAmount(),
                                 currency
                         )
                 )
@@ -173,7 +173,9 @@ public class StripeSubscriptionService {
 
         form.add(
                 "line_items[0][price_data][recurring][interval]",
-                "month"
+                checkout.getRenewalMonths() == 12
+                        ? "year"
+                        : "month"
         );
 
         form.add(

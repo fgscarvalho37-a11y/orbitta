@@ -12,6 +12,8 @@ public record SubscriptionCheckoutResponse(
         String productName,
         String planName,
         BigDecimal monthlyPrice,
+        BigDecimal billingAmount,
+        String billingCycle,
         BigDecimal setupPrice,
         BigDecimal totalPrice,
         String currency,
@@ -36,6 +38,9 @@ public record SubscriptionCheckoutResponse(
                         ? checkout.getMonthlyPrice()
                         : BigDecimal.ZERO;
 
+        BigDecimal billingAmount =
+                checkout.getBillingAmount();
+
         BigDecimal setupPrice =
                 checkout.getSetupPrice() != null
                         ? checkout.getSetupPrice()
@@ -48,8 +53,10 @@ public record SubscriptionCheckoutResponse(
                 checkout.getProductName(),
                 checkout.getPlanName(),
                 monthlyPrice,
+                billingAmount,
+                checkout.getBillingCycle().name(),
                 setupPrice,
-                monthlyPrice.add(setupPrice),
+                billingAmount.add(setupPrice),
                 checkout.getCurrency(),
                 checkout.getSettlementAmount(),
                 checkout.getSettlementCurrency(),

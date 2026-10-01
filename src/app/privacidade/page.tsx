@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const version = "24/09/2026";
+const version = "01/10/2026";
 
 export default function PrivacidadePage() {
   return (
@@ -85,7 +85,7 @@ export default function PrivacidadePage() {
           <section>
             <h2 className="text-lg font-semibold text-white/80">9. Cookies e sessão</h2>
             <p className="mt-2">
-              A plataforma pode utilizar cookies e mecanismos de sessão necessários para autenticação, segurança e funcionamento de áreas logadas.
+              A plataforma utiliza cookies essenciais para autenticação, sessão, prevenção de abuso, segurança e preferências necessárias ao funcionamento. Cookies opcionais de medição ou analytics, quando implementados, devem permanecer desativados até que o usuário forneça consentimento. A escolha pode ser registrada em cookie próprio da Orbitta e pode ser renovada ou alterada quando necessário.
             </p>
           </section>
 

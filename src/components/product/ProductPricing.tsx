@@ -648,8 +648,8 @@ export default function ProductPricing({
               }
             >
               {text("Anual", "Annual")}
-              <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-[9px] text-orange-700">
-                {text("2 meses grátis", "2 months free")}
+              <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-[9px] font-bold text-orange-700">
+                {text("Pague 10, use 12", "Pay 10, get 12")}
               </span>
             </button>
           </div>
@@ -687,6 +687,8 @@ export default function ProductPricing({
               Number(price?.monthlyPrice ?? 0);
             const annualValue =
               monthlyValue * 10;
+            const annualEquivalent =
+              annualValue / 12;
             const displayedValue =
               billingCycle === "ANNUAL"
                 ? annualValue
@@ -702,7 +704,12 @@ export default function ProductPricing({
                 className="relative overflow-hidden rounded-[32px] border border-orange-300/[0.14] bg-[#09101b]/95 p-7 shadow-[0_30px_100px_rgba(249,115,22,0.08)] sm:p-9"
               >
                 <div className="pointer-events-none absolute inset-x-10 top-0 h-24 bg-gradient-to-b from-orange-400/[0.08] to-transparent blur-2xl" />
+                <div className="pointer-events-none absolute -right-16 top-20 h-40 w-40 rounded-full bg-orange-500/[0.07] blur-[70px]" />
                 <div className="relative">
+                  <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-300/15 bg-orange-300/[0.06] px-3 py-1.5 text-[9px] font-medium uppercase tracking-[0.16em] text-orange-100/65">
+                    <Flame size={11} />
+                    {text("Preço de lançamento", "Launch pricing")}
+                  </div>
                   <div className="flex items-start justify-between gap-5">
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.2em] text-orange-200/55">
@@ -760,20 +767,37 @@ export default function ProductPricing({
                         </div>
 
                         {billingCycle === "ANNUAL" && (
-                          <p className="mt-3 text-xs leading-5 text-emerald-200/65">
-                            {text(
-                              `12 meses por ${formatMoney(
-                                annualValue,
-                                price.currency,
-                                locale
-                              )} — você economiza 2 mensalidades.`,
-                              `12 months for ${formatMoney(
-                                annualValue,
-                                price.currency,
-                                locale
-                              )} — you save 2 monthly payments.`
-                            )}
-                          </p>
+                          <div className="mt-4 rounded-2xl border border-emerald-300/[0.09] bg-emerald-300/[0.035] px-4 py-3">
+                            <p className="text-xs leading-5 text-emerald-100/75">
+                              {text(
+                                `12 meses por ${formatMoney(
+                                  annualValue,
+                                  price.currency,
+                                  locale
+                                )} — você economiza 2 mensalidades.`,
+                                `12 months for ${formatMoney(
+                                  annualValue,
+                                  price.currency,
+                                  locale
+                                )} — you save 2 monthly payments.`
+                              )}
+                            </p>
+
+                            <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-emerald-100/40">
+                              {text(
+                                `Equivale a ${formatMoney(
+                                  annualEquivalent,
+                                  price.currency,
+                                  locale
+                                )} por mês`,
+                                `Equivalent to ${formatMoney(
+                                  annualEquivalent,
+                                  price.currency,
+                                  locale
+                                )} per month`
+                              )}
+                            </p>
+                          </div>
                         )}
 
                         <p className="mt-3 text-[10px] uppercase tracking-[0.14em] text-orange-100/35">

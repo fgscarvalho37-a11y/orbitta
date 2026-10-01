@@ -253,9 +253,27 @@ export default function ProductPageClient({
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
+                {displayProduct.slug === "pizzasystem" && (
+                  <a
+                    href="#planos"
+                    className="group flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
+                  >
+                    {text("Ver planos e contratar", "View plans and subscribe")}
+
+                    <ArrowRight
+                      size={16}
+                      className="transition-transform group-hover:translate-x-1"
+                    />
+                  </a>
+                )}
+
                 <a
                   href="#conhecer"
-                  className="group flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
+                  className={
+                    displayProduct.slug === "pizzasystem"
+                      ? "group flex items-center gap-3 rounded-full border border-white/[0.1] bg-white/[0.03] px-6 py-3.5 text-sm font-medium text-white/60 transition hover:border-white/20 hover:bg-white/[0.06] hover:text-white"
+                      : "group flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
+                  }
                 >
                   {text("Conhecer o sistema", "Explore the system")}
 

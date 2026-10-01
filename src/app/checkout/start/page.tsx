@@ -59,6 +59,16 @@ export default function CheckoutStartPage() {
       try {
         const params = new URLSearchParams(window.location.search);
         const planId = Number(params.get("planId"));
+        const priceIdValue = Number(params.get("priceId"));
+        const priceId =
+          Number.isInteger(priceIdValue) &&
+          priceIdValue > 0
+            ? priceIdValue
+            : null;
+        const billingCycle =
+          params.get("billingCycle") === "ANNUAL"
+            ? "ANNUAL"
+            : "MONTHLY";
 
         if (!Number.isInteger(planId) || planId <= 0) {
           throw new Error(
@@ -70,7 +80,9 @@ export default function CheckoutStartPage() {
         }
 
         const currentPath =
-          `/checkout/start?planId=${planId}`;
+          `/checkout/start?planId=${planId}` +
+          `${priceId ? `&priceId=${priceId}` : ""}` +
+          `&billingCycle=${billingCycle}`;
 
         const meResponse = await fetch(
           `${API_URL}/api/auth/me`,
@@ -178,6 +190,8 @@ export default function CheckoutStartPage() {
             },
             body: JSON.stringify({
               planId,
+              priceId,
+              billingCycle,
             }),
           }
         );

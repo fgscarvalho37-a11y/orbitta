@@ -128,7 +128,6 @@ public class SecurityConfig {
 
                         .ignoringRequestMatchers(
                                 "/api/auth/**",
-                                "/api/admin/**",
                                 "/api/webhooks/**",
                                 "/api/internal/renewal-emails/**"
                         )

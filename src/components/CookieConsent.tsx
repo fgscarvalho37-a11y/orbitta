@@ -76,8 +76,10 @@ export default function CookieConsent() {
               </h2>
 
               <p className="mt-2 text-xs leading-5 text-white/42">
-                A Orbitta usa cookies essenciais para login, sessão e segurança.
-                Cookies opcionais de medição só podem ser ativados com sua escolha.
+                {text(
+                  "A Orbitta usa cookies essenciais para login, sessão e segurança. Cookies opcionais de medição só podem ser ativados com sua escolha.",
+                  "Orbitta uses essential cookies for sign-in, sessions and security. Optional measurement cookies are only enabled with your choice."
+                )}
               </p>
             </div>
 
@@ -95,10 +97,13 @@ export default function CookieConsent() {
             <div className="mt-4 grid gap-2 text-[11px] leading-5 text-white/38 sm:grid-cols-2">
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
                 <strong className="text-white/65">
-                  Essenciais
+                  {text("Essenciais", "Essential")}
                 </strong>
                 <p className="mt-1">
-                  Autenticação, sessão, segurança e preferências básicas. Sempre ativos.
+                  {text(
+                    "Autenticação, sessão, segurança e preferências básicas. Sempre ativos.",
+                    "Authentication, sessions, security and basic preferences. Always active."
+                  )}
                 </p>
               </div>
 
@@ -139,7 +144,9 @@ export default function CookieConsent() {
               className="ml-auto flex items-center gap-2 px-2 py-2 text-[11px] text-white/35 transition hover:text-white/70"
             >
               <Settings2 size={13} />
-              {details ? "{text("Ocultar detalhes", "Hide details")}" : "{text("Ver detalhes", "View details")}"}
+              {details
+                ? text("Ocultar detalhes", "Hide details")
+                : text("Ver detalhes", "View details")}
             </button>
           </div>
 

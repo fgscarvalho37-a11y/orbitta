@@ -1,4 +1,4 @@
-"use client";
+"use client";\n\nimport { secureFetch } from "@/lib/secureFetch";
 
 import {
   CheckCircle2,
@@ -112,7 +112,7 @@ export default function AdminInvoicesPage() {
       refresh ? setRefreshing(true) : setLoading(true);
       setError("");
 
-      const response = await fetch(
+      const response = await secureFetch(
         `${API_URL}/api/admin/invoices`,
         {
           credentials: "include",
@@ -164,7 +164,7 @@ export default function AdminInvoicesPage() {
       setError("");
       setSuccess("");
 
-      const response = await fetch(
+      const response = await secureFetch(
         `${API_URL}/api/admin/invoices/${invoice.id}/${action}`,
         {
           method: "PATCH",

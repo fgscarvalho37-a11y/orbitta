@@ -48,7 +48,7 @@ public class SubscriptionCheckoutService {
             StripeSubscriptionSyncService.PROVIDER;
 
     public static final String TERMS_VERSION =
-            "2026-09-24";
+            "2026-10-01";
 
     private static final String MERCADO_PAGO_CHECKOUT_URL =
             "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=";

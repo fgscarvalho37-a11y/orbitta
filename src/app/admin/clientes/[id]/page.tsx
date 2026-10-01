@@ -1,4 +1,6 @@
-"use client";\n\nimport { secureFetch } from "@/lib/secureFetch";
+"use client";
+
+import { secureFetch } from "@/lib/secureFetch";
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";

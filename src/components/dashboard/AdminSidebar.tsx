@@ -23,41 +23,56 @@ import { useState } from "react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageProvider";
 
-const navigation = [
+const navigationGroups = [
   {
-    name: "Visão geral",
-    href: "/admin",
-    icon: LayoutDashboard,
+    label: "Operação",
+    items: [
+      {
+        name: "Visão geral",
+        href: "/admin",
+        icon: LayoutDashboard,
+      },
+      {
+        name: "Clientes",
+        href: "/admin/clientes",
+        icon: Users,
+      },
+      {
+        name: "Suporte",
+        href: "/admin/suporte",
+        icon: CircleHelp,
+      },
+    ],
   },
   {
-    name: "Clientes",
-    href: "/admin/clientes",
-    icon: Users,
+    label: "Catálogo",
+    items: [
+      {
+        name: "Produtos",
+        href: "/admin/produtos",
+        icon: Boxes,
+      },
+      {
+        name: "Preços regionais",
+        href: "/admin/precos",
+        icon: Globe2,
+      },
+    ],
   },
   {
-    name: "Produtos",
-    href: "/admin/produtos",
-    icon: Boxes,
-  },
-  {
-    name: "Preços regionais",
-    href: "/admin/precos",
-    icon: Globe2,
-  },
-  {
-    name: "Faturas",
-    href: "/admin/faturas",
-    icon: ReceiptText,
-  },
-  {
-    name: "Pagamentos",
-    href: "/admin/pagamentos",
-    icon: CreditCard,
-  },
-  {
-    name: "Suporte",
-    href: "/admin/suporte",
-    icon: CircleHelp,
+    label: "Financeiro",
+    items: [
+      {
+        name: "Faturas",
+        href: "/admin/faturas",
+        icon: ReceiptText,
+      },
+      {
+        name: "Pagamentos",
+        href: "/admin/pagamentos",
+        icon: CreditCard,
+      },
+    ],
   },
 ];
 
@@ -78,6 +93,9 @@ const NAV_EN: Record<string, string> = {
   "Pagamentos": "Payments",
   "Suporte": "Support",
   "Configurações": "Settings",
+  "Operação": "Operations",
+  "Catálogo": "Catalog",
+  "Financeiro": "Billing",
 };
 
 export default function AdminSidebar() {
@@ -149,58 +167,64 @@ export default function AdminSidebar() {
       {/* MENU */}
 
       <div className="flex-1 overflow-y-auto px-3 py-6">
-        {!collapsed && (
-          <div className="mb-3 px-3 text-[9px] uppercase tracking-[0.25em] text-white/20">
-            {text("Administração", "Administration")}
-          </div>
-        )}
+        <div className="space-y-5">
+          {navigationGroups.map((group) => (
+            <div key={group.label}>
+              {!collapsed && (
+                <div className="mb-2 px-3 text-[9px] uppercase tracking-[0.25em] text-white/18">
+                  {navText(group.label)}
+                </div>
+              )}
 
-        <nav className="space-y-1">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
+              <nav className="space-y-1">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
 
-            return (
-              <Link
-                key={navText(item.name)}
-                href={item.href}
-                title={
-                  collapsed
-                    ? navText(item.name)
-                    : undefined
-                }
-                className={`group relative flex h-11 items-center rounded-xl transition ${
-                  collapsed
-                    ? "justify-center px-0"
-                    : "gap-3 px-3"
-                } ${
-                  active
-                    ? "bg-violet-300/[0.07] text-violet-100"
-                    : "text-white/35 hover:bg-white/[0.035] hover:text-white/70"
-                }`}
-              >
-                {active && (
-                  <span className="absolute -left-3 h-5 w-[2px] rounded-r-full bg-violet-300 shadow-[0_0_10px_rgba(196,181,253,0.7)]" />
-                )}
+                  return (
+                    <Link
+                      key={navText(item.name)}
+                      href={item.href}
+                      title={
+                        collapsed
+                          ? navText(item.name)
+                          : undefined
+                      }
+                      className={`group relative flex h-11 items-center rounded-xl transition ${
+                        collapsed
+                          ? "justify-center px-0"
+                          : "gap-3 px-3"
+                      } ${
+                        active
+                          ? "bg-violet-300/[0.07] text-violet-100"
+                          : "text-white/35 hover:bg-white/[0.035] hover:text-white/70"
+                      }`}
+                    >
+                      {active && (
+                        <span className="absolute -left-3 h-5 w-[2px] rounded-r-full bg-violet-300 shadow-[0_0_10px_rgba(196,181,253,0.7)]" />
+                      )}
 
-                <Icon
-                  size={17}
-                  className={`shrink-0 ${
-                    active
-                      ? "text-violet-300"
-                      : ""
-                  }`}
-                />
+                      <Icon
+                        size={17}
+                        className={`shrink-0 ${
+                          active
+                            ? "text-violet-300"
+                            : ""
+                        }`}
+                      />
 
-                {!collapsed && (
-                  <span className="text-sm">
-                    {navText(item.name)}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+                      {!collapsed && (
+                        <span className="text-sm">
+                          {navText(item.name)}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+          ))}
+        </div>
 
         <div className="my-6 h-px bg-white/[0.05]" />
 

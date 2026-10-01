@@ -3,6 +3,7 @@
 import { Cookie, Settings2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 type Consent = "essential" | "all";
 
@@ -40,6 +41,7 @@ function saveConsent(value: Consent) {
 }
 
 export default function CookieConsent() {
+  const { text } = useLanguage();
   const [visible, setVisible] = useState(false);
   const [details, setDetails] = useState(false);
 
@@ -70,7 +72,7 @@ export default function CookieConsent() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-sm font-semibold">
-                Cookies e privacidade
+                {text("Cookies e privacidade", "Cookies and privacy")}
               </h2>
 
               <p className="mt-2 text-xs leading-5 text-white/42">
@@ -102,10 +104,13 @@ export default function CookieConsent() {
 
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
                 <strong className="text-white/65">
-                  Medição opcional
+                  {text("Medição opcional", "Optional measurement")}
                 </strong>
                 <p className="mt-1">
-                  Reservado para analytics e métricas quando houver integração e consentimento.
+                  {text(
+                    "Reservado para analytics e métricas quando houver integração e consentimento.",
+                    "Reserved for analytics and metrics when an integration exists and consent is given."
+                  )}
                 </p>
               </div>
             </div>
@@ -117,7 +122,7 @@ export default function CookieConsent() {
               onClick={() => choose("essential")}
               className="rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-xs text-white/60 transition hover:bg-white/[0.06] hover:text-white"
             >
-              Somente essenciais
+              {text("Somente essenciais", "Essential only")}
             </button>
 
             <button
@@ -125,7 +130,7 @@ export default function CookieConsent() {
               onClick={() => choose("all")}
               className="rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-[#07101c] transition hover:bg-cyan-50"
             >
-              Aceitar opcionais
+              {text("Aceitar opcionais", "Accept optional")}
             </button>
 
             <button
@@ -134,17 +139,17 @@ export default function CookieConsent() {
               className="ml-auto flex items-center gap-2 px-2 py-2 text-[11px] text-white/35 transition hover:text-white/70"
             >
               <Settings2 size={13} />
-              {details ? "Ocultar detalhes" : "Ver detalhes"}
+              {details ? "{text("Ocultar detalhes", "Hide details")}" : "{text("Ver detalhes", "View details")}"}
             </button>
           </div>
 
           <p className="mt-3 text-[10px] text-white/24">
-            Consulte a{" "}
+            {text("Consulte a", "See our")}{" "}
             <Link
               href="/privacidade"
               className="underline underline-offset-2 transition hover:text-white/60"
             >
-              Política de Privacidade
+              {text("Política de Privacidade", "Privacy Policy")}
             </Link>
             .
           </p>

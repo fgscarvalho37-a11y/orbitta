@@ -9,22 +9,15 @@ import {
   BellRing,
   Bike,
   Building2,
-  CalendarClock,
   CalendarDays,
   ChefHat,
   ClipboardList,
-  Coffee,
   CreditCard,
   ExternalLink,
-  HeartPulse,
-  Newspaper,
   PackageCheck,
-  ReceiptText,
   Settings2,
   ShoppingBag,
-  UserRound,
   Users,
-  UtensilsCrossed,
 } from "lucide-react";
 
 import { motion } from "motion/react";
@@ -58,24 +51,6 @@ const productIcons = {
     Users,
     ClipboardList,
   ],
-
-  vitalsync: [
-    HeartPulse,
-    CalendarClock,
-    UserRound,
-    Activity,
-    Newspaper,
-    BarChart3,
-  ],
-
-  cafeflow: [
-    Coffee,
-    ReceiptText,
-    UtensilsCrossed,
-    ShoppingBag,
-    Users,
-    Settings2,
-  ],
 };
 
 const heroTexts: Record<string, string> = {
@@ -85,11 +60,6 @@ const heroTexts: Record<string, string> = {
   condoflow:
     "O condomínio conectado em uma única experiência.",
 
-  vitalsync:
-    "A rotina de saúde conectada entre profissional e paciente.",
-
-  cafeflow:
-    "A operação da sua cafeteria organizada em um só lugar.",
 };
 
 const sectionTexts: Record<string, string> = {
@@ -99,11 +69,6 @@ const sectionTexts: Record<string, string> = {
   condoflow:
     "Moradores, portaria e administração trabalhando conectados.",
 
-  vitalsync:
-    "Atendimento, acompanhamento e gestão em uma única experiência.",
-
-  cafeflow:
-    "Do cardápio à comanda, toda a operação conectada.",
 };
 
 const heroTextsEn: Record<string, string> = {
@@ -111,10 +76,6 @@ const heroTextsEn: Record<string, string> = {
     "Your delivery operation in one platform.",
   condoflow:
     "Your condominium connected in one experience.",
-  vitalsync:
-    "Healthcare routines connected between professionals and patients.",
-  cafeflow:
-    "Your café operation organized in one place.",
 };
 
 const sectionTextsEn: Record<string, string> = {
@@ -122,10 +83,6 @@ const sectionTextsEn: Record<string, string> = {
     "A connected operation from order to delivery.",
   condoflow:
     "Front desk teams, residents and management working together.",
-  vitalsync:
-    "Care, follow-up and management in one experience.",
-  cafeflow:
-    "From menu to tabs, the whole operation connected.",
 };
 
 export default function ProductPageClient({

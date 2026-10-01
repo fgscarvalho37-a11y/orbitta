@@ -117,6 +117,13 @@ export default function ProductPageClient({
       displayProduct.status === "available") &&
     Boolean(displayProduct.previewUrl);
 
+  const localizedPreviewUrl =
+    previewAvailable && displayProduct.previewUrl
+      ? `${displayProduct.previewUrl}${
+          displayProduct.previewUrl.includes("?") ? "&" : "?"
+        }lang=${encodeURIComponent(locale)}`
+      : undefined;
+
   const overviewFeatures =
     displayProduct.features.slice(
       0,
@@ -257,7 +264,7 @@ export default function ProductPageClient({
 
                 {previewAvailable && displayProduct.previewUrl ? (
                   <a
-                    href={displayProduct.previewUrl}
+                    href={localizedPreviewUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group flex items-center gap-3 rounded-full border border-cyan-300/20 bg-cyan-300/[0.06] px-6 py-3.5 text-sm text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-300/[0.1]"
@@ -327,7 +334,7 @@ export default function ProductPageClient({
           {previewAvailable && displayProduct.previewUrl ? (
             <div className="relative h-[620px] bg-[#f6f3ee] sm:h-[700px] lg:h-[760px]">
               <iframe
-                src={displayProduct.previewUrl}
+                src={localizedPreviewUrl}
                 title={text(
                   `Preview do ${displayProduct.name}`,
                   `${displayProduct.name} preview`
@@ -686,7 +693,7 @@ export default function ProductPageClient({
 
               {previewAvailable && displayProduct.previewUrl && (
                 <a
-                  href={displayProduct.previewUrl}
+                  href={localizedPreviewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center gap-3 rounded-full border border-white/[0.1] bg-white/[0.04] px-6 py-3.5 text-sm text-white/70 transition hover:bg-white/[0.08] hover:text-white"

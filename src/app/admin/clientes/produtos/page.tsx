@@ -1,4 +1,4 @@
-"use client";
+"use client";\n\nimport { secureFetch } from "@/lib/secureFetch";
 
 import {
   Boxes,
@@ -96,7 +96,7 @@ export default function AdminProductsPage() {
 
         setError(null);
 
-        const response = await fetch(
+        const response = await secureFetch(
           `${API_URL}/api/admin/catalog/products`,
           {
             method: "GET",
@@ -198,7 +198,7 @@ export default function AdminProductsPage() {
       setSaving(true);
       setError(null);
 
-      const response = await fetch(
+      const response = await secureFetch(
         `${API_URL}/api/admin/catalog/products`,
         {
           method: "POST",

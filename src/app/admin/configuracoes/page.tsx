@@ -1,4 +1,4 @@
-"use client";
+"use client";\n\nimport { secureFetch } from "@/lib/secureFetch";
 
 import Link from "next/link";
 import {
@@ -126,7 +126,7 @@ export default function AdminSettingsPage() {
         demoResponse,
       ] =
         await Promise.all([
-          fetch(
+          secureFetch(
             `${API_URL}/api/admin/clients`,
             {
               credentials:
@@ -135,7 +135,7 @@ export default function AdminSettingsPage() {
                 "no-store",
             }
           ),
-          fetch(
+          secureFetch(
             `${API_URL}/api/admin/demo-account`,
             {
               credentials:
@@ -234,7 +234,7 @@ export default function AdminSettingsPage() {
       setDemoSuccess("");
 
       const response =
-        await fetch(
+        await secureFetch(
           `${API_URL}/api/admin/demo-account`,
           {
             method: "PUT",
@@ -298,7 +298,7 @@ export default function AdminSettingsPage() {
       setDemoSuccess("");
 
       const response =
-        await fetch(
+        await secureFetch(
           `${API_URL}/api/admin/demo-account/status`,
           {
             method: "PATCH",

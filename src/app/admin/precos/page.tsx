@@ -1,4 +1,4 @@
-"use client";
+"use client";\n\nimport { secureFetch } from "@/lib/secureFetch";
 
 import {
   Check,
@@ -134,7 +134,7 @@ export default function AdminRegionalPricingPage() {
 
         setError(null);
 
-        const response = await fetch(
+        const response = await secureFetch(
           `${API_URL}/api/admin/catalog/products`,
           {
             credentials: "include",
@@ -317,7 +317,7 @@ export default function AdminRegionalPricingPage() {
       setError(null);
       setSuccess(null);
 
-      const response = await fetch(
+      const response = await secureFetch(
         `${API_URL}/api/admin/catalog/plans/${plan.id}/prices/${regionCode}`,
         {
           method: "PUT",

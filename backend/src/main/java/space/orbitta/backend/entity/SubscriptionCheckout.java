@@ -103,6 +103,15 @@ public class SubscriptionCheckout {
     )
     private String currency;
 
+    @Enumerated(EnumType.STRING)
+    @Column(
+            name = "billing_cycle",
+            nullable = false,
+            length = 20
+    )
+    private BillingCycle billingCycle =
+            BillingCycle.MONTHLY;
+
     @Column(
             name = "settlement_amount",
             precision = 12,
@@ -214,6 +223,11 @@ public class SubscriptionCheckout {
         if (setupPrice == null) {
             setupPrice = BigDecimal.ZERO;
         }
+
+        if (billingCycle == null) {
+            billingCycle =
+                    BillingCycle.MONTHLY;
+        }
     }
 
     @PreUpdate
@@ -287,6 +301,33 @@ public class SubscriptionCheckout {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public BillingCycle getBillingCycle() {
+        return BillingCycle.normalize(
+                billingCycle
+        );
+    }
+
+    public void setBillingCycle(
+            BillingCycle billingCycle
+    ) {
+        this.billingCycle =
+                BillingCycle.normalize(
+                        billingCycle
+                );
+    }
+
+    public BigDecimal getBillingAmount() {
+        return getBillingCycle()
+                .applyTo(
+                        monthlyPrice
+                );
+    }
+
+    public int getRenewalMonths() {
+        return getBillingCycle()
+                .getRenewalMonths();
     }
 
     public BigDecimal getSettlementAmount() {

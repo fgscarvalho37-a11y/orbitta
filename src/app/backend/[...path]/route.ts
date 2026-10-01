@@ -97,6 +97,36 @@ function normalizeSetCookie(
   );
 }
 
+function normalizeLocation(
+  value: string
+) {
+  try {
+    const backendUrl =
+      new URL(BACKEND_URL);
+
+    const target =
+      new URL(
+        value,
+        backendUrl
+      );
+
+    if (
+      target.origin ===
+      backendUrl.origin
+    ) {
+      return (
+        `/backend${target.pathname}` +
+        target.search +
+        target.hash
+      );
+    }
+
+    return value;
+  } catch {
+    return value;
+  }
+}
+
 async function proxyRequest(
   request: NextRequest,
   context: RouteContext
@@ -224,26 +254,30 @@ async function proxyRequest(
       }
     );
 
-  for (
-    const name
-    of [
-      "content-type",
-      "location",
-    ]
-  ) {
-    const value =
-      upstreamResponse
-        .headers
-        .get(
-          name
-        );
+  const contentType =
+    upstreamResponse.headers.get(
+      "content-type"
+    );
 
-    if (value) {
-      response.headers.set(
-        name,
-        value
-      );
-    }
+  if (contentType) {
+    response.headers.set(
+      "content-type",
+      contentType
+    );
+  }
+
+  const location =
+    upstreamResponse.headers.get(
+      "location"
+    );
+
+  if (location) {
+    response.headers.set(
+      "location",
+      normalizeLocation(
+        location
+      )
+    );
   }
 
   response.headers.set(
@@ -290,11 +324,6 @@ async function proxyRequest(
       )
     );
   }
-
-  response.headers.set(
-    "x-orbitta-backend-proxy",
-    "active"
-  );
 
   return response;
 }

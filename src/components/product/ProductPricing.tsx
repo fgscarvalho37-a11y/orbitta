@@ -86,8 +86,8 @@ const MARKET_META: Record<
     currency: "BRL",
   },
   US: {
-    pt: "Internacional",
-    en: "International",
+    pt: "Estados Unidos",
+    en: "United States",
     currency: "USD",
   },
 };
@@ -191,18 +191,6 @@ const PACKAGE_FEATURES: Record<
   },
 };
 
-function fallbackMarket(): MarketCode {
-  if (typeof navigator === "undefined") {
-    return "BR";
-  }
-
-  return navigator.language
-    .toLowerCase()
-    .startsWith("pt")
-    ? "BR"
-    : "US";
-}
-
 function formatMoney(
   value: number,
   currency: string,
@@ -272,42 +260,12 @@ export default function ProductPricing({
     useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function detectMarket() {
-      try {
-        const response = await fetch("/api/market", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error("market");
-        }
-
-        const data: {
-          marketCode?: string;
-        } = await response.json();
-
-        if (
-          !cancelled &&
-          (data.marketCode === "BR" ||
-            data.marketCode === "US")
-        ) {
-          setMarket(data.marketCode);
-        }
-      } catch {
-        if (!cancelled) {
-          setMarket(fallbackMarket());
-        }
-      }
-    }
-
-    void detectMarket();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    // The public language selector doubles as the storefront market selector:
+    // PT shows the Brazil/BRL offer and EN shows the U.S./USD offer.
+    // This prevents a Brazilian browser previewing the English site from
+    // still seeing BRL prices during international sales demos.
+    setMarket(isEnglish ? "US" : "BR");
+  }, [isEnglish]);
 
   useEffect(() => {
     let cancelled = false;

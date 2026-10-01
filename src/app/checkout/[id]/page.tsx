@@ -37,6 +37,8 @@ type SubscriptionCheckout = {
   productName: string;
   planName: string;
   monthlyPrice: number;
+  billingAmount: number;
+  billingCycle: "MONTHLY" | "ANNUAL";
   setupPrice: number;
   totalPrice: number;
   currency: string;
@@ -368,6 +370,9 @@ export default function CheckoutPage({
   const isUsdCheckout =
     checkout.currency.toUpperCase() === "USD";
 
+  const isAnnual =
+    checkout.billingCycle === "ANNUAL";
+
   const hasBrlSettlement =
     isUsdCheckout &&
     checkout.settlementAmount !== null &&
@@ -449,25 +454,34 @@ export default function CheckoutPage({
                 <div className="flex items-center justify-between rounded-2xl border border-white/[0.05] bg-white/[0.018] px-5 py-4">
                   <div>
                     <div className="text-xs text-white/55">
-                      {text("Mensalidade", "Monthly price")}
+                      {isAnnual
+                        ? text("Plano anual", "Annual plan")
+                        : text("Mensalidade", "Monthly price")}
                     </div>
 
                     <div className="mt-1 text-[10px] text-white/20">
-                      {isUsdCheckout
+                      {isAnnual
                         ? text(
-                            "Primeiro mês pago uma vez; renovação recorrente será ativada depois.",
-                            "First month is a one-time payment; recurring renewal will be activated later."
+                            "12 meses de acesso pelo valor equivalente a 10 mensalidades.",
+                            "12 months of access for the price of 10 monthly payments."
                           )
-                        : text(
-                            "Cobrança recorrente mensal",
-                            "Recurring monthly charge"
-                          )}
+                        : isUsdCheckout
+                          ? text(
+                              "Primeiro mês pago uma vez; renovação recorrente será ativada depois.",
+                              "First month is a one-time payment; recurring renewal will be activated later."
+                            )
+                          : text(
+                              "Cobrança recorrente mensal",
+                              "Recurring monthly charge"
+                            )}
                     </div>
                   </div>
 
                   <div className="text-sm font-medium text-white/75">
                     {formatCurrency(
-                      checkout.monthlyPrice,
+                      isAnnual
+                        ? checkout.billingAmount
+                        : checkout.monthlyPrice,
                       checkout.currency,
                       locale
                     )}
@@ -588,7 +602,9 @@ export default function CheckoutPage({
 
                 <span className="text-white/60">
                   {formatCurrency(
-                    checkout.monthlyPrice,
+                    isAnnual
+                      ? checkout.billingAmount
+                      : checkout.monthlyPrice,
                     checkout.currency,
                     locale
                   )}
@@ -668,15 +684,20 @@ export default function CheckoutPage({
                     >
                       {text("Política de Privacidade", "Privacy Policy")}
                     </Link>
-                    . {isUsdCheckout
+                    . {isAnnual
                       ? text(
-                          "Estou ciente de que o primeiro mês será pago uma única vez pelo Mercado Pago em BRL, após conversão do valor exibido em USD.",
-                          "I understand that the first month will be paid once through Mercado Pago in BRL after converting the displayed USD amount."
+                          "Estou ciente de que o plano anual é pago antecipadamente, concede 12 meses de acesso e custa o equivalente a 10 mensalidades, além de eventual taxa inicial indicada neste checkout.",
+                          "I understand that the annual plan is prepaid, provides 12 months of access, and costs the equivalent of 10 monthly payments, plus any setup fee shown in this checkout."
                         )
-                      : text(
-                          "Estou ciente da cobrança recorrente mensal e da taxa inicial indicada neste checkout.",
-                          "I understand the recurring monthly charge and the setup fee shown in this checkout."
-                        )}
+                      : isUsdCheckout
+                        ? text(
+                            "Estou ciente de que o primeiro mês será pago uma única vez pelo Mercado Pago em BRL, após conversão do valor exibido em USD.",
+                            "I understand that the first month will be paid once through Mercado Pago in BRL after converting the displayed USD amount."
+                          )
+                        : text(
+                            "Estou ciente da cobrança recorrente mensal e da taxa inicial indicada neste checkout.",
+                            "I understand the recurring monthly charge and the setup fee shown in this checkout."
+                          )}
                   </span>
                 </label>
 
@@ -733,15 +754,20 @@ export default function CheckoutPage({
               </p>
             ) : canPay ? (
               <p className="mt-3 text-center text-[10px] leading-4 text-white/20">
-                {isUsdCheckout
+                {isAnnual
                   ? text(
-                      `Você será redirecionado para ${gatewayName}. A primeira cobrança será processada em BRL.`,
-                      `You will be redirected to ${gatewayName}. The first charge will be processed in BRL.`
+                      `Você será redirecionado para ${gatewayName} para concluir o pagamento anual antecipado.`,
+                      `You will be redirected to ${gatewayName} to complete the prepaid annual payment.`
                     )
-                  : text(
-                      `Você será redirecionado para ${gatewayName} para concluir a assinatura.`,
-                      `You will be redirected to ${gatewayName} to complete your subscription.`
-                    )}
+                  : isUsdCheckout
+                    ? text(
+                        `Você será redirecionado para ${gatewayName}. A primeira cobrança será processada em BRL.`,
+                        `You will be redirected to ${gatewayName}. The first charge will be processed in BRL.`
+                      )
+                    : text(
+                        `Você será redirecionado para ${gatewayName} para concluir a assinatura.`,
+                        `You will be redirected to ${gatewayName} to complete your subscription.`
+                      )}
               </p>
             ) : null}
 

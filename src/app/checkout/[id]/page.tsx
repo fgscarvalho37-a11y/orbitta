@@ -523,8 +523,20 @@ export default function CheckoutPage({
 
                         <div className="mt-1 text-[10px] leading-4 text-white/25">
                           {text(
-                            "US$ 79,90 é convertido para reais no início deste checkout e o valor fica travado até ele expirar.",
-                            "US$79.90 is converted to BRL when this checkout starts, and the converted amount stays locked until it expires."
+                            `${formatCurrency(
+                              isAnnual
+                                ? checkout.billingAmount
+                                : checkout.monthlyPrice,
+                              "USD",
+                              "en-US"
+                            )} é convertido para reais no início deste checkout e o valor fica travado até ele expirar.`,
+                            `${formatCurrency(
+                              isAnnual
+                                ? checkout.billingAmount
+                                : checkout.monthlyPrice,
+                              "USD",
+                              "en-US"
+                            )} is converted to BRL when this checkout starts, and the converted amount stays locked until it expires.`
                           )}
                         </div>
                       </div>

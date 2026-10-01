@@ -1,4 +1,4 @@
-"use client";
+"use client";\n\nimport { secureFetch } from "@/lib/secureFetch";
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -196,7 +196,7 @@ export default function AdminClientDetailsPage() {
         productsResponse,
         invoicesResponse,
       ] = await Promise.all([
-        fetch(
+        secureFetch(
           `${API_URL}/api/admin/clients/${clientId}`,
           {
             credentials: "include",
@@ -204,7 +204,7 @@ export default function AdminClientDetailsPage() {
           }
         ),
 
-        fetch(
+        secureFetch(
           `${API_URL}/api/admin/clients/${clientId}/products`,
           {
             credentials: "include",
@@ -212,7 +212,7 @@ export default function AdminClientDetailsPage() {
           }
         ),
 
-        fetch(
+        secureFetch(
           `${API_URL}/api/admin/clients/${clientId}/invoices`,
           {
             credentials: "include",
@@ -309,7 +309,7 @@ export default function AdminClientDetailsPage() {
       setError(null);
       setSuccess(null);
 
-      const response = await fetch(
+      const response = await secureFetch(
         `${API_URL}/api/admin/clients/${client.id}/status`,
         {
           method: "PATCH",

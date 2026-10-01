@@ -55,6 +55,19 @@ function buildUpstreamHeaders(
     }
   }
 
+  const forwardedFor =
+    request.headers.get("x-forwarded-for") ??
+    request.headers.get("x-real-ip");
+
+  if (forwardedFor) {
+    headers.set(
+      "x-forwarded-for",
+      forwardedFor
+        .split(",")[0]
+        .trim()
+    );
+  }
+
   headers.set(
     "x-forwarded-proto",
     "https"
@@ -166,9 +179,7 @@ async function proxyRequest(
       secondError
     ) {
       console.error(
-        "[ORBITTA PROXY] Backend indisponível:",
-        firstError,
-        secondError
+        "[ORBITTA PROXY] Backend indisponível após nova tentativa."
       );
 
       return NextResponse.json(

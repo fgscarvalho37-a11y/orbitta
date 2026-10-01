@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const version = "24/09/2026";
+const version = "01/10/2026";
 
 export default function TermosPage() {
   return (
@@ -43,7 +43,7 @@ export default function TermosPage() {
           <section>
             <h2 className="text-lg font-semibold text-white/80">3. Plano, cobrança e renovação</h2>
             <p className="mt-2">
-              O preço mensal, eventual taxa de implantação, moeda e demais condições comerciais são exibidos no checkout antes do pagamento. Quando indicado como recorrente, o plano é renovado e cobrado periodicamente até seu cancelamento, conforme as condições apresentadas na contratação.
+              O preço, eventual taxa de implantação, moeda, período de acesso e demais condições comerciais são exibidos no checkout antes do pagamento. O plano mensal pode ser cobrado de forma recorrente quando isso estiver indicado na contratação. O plano anual, quando oferecido, é pago antecipadamente e concede 12 meses de acesso pelo valor equivalente a 10 mensalidades, salvo condição promocional diferente expressamente exibida no checkout. Uma nova cobrança anual somente ocorrerá se a renovação automática estiver claramente informada e aceita na contratação.
             </p>
           </section>
 

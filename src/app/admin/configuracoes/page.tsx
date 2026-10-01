@@ -15,7 +15,6 @@ import {
   Settings,
   ShieldCheck,
   UserRound,
-  Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageProvider";
@@ -383,57 +382,124 @@ export default function AdminSettingsPage() {
         </p>
       </header>
 
-      <section className="mt-8 grid gap-5 md:grid-cols-2">
-        <SettingsLink
-          href="/admin/produtos"
+      <section className="mt-8 grid gap-5 xl:grid-cols-3">
+        <SettingsCategory
           icon={Boxes}
+          eyebrow={text(
+            "Comercial",
+            "Commercial"
+          )}
           title={text(
-            "Produtos e planos",
-            "Products & plans"
+            "Catálogo e clientes",
+            "Catalog & clients"
           )}
-          description={text(
-            "Gerencie catálogo, planos, preços e disponibilidade dos produtos Orbitta.",
-            "Manage the catalog, plans, pricing and product availability."
-          )}
+          items={[
+            {
+              href: "/admin/produtos",
+              title: text(
+                "Produtos e planos",
+                "Products & plans"
+              ),
+              description: text(
+                "Catálogo, disponibilidade e planos.",
+                "Catalog, availability and plans."
+              ),
+            },
+            {
+              href: "/admin/precos",
+              title: text(
+                "Preços regionais",
+                "Regional pricing"
+              ),
+              description: text(
+                "Valores por mercado e moeda.",
+                "Pricing by market and currency."
+              ),
+            },
+            {
+              href: "/admin/clientes",
+              title: text(
+                "Clientes",
+                "Clients"
+              ),
+              description: text(
+                "Acessos e produtos contratados.",
+                "Access and purchased products."
+              ),
+            },
+          ]}
         />
 
-        <SettingsLink
-          href="/admin/clientes"
-          icon={Users}
-          title={text(
-            "Clientes",
-            "Clients"
-          )}
-          description={text(
-            "Consulte clientes, status de acesso e produtos contratados.",
-            "Review clients, access status and purchased products."
-          )}
-        />
-
-        <SettingsLink
-          href="/admin/faturas"
+        <SettingsCategory
           icon={ShieldCheck}
-          title={text(
+          eyebrow={text(
             "Financeiro",
             "Billing"
           )}
-          description={text(
-            "Acompanhe faturas, vencimentos e cobranças.",
-            "Track invoices, due dates and charges."
+          title={text(
+            "Cobranças e recebimentos",
+            "Charges & payments"
           )}
+          items={[
+            {
+              href: "/admin/faturas",
+              title: text(
+                "Faturas",
+                "Invoices"
+              ),
+              description: text(
+                "Vencimentos e cobranças.",
+                "Due dates and charges."
+              ),
+            },
+            {
+              href: "/admin/pagamentos",
+              title: text(
+                "Pagamentos",
+                "Payments"
+              ),
+              description: text(
+                "Status dos meios de pagamento.",
+                "Payment method status."
+              ),
+            },
+          ]}
         />
 
-        <SettingsLink
-          href="/"
-          icon={ExternalLink}
+        <SettingsCategory
+          icon={Settings}
+          eyebrow={text(
+            "Operação",
+            "Operations"
+          )}
           title={text(
-            "Site público",
-            "Public website"
+            "Plataforma",
+            "Platform"
           )}
-          description={text(
-            "Abra a landing page principal da Orbitta.",
-            "Open the main Orbitta landing page."
-          )}
+          items={[
+            {
+              href: "/admin/suporte",
+              title: text(
+                "Suporte",
+                "Support"
+              ),
+              description: text(
+                "Chamados enviados pelos clientes.",
+                "Tickets submitted by clients."
+              ),
+            },
+            {
+              href: "/",
+              title: text(
+                "Site público",
+                "Public website"
+              ),
+              description: text(
+                "Abrir a Orbitta pública.",
+                "Open the public Orbitta website."
+              ),
+            },
+          ]}
         />
       </section>
 
@@ -751,40 +817,61 @@ export default function AdminSettingsPage() {
   );
 }
 
-function SettingsLink({
-  href,
+function SettingsCategory({
   icon: Icon,
+  eyebrow,
   title,
-  description,
+  items,
 }: {
-  href: string;
   icon: React.ElementType;
+  eyebrow: string;
   title: string;
-  description: string;
+  items: Array<{
+    href: string;
+    title: string;
+    description: string;
+  }>;
 }) {
   return (
-    <Link
-      href={href}
-      className="group rounded-[24px] border border-white/[0.06] bg-[#08101d] p-5 transition hover:border-violet-300/[0.12] hover:bg-[#091321]"
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-violet-300/[0.08] bg-violet-300/[0.03] text-violet-200/50">
+    <article className="overflow-hidden rounded-[26px] border border-white/[0.06] bg-[#08101d]">
+      <div className="flex items-center gap-4 border-b border-white/[0.05] p-5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-300/[0.08] bg-violet-300/[0.03] text-violet-200/55">
           <Icon size={17} />
         </div>
 
-        <ExternalLink
-          size={14}
-          className="text-white/15 transition group-hover:text-violet-200/50"
-        />
+        <div>
+          <p className="text-[9px] uppercase tracking-[0.2em] text-violet-200/35">
+            {eyebrow}
+          </p>
+          <h2 className="mt-1 text-sm font-medium text-white/80">
+            {title}
+          </h2>
+        </div>
       </div>
 
-      <h2 className="mt-5 text-sm font-medium text-white/80">
-        {title}
-      </h2>
+      <div className="divide-y divide-white/[0.045]">
+        {items.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="group flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-white/[0.025]"
+          >
+            <div className="min-w-0">
+              <div className="text-xs font-medium text-white/62 transition group-hover:text-white/85">
+                {item.title}
+              </div>
+              <div className="mt-1 text-[10px] leading-4 text-white/24">
+                {item.description}
+              </div>
+            </div>
 
-      <p className="mt-2 text-xs leading-6 text-white/28">
-        {description}
-      </p>
-    </Link>
+            <ExternalLink
+              size={13}
+              className="shrink-0 text-white/12 transition group-hover:text-violet-200/55"
+            />
+          </Link>
+        ))}
+      </div>
+    </article>
   );
 }

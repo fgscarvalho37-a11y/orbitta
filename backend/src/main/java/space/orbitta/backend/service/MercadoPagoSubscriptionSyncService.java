@@ -417,7 +417,9 @@ public class MercadoPagoSubscriptionSyncService {
                         Map.of(
                                 "next_payment_date",
                                 paidDate
-                                        .plusMonths(1)
+                                        .plusMonths(
+                                                checkout.getRenewalMonths()
+                                        )
                                         .toString()
                         )
                 );

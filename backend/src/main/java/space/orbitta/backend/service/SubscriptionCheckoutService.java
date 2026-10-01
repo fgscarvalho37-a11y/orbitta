@@ -1323,17 +1323,15 @@ public class SubscriptionCheckoutService {
     ) {
 
         return checkout != null &&
+                checkout.getSettlementAmount() != null &&
+                "BRL".equalsIgnoreCase(
+                        checkout.getSettlementCurrency()
+                ) &&
                 (
                         checkout.getBillingCycle()
                                 == BillingCycle.ANNUAL ||
-                        (
-                                "USD".equalsIgnoreCase(
-                                        checkout.getCurrency()
-                                ) &&
-                                checkout.getSettlementAmount() != null &&
-                                "BRL".equalsIgnoreCase(
-                                        checkout.getSettlementCurrency()
-                                )
+                        "USD".equalsIgnoreCase(
+                                checkout.getCurrency()
                         )
                 );
     }

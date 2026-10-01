@@ -290,7 +290,7 @@
             <button class="hero-btn">Ver cardápio &nbsp; →</button>
           </div>
           <div class="hero-img">
-            <img src="https://pizza-system-nine.vercel.app/pizzasystem/hero.jpg" alt="Pizza em destaque" />
+            <img src="https://raw.githubusercontent.com/fgscarvalho37-a11y/PizzaSystem/main/frontend/public/pizzasystem/hero.jpg" alt="Pizza em destaque" />
             <div class="badge">CARDÁPIO ONLINE</div>
             <div class="openbadge">ABERTO</div>
           </div>
@@ -304,15 +304,15 @@
 
           <div class="products">
             <article class="product">
-              <div class="pic"><img src="https://pizza-system-nine.vercel.app/pizzasystem/hero.jpg" alt=""><span class="product-cat">Pizzas</span></div>
+              <div class="pic"><img src="https://raw.githubusercontent.com/fgscarvalho37-a11y/PizzaSystem/main/frontend/public/pizzasystem/hero.jpg" alt=""><span class="product-cat">Pizzas</span></div>
               <div class="product-body"><div class="product-row"><h3>Calabresa</h3><div class="price">R$ 49,90</div></div><p>Calabresa, cebola, mussarela e orégano.</p><button class="options">＋ &nbsp; Ver opções</button></div>
             </article>
             <article class="product">
-              <div class="pic"><img src="https://pizza-system-nine.vercel.app/pizzasystem/hero.jpg" alt=""><span class="product-cat">Pizzas</span></div>
+              <div class="pic"><img src="https://raw.githubusercontent.com/fgscarvalho37-a11y/PizzaSystem/main/frontend/public/pizzasystem/hero.jpg" alt=""><span class="product-cat">Pizzas</span></div>
               <div class="product-body"><div class="product-row"><h3>Frango com Catupiry</h3><div class="price">R$ 54,90</div></div><p>Frango desfiado, catupiry e mussarela.</p><button class="options">＋ &nbsp; Ver opções</button></div>
             </article>
             <article class="product">
-              <div class="pic"><img src="https://pizza-system-nine.vercel.app/pizzasystem/hero.jpg" alt=""><span class="product-cat">Pizzas</span></div>
+              <div class="pic"><img src="https://raw.githubusercontent.com/fgscarvalho37-a11y/PizzaSystem/main/frontend/public/pizzasystem/hero.jpg" alt=""><span class="product-cat">Pizzas</span></div>
               <div class="product-body"><div class="product-row"><h3>Portuguesa</h3><div class="price">R$ 56,90</div></div><p>Presunto, ovo, cebola, azeitona e mussarela.</p><button class="options">＋ &nbsp; Ver opções</button></div>
             </article>
             <article class="product">
@@ -320,7 +320,7 @@
               <div class="product-body"><div class="product-row"><h3>Coca-Cola 2L</h3><div class="price">R$ 14,00</div></div><p>Bebida gelada para acompanhar seu pedido.</p><button class="options">＋ &nbsp; Ver opções</button></div>
             </article>
             <article class="product">
-              <div class="pic"><img src="https://pizza-system-nine.vercel.app/pizzasystem/hero.jpg" alt=""><span class="product-cat">Combos</span></div>
+              <div class="pic"><img src="https://raw.githubusercontent.com/fgscarvalho37-a11y/PizzaSystem/main/frontend/public/pizzasystem/hero.jpg" alt=""><span class="product-cat">Combos</span></div>
               <div class="product-body"><div class="product-row"><h3>Combo Família</h3><div class="price">R$ 109,90</div></div><p>2 pizzas grandes e refrigerante para compartilhar.</p><button class="options">＋ &nbsp; Ver opções</button></div>
             </article>
             <article class="product">
@@ -334,6 +334,158 @@
       <footer class="store-footer"><div><div><div class="footer-name">Bella Massa<em>.</em></div><div class="tagline">Pedidos online</div></div><div class="tagline">Voltar ao cardápio</div></div></footer>
     </div>
   </section>
+
+  <script>
+    (() => {
+      const params = new URLSearchParams(window.location.search);
+      let storedLocale = null;
+      try {
+        storedLocale = window.localStorage.getItem("orbitta-language");
+      } catch {
+        storedLocale = null;
+      }
+
+      const requestedLocale =
+        params.get("lang") ||
+        storedLocale ||
+        (navigator.language.toLowerCase().startsWith("pt")
+          ? "pt-BR"
+          : "en-US");
+
+      const isEnglish = requestedLocale.toLowerCase().startsWith("en");
+      document.documentElement.lang = isEnglish ? "en-US" : "pt-BR";
+
+      if (!isEnglish) return;
+
+      document.title = "PizzaSystem — Live interface demo";
+      const description = document.querySelector('meta[name="description"]');
+      if (description) {
+        description.setAttribute(
+          "content",
+          "Interactive PizzaSystem interface demo."
+        );
+      }
+
+      const translations = {
+        "Demonstração fiel da interface real": "Live interface demo",
+        "Painel administrativo": "Admin dashboard",
+        "Cardápio do cliente": "Customer menu",
+        "Visão geral da operação de Pizzaria Bella Massa.": "Overview of Bella Massa's restaurant operation.",
+        "Ver pedidos": "View orders",
+        "Abrir loja": "Open store",
+        "Loja agora": "Store now",
+        "Recebendo pedidos": "Accepting orders",
+        "Aberto conforme operação e horários configurados.": "Open according to your configured business hours.",
+        "Pedidos hoje": "Orders today",
+        "22 restantes no limite de hoje": "22 remaining in today's limit",
+        "Em andamento": "In progress",
+        "4 preparando · 3 prontos": "4 preparing · 3 ready",
+        "Pedidos carregados": "Loaded orders",
+        "Total disponível no painel": "Total available in the dashboard",
+        "Resumo financeiro carregado": "Loaded financial summary",
+        "Soma dos pedidos aprovados disponíveis nesta consulta. Para fechamento oficial, use Caixa e Relatórios.": "Total approved orders available in this view. Use Cash Register and Reports for official closing.",
+        "Abrir caixa": "Open cash register",
+        "Operação": "Operations",
+        "Acesso rápido": "Quick access",
+        "Acompanhe pedidos, pagamentos e clientes.": "Track orders, payments and customers.",
+        "Cozinha": "Kitchen",
+        "Gerencie os pedidos em preparo.": "Manage orders being prepared.",
+        "Entregas": "Deliveries",
+        "Organize pedidos prontos e entregas.": "Organize ready orders and deliveries.",
+        "Gestão": "Management",
+        "Financeiro e acompanhamento": "Finance and tracking",
+        "Histórico": "History",
+        "Consulte pedidos finalizados e cancelados.": "Review completed and canceled orders.",
+        "Relatórios": "Reports",
+        "Veja faturamento e desempenho.": "View revenue and performance.",
+        "Caixa": "Cash register",
+        "Acompanhe valores e pagamentos.": "Track totals and payments.",
+        "Cupons": "Coupons",
+        "Gerencie descontos e promoções.": "Manage discounts and promotions.",
+        "Fidelidade": "Loyalty",
+        "Gerencie pontos e recompensas.": "Manage points and rewards.",
+        "Cardápio": "Menu",
+        "Produtos e operação da loja": "Products and store operations",
+        "Produtos": "Products",
+        "Edite produtos, preços e disponibilidade.": "Edit products, prices and availability.",
+        "Categorias": "Categories",
+        "Organize a estrutura do cardápio.": "Organize your menu structure.",
+        "Adicionais": "Add-ons",
+        "Configure grupos e opções.": "Configure groups and options.",
+        "Horários": "Business hours",
+        "Configure quando a loja recebe pedidos.": "Configure when the store accepts orders.",
+        "Loja online": "Online store",
+        "Abra o cardápio público dos clientes.": "Open the public customer menu.",
+        "Pedidos online": "Online ordering",
+        "Entrar": "Sign in",
+        "Pedido": "Order",
+        "Todos": "All",
+        "Bebidas": "Drinks",
+        "Combos": "Combos",
+        "Hoje tem pizza quentinha saindo do forno — peça pelo site": "Fresh pizza is coming out of the oven — order online",
+        "Seu pedido começa aqui": "Your order starts here",
+        "Escolha.": "Choose.",
+        "Peça.": "Order.",
+        "Aproveite.": "Enjoy.",
+        "Escolha seus favoritos, monte seu pedido e acompanhe tudo pelo site.": "Pick your favorites, customize your order and track everything online.",
+        "Ver cardápio": "View menu",
+        "Pizza em destaque": "Featured pizza",
+        "CARDÁPIO ONLINE": "ONLINE MENU",
+        "ABERTO": "OPEN",
+        "O cardápio": "The menu",
+        "Escolha o seu": "Choose yours",
+        "Buscar no cardápio": "Search the menu",
+        "Ver opções": "View options",
+        "SEM FOTO": "NO PHOTO",
+        "Calabresa, cebola, mussarela e orégano.": "Pepperoni, mozzarella and oregano.",
+        "Calabresa": "Pepperoni",
+        "Frango desfiado, catupiry e mussarela.": "Chicken, bacon, ranch and mozzarella.",
+        "Frango com Catupiry": "Chicken Bacon Ranch",
+        "Presunto, ovo, cebola, azeitona e mussarela.": "Ham, peppers, onions, olives and mozzarella.",
+        "Portuguesa": "Supreme",
+        "Bebida gelada para acompanhar seu pedido.": "Ice-cold drink to go with your order.",
+        "Combo Família": "Family Combo",
+        "2 pizzas grandes e refrigerante para compartilhar.": "2 large pizzas and a soda to share.",
+        "Suco Laranja": "Orange Juice",
+        "Suco de laranja para completar o pedido.": "Orange juice to complete your order.",
+        "Voltar ao cardápio": "Back to menu",
+        "R$ 2.184,40": "$2,184.40",
+        "R$ 49,90": "$12.99",
+        "R$ 54,90": "$13.99",
+        "R$ 56,90": "$14.99",
+        "R$ 14,00": "$3.49",
+        "R$ 109,90": "$27.99",
+        "R$ 11,00": "$2.99",
+        "R$": "$",
+        "Pedidos": "Orders"
+      };
+
+      const replacements = Object.entries(translations)
+        .sort((a, b) => b[0].length - a[0].length);
+
+      const walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT
+      );
+
+      let node;
+      while ((node = walker.nextNode())) {
+        let value = node.nodeValue || "";
+        for (const [from, to] of replacements) {
+          if (value.includes(from)) {
+            value = value.split(from).join(to);
+          }
+        }
+        node.nodeValue = value;
+      }
+
+      const search = document.querySelector(".search");
+      if (search) search.setAttribute("placeholder", "Search the menu");
+
+      const heroImage = document.querySelector(".hero-img img");
+      if (heroImage) heroImage.setAttribute("alt", "Featured pizza");
+    })();
+  </script>
 
   <script>
     const tabs = Array.from(document.querySelectorAll(".tab"));

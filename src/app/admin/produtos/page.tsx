@@ -1,4 +1,4 @@
-"use client";
+"use client";\n\nimport { secureFetch } from "@/lib/secureFetch";
 
 import {
   Boxes,
@@ -209,7 +209,7 @@ export default function AdminProductsPage() {
 
         setError(null);
 
-        const response = await fetch(
+        const response = await secureFetch(
           `${API_URL}/api/admin/catalog/products`,
           {
             method: "GET",
@@ -391,7 +391,7 @@ export default function AdminProductsPage() {
         ? `${API_URL}/api/admin/catalog/products/${editingProduct.id}`
         : `${API_URL}/api/admin/catalog/products`;
 
-      const response = await fetch(url, {
+      const response = await secureFetch(url, {
         method: editingProduct
           ? "PUT"
           : "POST",
@@ -448,7 +448,7 @@ export default function AdminProductsPage() {
       setChangingStatus(key);
       setError(null);
 
-      const response = await fetch(
+      const response = await secureFetch(
         `${API_URL}/api/admin/catalog/products/${product.id}`,
         {
           method: "PUT",
@@ -664,7 +664,7 @@ export default function AdminProductsPage() {
         ? `${API_URL}/api/admin/catalog/plans/${editingPlan.id}`
         : `${API_URL}/api/admin/catalog/plans`;
 
-      const response = await fetch(url, {
+      const response = await secureFetch(url, {
         method: editingPlan
           ? "PUT"
           : "POST",
@@ -722,7 +722,7 @@ export default function AdminProductsPage() {
       setChangingStatus(key);
       setError(null);
 
-      const response = await fetch(
+      const response = await secureFetch(
         `${API_URL}/api/admin/catalog/plans/${plan.id}`,
         {
           method: "PUT",

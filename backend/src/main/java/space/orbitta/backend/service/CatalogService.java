@@ -32,16 +32,31 @@ public class CatalogService {
     }
 
     @Transactional(readOnly = true)
-    public List<CatalogProductResponse> getActiveProducts() {
+    public List<CatalogProductResponse> getActiveProducts(
+            String regionCode
+    ) {
+        String market =
+                normalizePublicMarket(
+                        regionCode
+                );
+
         return catalogProductRepository
                 .findByActiveTrueOrderByDisplayOrderAscNameAsc()
                 .stream()
-                .map(this::toPublicProductResponse)
+                .map(product ->
+                        toPublicProductResponse(
+                                product,
+                                market
+                        )
+                )
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public CatalogProductResponse getActiveProductBySlug(String slug) {
+    public CatalogProductResponse getActiveProductBySlug(
+            String slug,
+            String regionCode
+    ) {
         CatalogProduct product = catalogProductRepository
                 .findBySlug(slug)
                 .filter(CatalogProduct::isActive)
@@ -51,7 +66,12 @@ public class CatalogService {
                         )
                 );
 
-        return toPublicProductResponse(product);
+        return toPublicProductResponse(
+                product,
+                normalizePublicMarket(
+                        regionCode
+                )
+        );
     }
 
     @Transactional(readOnly = true)
@@ -104,14 +124,20 @@ public class CatalogService {
     }
 
     private CatalogProductResponse toPublicProductResponse(
-            CatalogProduct product
+            CatalogProduct product,
+            String regionCode
     ) {
         List<CatalogPlanResponse> plans = catalogPlanRepository
                 .findByProductIdAndActiveTrueOrderByDisplayOrderAscMonthlyPriceAsc(
                         product.getId()
                 )
                 .stream()
-                .map(this::toPlanResponse)
+                .map(plan ->
+                        toPlanResponse(
+                                plan,
+                                regionCode
+                        )
+                )
                 .toList();
 
         return new CatalogProductResponse(
@@ -128,14 +154,25 @@ public class CatalogService {
         );
     }
 
-    private CatalogPlanResponse toPlanResponse(CatalogPlan plan) {
+    private CatalogPlanResponse toPlanResponse(
+            CatalogPlan plan,
+            String regionCode
+    ) {
         List<CatalogPlanPriceResponse> regionalPrices =
                 catalogPlanPriceRepository
                         .findByPlanIdAndActiveTrueOrderByDisplayOrderAscRegionCodeAsc(
                                 plan.getId()
                         )
                         .stream()
-                        .map(CatalogPlanPriceResponse::from)
+                        .filter(price ->
+                                price.getRegionCode()
+                                        .equalsIgnoreCase(
+                                                regionCode
+                                        )
+                        )
+                        .map(
+                                CatalogPlanPriceResponse::from
+                        )
                         .toList();
 
         return new CatalogPlanResponse(
@@ -151,4 +188,21 @@ public class CatalogService {
                 regionalPrices
         );
     }
+
+    private String normalizePublicMarket(
+            String regionCode
+    ) {
+
+        if (
+                regionCode != null &&
+                "BR".equalsIgnoreCase(
+                        regionCode.trim()
+                )
+        ) {
+            return "BR";
+        }
+
+        return "US";
+    }
+
 }

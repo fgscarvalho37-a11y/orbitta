@@ -3,6 +3,8 @@ package space.orbitta.backend.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,6 +30,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(
+                    AuthController.class
+            );
 
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
@@ -139,9 +146,10 @@ public class AuthController {
             } catch (
                     RuntimeException exception
             ) {
-                System.err.println(
-                        "[DEMO ACCESS] Falha ao registrar acesso: "
-                                + exception.getMessage()
+                logger.warn(
+                        "Falha ao registrar acesso da conta demo: {}",
+                        exception.getClass()
+                                .getSimpleName()
                 );
             }
 
@@ -227,7 +235,7 @@ public class AuthController {
 
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(
-            @RequestBody UpdateProfileRequest request,
+            @Valid @RequestBody UpdateProfileRequest request,
             Authentication authentication
     ) {
         if (
@@ -277,7 +285,7 @@ public class AuthController {
 
     @PutMapping("/password")
     public ResponseEntity<?> changePassword(
-            @RequestBody ChangePasswordRequest request,
+            @Valid @RequestBody ChangePasswordRequest request,
             Authentication authentication
     ) {
         if (

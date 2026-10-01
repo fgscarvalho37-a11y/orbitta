@@ -10,6 +10,7 @@ import space.orbitta.backend.dto.MercadoPagoSubscriptionResponse;
 import space.orbitta.backend.dto.SubscriptionCheckoutResponse;
 import space.orbitta.backend.dto.SubscriptionPaymentResponse;
 import space.orbitta.backend.dto.TermsAcceptanceRequest;
+import space.orbitta.backend.entity.BillingCycle;
 import space.orbitta.backend.entity.CatalogPlan;
 import space.orbitta.backend.entity.CatalogPlanPrice;
 import space.orbitta.backend.entity.CatalogProduct;
@@ -146,6 +147,11 @@ public class SubscriptionCheckoutService {
         CatalogProduct product =
                 plan.getProduct();
 
+        BillingCycle billingCycle =
+                BillingCycle.normalize(
+                        request.billingCycle()
+                );
+
         CatalogPlanPrice regionalPrice =
                 catalogService
                         .getActivePlanPriceEntity(
@@ -268,7 +274,9 @@ public class SubscriptionCheckoutService {
                         checkout.getCurrency()
                                 .equalsIgnoreCase(
                                         currency
-                                );
+                                ) &&
+                        checkout.getBillingCycle()
+                                == billingCycle;
 
                 boolean settlementReady =
                         !"USD".equalsIgnoreCase(
@@ -337,8 +345,17 @@ public class SubscriptionCheckoutService {
                 currency
         );
 
+        checkout.setBillingCycle(
+                billingCycle
+        );
+
+        BigDecimal billingAmount =
+                billingCycle.applyTo(
+                        monthlyPrice
+                );
+
         BigDecimal totalPrice =
-                monthlyPrice.add(
+                billingAmount.add(
                         setupPrice
                 );
 
@@ -1306,12 +1323,18 @@ public class SubscriptionCheckoutService {
     ) {
 
         return checkout != null &&
-                "USD".equalsIgnoreCase(
-                        checkout.getCurrency()
-                ) &&
-                checkout.getSettlementAmount() != null &&
-                "BRL".equalsIgnoreCase(
-                        checkout.getSettlementCurrency()
+                (
+                        checkout.getBillingCycle()
+                                == BillingCycle.ANNUAL ||
+                        (
+                                "USD".equalsIgnoreCase(
+                                        checkout.getCurrency()
+                                ) &&
+                                checkout.getSettlementAmount() != null &&
+                                "BRL".equalsIgnoreCase(
+                                        checkout.getSettlementCurrency()
+                                )
+                        )
                 );
     }
 

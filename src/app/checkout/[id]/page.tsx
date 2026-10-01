@@ -20,7 +20,7 @@ import {
 const API_URL = "/backend";
 
 const TERMS_VERSION =
-  "2026-09-24";
+  "2026-10-01";
 
 type CheckoutStatus =
   | "PENDING"

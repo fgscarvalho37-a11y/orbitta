@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, LogIn, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 import { useLanguage } from "@/i18n/LanguageProvider";
 
@@ -57,29 +57,23 @@ export default function Hero() {
             className="mt-10 flex flex-wrap gap-4"
           >
             <a
-              href="#produtos"
+              href="/produtos/pizzasystem"
               className="group flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
             >
-              {text("Conhecer produtos", "Explore products")}
+              {text("Conhecer o PizzaSystem", "Explore PizzaSystem")}
               <ArrowRight
                 size={16}
                 className="transition-transform group-hover:translate-x-1"
               />
             </a>
 
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              title={text("Contato disponível em breve", "Contact coming soon")}
-              className="flex cursor-not-allowed items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.025] px-6 py-3.5 text-sm font-medium text-white/30"
+            <a
+              href="/login"
+              className="group flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.04] px-6 py-3.5 text-sm font-medium text-white/65 transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
             >
-              {text("Falar com a Orbitta", "Talk to Orbitta")}
-
-              <span className="rounded-full border border-white/[0.06] bg-white/[0.03] px-2 py-0.5 text-[9px] uppercase tracking-wider text-white/25">
-                {text("Em breve", "Coming soon")}
-              </span>
-            </button>
+              <LogIn size={15} />
+              {text("Já sou cliente", "I'm already a client")}
+            </a>
           </motion.div>
 
           <div className="mt-16 flex flex-wrap gap-x-10 gap-y-5 border-t border-white/[0.07] pt-6 text-xs uppercase tracking-[0.16em] text-white/30">

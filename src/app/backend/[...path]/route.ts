@@ -55,6 +55,18 @@ function buildUpstreamHeaders(
     }
   }
 
+  const country =
+    request.headers.get(
+      "x-vercel-ip-country"
+    );
+
+  headers.set(
+    "x-orbitta-market",
+    country?.toUpperCase() === "BR"
+      ? "BR"
+      : "US"
+  );
+
   const forwardedFor =
     request.headers.get("x-forwarded-for") ??
     request.headers.get("x-real-ip");

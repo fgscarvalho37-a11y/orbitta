@@ -161,6 +161,12 @@ export default function ProductPageClient({
       displayProduct.status === "available") &&
     Boolean(displayProduct.previewUrl);
 
+  const overviewFeatures =
+    displayProduct.features.slice(
+      0,
+      6
+    );
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050914] text-white">
       {/* HEADER */}
@@ -423,7 +429,7 @@ export default function ProductPageClient({
           </div>
 
           <div className="grid gap-px overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.06] sm:grid-cols-2">
-            {displayProduct.features.map((feature, index) => {
+            {overviewFeatures.map((feature, index) => {
               const Icon = icons[index] ?? Settings2;
 
               return (
@@ -464,6 +470,22 @@ export default function ProductPageClient({
               );
             })}
           </div>
+
+          {displayProduct.features.length >
+            overviewFeatures.length && (
+            <div className="lg:col-start-2">
+              <a
+                href="#planos"
+                className="inline-flex items-center gap-2 text-xs font-medium text-cyan-200/55 transition hover:text-cyan-100"
+              >
+                {text(
+                  `Ver todas as ${displayProduct.features.length} funcionalidades incluídas`,
+                  `See all ${displayProduct.features.length} included features`
+                )}
+                <ArrowRight size={13} />
+              </a>
+            </div>
+          )}
         </div>
       </section>
 

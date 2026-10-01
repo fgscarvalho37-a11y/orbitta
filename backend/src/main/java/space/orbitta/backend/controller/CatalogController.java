@@ -18,18 +18,34 @@ public class CatalogController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<List<CatalogProductResponse>> getProducts() {
+    public ResponseEntity<List<CatalogProductResponse>> getProducts(
+            @RequestHeader(
+                    name = "X-Orbitta-Market",
+                    required = false
+            )
+            String market
+    ) {
         return ResponseEntity.ok(
-                catalogService.getActiveProducts()
+                catalogService.getActiveProducts(
+                        market
+                )
         );
     }
 
     @GetMapping("/products/{slug}")
     public ResponseEntity<CatalogProductResponse> getProductBySlug(
-            @PathVariable String slug
+            @PathVariable String slug,
+            @RequestHeader(
+                    name = "X-Orbitta-Market",
+                    required = false
+            )
+            String market
     ) {
         return ResponseEntity.ok(
-                catalogService.getActiveProductBySlug(slug)
+                catalogService.getActiveProductBySlug(
+                        slug,
+                        market
+                )
         );
     }
 }

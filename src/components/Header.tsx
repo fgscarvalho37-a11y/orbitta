@@ -29,10 +29,17 @@ export default function Header() {
 
       <nav className="hidden items-center gap-8 text-sm text-white/60 md:flex">
         <a
-          className="transition duration-200 hover:text-white"
+          className="font-medium text-white/80 transition duration-200 hover:text-white"
           href="/produtos/pizzasystem"
         >
           PizzaSystem
+        </a>
+
+        <a
+          className="transition duration-200 hover:text-white"
+          href="/produtos/pizzasystem#planos"
+        >
+          {text("Planos", "Pricing")}
         </a>
 
         <a
@@ -54,13 +61,20 @@ export default function Header() {
         <LanguageSwitcher compact />
 
         <a
+          href="/produtos/pizzasystem#planos"
+          className="hidden rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-[#07101c] transition hover:bg-cyan-50 sm:inline-flex"
+        >
+          {text("Ver planos", "View pricing")}
+        </a>
+
+        <a
           href="/login"
           className="group flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-5 py-2.5 text-sm font-medium backdrop-blur-md transition duration-200 hover:border-white/20 hover:bg-white/[0.1]"
         >
           {text("Área do cliente", "Client area")}
 
           <ArrowRight
-          size={15}
+            size={15}
             className="transition-transform duration-200 group-hover:translate-x-1"
           />
         </a>

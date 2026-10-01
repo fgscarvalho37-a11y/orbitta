@@ -30,32 +30,24 @@ export default function Header() {
       <nav className="hidden items-center gap-8 text-sm text-white/60 md:flex">
         <a
           className="transition duration-200 hover:text-white"
-          href="#produtos"
+          href="/produtos/pizzasystem"
+        >
+          PizzaSystem
+        </a>
+
+        <a
+          className="transition duration-200 hover:text-white"
+          href="/produtos/condoflow"
+        >
+          CondoFlow
+        </a>
+
+        <a
+          className="transition duration-200 hover:text-white"
+          href="/produtos"
         >
           {text("Produtos", "Products")}
         </a>
-
-        <span
-          aria-disabled="true"
-          className="flex cursor-not-allowed items-center gap-2 text-white/25"
-          title={text("Disponível em breve", "Coming soon")}
-        >
-          {text("Soluções", "Solutions")}
-          <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2 py-0.5 text-[9px] uppercase tracking-wider text-white/20">
-            {text("Em breve", "Coming soon")}
-          </span>
-        </span>
-
-        <span
-          aria-disabled="true"
-          className="flex cursor-not-allowed items-center gap-2 text-white/25"
-          title={text("Disponível em breve", "Coming soon")}
-        >
-          Orbitta
-          <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2 py-0.5 text-[9px] uppercase tracking-wider text-white/20">
-            {text("Em breve", "Coming soon")}
-          </span>
-        </span>
       </nav>
 
       <div className="flex items-center gap-3">

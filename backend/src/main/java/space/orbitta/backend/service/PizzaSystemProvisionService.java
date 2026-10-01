@@ -463,6 +463,7 @@ public class PizzaSystemProvisionService {
      * SINCRONIZAR SENHA / DADOS DO USUÁRIO
      * =========================================================
      */
+    @Transactional
     public void syncUser(
             User user
     ) {
@@ -504,8 +505,6 @@ public class PizzaSystemProvisionService {
                 System.err.println(
                         "[PIZZASYSTEM] Falha ao sincronizar usuário "
                                 + user.getId()
-                                + ": "
-                                + exception.getMessage()
                 );
             }
         }

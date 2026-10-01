@@ -169,7 +169,7 @@ public class RateLimitFilter
         ) {
             return new Limit(
                     "login",
-                    10,
+                    5,
                     15 * 60
             );
         }
@@ -185,8 +185,59 @@ public class RateLimitFilter
         ) {
             return new Limit(
                     "register",
-                    5,
+                    3,
                     60 * 60
+            );
+        }
+
+        if (
+                "POST".equalsIgnoreCase(
+                        method
+                )
+                &&
+                path.startsWith(
+                        "/api/support/"
+                )
+        ) {
+            return new Limit(
+                    "support-write",
+                    12,
+                    10 * 60
+            );
+        }
+
+        if (
+                "POST".equalsIgnoreCase(
+                        method
+                )
+                &&
+                path.startsWith(
+                        "/api/checkout/"
+                )
+        ) {
+            return new Limit(
+                    "checkout-write",
+                    20,
+                    5 * 60
+            );
+        }
+
+        if (
+                (
+                        "POST".equalsIgnoreCase(method) ||
+                        "PUT".equalsIgnoreCase(method) ||
+                        "PATCH".equalsIgnoreCase(method) ||
+                        "DELETE".equalsIgnoreCase(method)
+                )
+                &&
+                path.startsWith(
+                        "/api/admin/"
+                )
+        ) {
+            return new Limit(
+                    "admin-write",
+                    90,
+                    5 * 60
             );
         }
 
@@ -197,7 +248,7 @@ public class RateLimitFilter
         ) {
             return new Limit(
                     "api",
-                    240,
+                    180,
                     60
             );
         }

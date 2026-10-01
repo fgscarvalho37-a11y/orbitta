@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import {
-  Activity,
   ArrowLeft,
   ArrowRight,
   BarChart3,
@@ -67,7 +66,7 @@ const sectionTexts: Record<string, string> = {
     "Uma operação conectada do pedido à entrega.",
 
   condoflow:
-    "Moradores, portaria e administração trabalhando conectados.",
+    "Síndico e portaria trabalhando conectados.",
 
 };
 
@@ -82,7 +81,7 @@ const sectionTextsEn: Record<string, string> = {
   pizzasystem:
     "A connected operation from order to delivery.",
   condoflow:
-    "Front desk teams, residents and management working together.",
+    "Front desk teams and managers working together.",
 };
 
 export default function ProductPageClient({

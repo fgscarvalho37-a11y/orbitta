@@ -5,6 +5,7 @@ import space.orbitta.backend.entity.BillingCycle;
 public record CreateSubscriptionRequest(
         Long planId,
         Long priceId,
-        BillingCycle billingCycle
+        BillingCycle billingCycle,
+        String displayCurrency
 ) {
 }

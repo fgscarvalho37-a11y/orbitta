@@ -19,6 +19,9 @@ public class FxRateService {
     private static final String EUR_BRL_URL =
             "https://api.frankfurter.dev/v2/rate/EUR/BRL";
 
+    private static final String GBP_BRL_URL =
+            "https://api.frankfurter.dev/v2/rate/GBP/BRL";
+
     private static final Duration CACHE_TTL =
             Duration.ofMinutes(15);
 
@@ -30,6 +33,7 @@ public class FxRateService {
 
     private CachedRate usdBrlCache;
     private CachedRate eurBrlCache;
+    private CachedRate gbpBrlCache;
 
     public synchronized FxQuote quoteUsdToBrl(
             BigDecimal usdAmount
@@ -67,6 +71,49 @@ public class FxRateService {
                 rate,
                 LocalDateTime.now()
         );
+    }
+
+    public synchronized FxQuote quoteGbpToBrl(
+            BigDecimal gbpAmount
+    ) {
+        if (gbpAmount == null || gbpAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Valor em GBP inválido para conversão.");
+        }
+
+        BigDecimal rate = getGbpBrlRate();
+        BigDecimal converted = gbpAmount.multiply(rate).setScale(2, RoundingMode.HALF_UP);
+
+        return new FxQuote("GBP", "BRL", gbpAmount, converted, rate, LocalDateTime.now());
+    }
+
+    private BigDecimal getGbpBrlRate() {
+        LocalDateTime now = LocalDateTime.now();
+
+        if (gbpBrlCache != null && gbpBrlCache.fetchedAt().plus(CACHE_TTL).isAfter(now)) {
+            return gbpBrlCache.rate();
+        }
+
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(GBP_BRL_URL, Map.class);
+            Map<?, ?> body = response.getBody();
+            Object rawRate = body != null ? body.get("rate") : null;
+
+            if (rawRate == null) throw new IllegalStateException("Cotação GBP/BRL não retornada.");
+
+            BigDecimal rate = new BigDecimal(String.valueOf(rawRate));
+            if (rate.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalStateException("Cotação GBP/BRL inválida.");
+
+            gbpBrlCache = new CachedRate(rate, now);
+            return rate;
+        } catch (RuntimeException exception) {
+            if (gbpBrlCache != null && gbpBrlCache.fetchedAt().plus(STALE_FALLBACK_TTL).isAfter(now)) {
+                return gbpBrlCache.rate();
+            }
+            throw new IllegalStateException(
+                    "Não foi possível obter a cotação GBP/BRL agora. Tente novamente em alguns instantes.",
+                    exception
+            );
+        }
     }
 
     public synchronized FxQuote quoteEurToBrl(

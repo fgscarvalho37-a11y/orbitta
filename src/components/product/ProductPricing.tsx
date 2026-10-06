@@ -16,7 +16,10 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
-import { useLanguage } from "@/i18n/LanguageProvider";
+import {
+  useLanguage,
+  type MarketCode,
+} from "@/i18n/LanguageProvider";
 
 const API_URL = "/backend";
 
@@ -69,7 +72,6 @@ type ProductPricingProps = {
   slug: string;
 };
 
-type MarketCode = "BR" | "US" | "GB";
 type BillingCycle = "MONTHLY" | "ANNUAL";
 
 const MARKET_META: Record<
@@ -94,6 +96,21 @@ const MARKET_META: Record<
     pt: "Reino Unido",
     en: "United Kingdom",
     currency: "GBP",
+  },
+  AU: {
+    pt: "Austrália",
+    en: "Australia",
+    currency: "AUD",
+  },
+  EU: {
+    pt: "Europa",
+    en: "Europe",
+    currency: "EUR",
+  },
+  CA: {
+    pt: "Canadá",
+    en: "Canada",
+    currency: "CAD",
   },
 };
 

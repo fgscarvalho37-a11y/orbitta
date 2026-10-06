@@ -367,14 +367,15 @@ export default function CheckoutPage({
       ? "Stripe"
       : "Mercado Pago";
 
-  const isUsdCheckout =
-    checkout.currency.toUpperCase() === "USD";
+  const sourceCurrency = checkout.currency.toUpperCase();
+  const isForeignMercadoPagoCheckout =
+    sourceCurrency === "USD" || sourceCurrency === "EUR";
 
   const isAnnual =
     checkout.billingCycle === "ANNUAL";
 
   const hasBrlSettlement =
-    isUsdCheckout &&
+    isForeignMercadoPagoCheckout &&
     checkout.settlementAmount !== null &&
     checkout.settlementCurrency?.toUpperCase() === "BRL";
 
@@ -465,7 +466,7 @@ export default function CheckoutPage({
                             "12 meses de acesso pelo valor equivalente a 10 mensalidades.",
                             "12 months of access for the price of 10 monthly payments."
                           )
-                        : isUsdCheckout
+                        : isForeignMercadoPagoCheckout
                           ? text(
                               "Primeiro mês pago uma vez; renovação recorrente será ativada depois.",
                               "First month is a one-time payment; recurring renewal will be activated later."
@@ -527,15 +528,15 @@ export default function CheckoutPage({
                               isAnnual
                                 ? checkout.billingAmount
                                 : checkout.monthlyPrice,
-                              "USD",
-                              "en-US"
+                              checkout.currency,
+                              locale
                             )} é convertido para reais no início deste checkout e o valor fica travado até ele expirar.`,
                             `${formatCurrency(
                               isAnnual
                                 ? checkout.billingAmount
                                 : checkout.monthlyPrice,
-                              "USD",
-                              "en-US"
+                              checkout.currency,
+                              locale
                             )} is converted to BRL when this checkout starts, and the converted amount stays locked until it expires.`
                           )}
                         </div>
@@ -552,7 +553,7 @@ export default function CheckoutPage({
 
                         {checkout.fxRate ? (
                           <div className="mt-1 text-[9px] text-white/20">
-                            1 USD = {Number(checkout.fxRate).toFixed(4)} BRL
+                            1 {sourceCurrency} = {Number(checkout.fxRate).toFixed(4)} BRL
                           </div>
                         ) : null}
                       </div>
@@ -701,10 +702,10 @@ export default function CheckoutPage({
                           "Estou ciente de que o plano anual é pago antecipadamente, concede 12 meses de acesso e custa o equivalente a 10 mensalidades, além de eventual taxa inicial indicada neste checkout.",
                           "I understand that the annual plan is prepaid, provides 12 months of access, and costs the equivalent of 10 monthly payments, plus any setup fee shown in this checkout."
                         )
-                      : isUsdCheckout
+                      : isForeignMercadoPagoCheckout
                         ? text(
-                            "Estou ciente de que o primeiro mês será pago uma única vez pelo Mercado Pago em BRL, após conversão do valor exibido em USD.",
-                            "I understand that the first month will be paid once through Mercado Pago in BRL after converting the displayed USD amount."
+                            "Estou ciente de que o primeiro mês será pago uma única vez pelo Mercado Pago em BRL, após conversão do valor exibido.",
+                            "I understand that the first month will be paid once through Mercado Pago in BRL after converting the displayed amount."
                           )
                         : text(
                             "Estou ciente da cobrança recorrente mensal e da taxa inicial indicada neste checkout.",
@@ -771,7 +772,7 @@ export default function CheckoutPage({
                       `Você será redirecionado para ${gatewayName} para concluir o pagamento anual antecipado.`,
                       `You will be redirected to ${gatewayName} to complete the prepaid annual payment.`
                     )
-                  : isUsdCheckout
+                  : isForeignMercadoPagoCheckout
                     ? text(
                         `Você será redirecionado para ${gatewayName}. A primeira cobrança será processada em BRL.`,
                         `You will be redirected to ${gatewayName}. The first charge will be processed in BRL.`

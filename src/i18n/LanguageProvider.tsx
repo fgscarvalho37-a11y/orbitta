@@ -11,15 +11,25 @@ import {
 
 export type AppLocale =
   | "pt-BR"
-  | "en-US";
+  | "en-US"
+  | "en-GB"
+  | "en-AU";
 
-export type MarketCode = "BR" | "US" | "GB";
+export type MarketCode =
+  | "BR"
+  | "US"
+  | "GB"
+  | "AU"
+  | "EU"
+  | "CA";
 
 type LanguageContextValue = {
   locale: AppLocale;
   isEnglish: boolean;
   market: MarketCode;
-  setMarket: (market: MarketCode) => void;
+  setMarket: (
+    market: MarketCode
+  ) => void;
   setLocale: (
     locale: AppLocale
   ) => void;
@@ -36,8 +46,51 @@ const LanguageContext =
 
 const STORAGE_KEY =
   "orbitta-language";
+
 const MARKET_STORAGE_KEY =
   "orbitta-market";
+
+const VALID_MARKETS:
+  MarketCode[] = [
+    "BR",
+    "US",
+    "GB",
+    "AU",
+    "EU",
+    "CA",
+  ];
+
+function isMarketCode(
+  value:
+    | string
+    | null
+    | undefined
+): value is MarketCode {
+  return Boolean(
+    value &&
+      VALID_MARKETS.includes(
+        value as MarketCode
+      )
+  );
+}
+
+function localeForMarket(
+  market: MarketCode
+): AppLocale {
+  if (market === "BR") {
+    return "pt-BR";
+  }
+
+  if (market === "GB") {
+    return "en-GB";
+  }
+
+  if (market === "AU") {
+    return "en-AU";
+  }
+
+  return "en-US";
+}
 
 export function LanguageProvider({
   children,
@@ -52,62 +105,179 @@ export function LanguageProvider({
       "pt-BR"
     );
 
-  const [market, setMarketState] =
-    useState<MarketCode>("BR");
+  const [
+    market,
+    setMarketState,
+  ] =
+    useState<MarketCode>(
+      "BR"
+    );
 
   useEffect(() => {
+    let active = true;
+
     const savedMarket =
-      window.localStorage.getItem(MARKET_STORAGE_KEY);
+      window.localStorage.getItem(
+        MARKET_STORAGE_KEY
+      );
 
-    if (savedMarket === "BR" || savedMarket === "US" || savedMarket === "GB") {
-      setMarketState(savedMarket);
-    }
-
-    const saved =
+    const savedLocale =
       window.localStorage.getItem(
         STORAGE_KEY
       );
 
     if (
-      saved === "pt-BR" ||
-      saved === "en-US"
+      isMarketCode(
+        savedMarket
+      )
     ) {
+      setMarketState(
+        savedMarket
+      );
+
+      const nextLocale:
+        AppLocale =
+        savedLocale === "pt-BR" ||
+        savedLocale === "en-US" ||
+        savedLocale === "en-GB" ||
+        savedLocale === "en-AU"
+          ? savedLocale
+          : localeForMarket(
+              savedMarket
+            );
+
       setLocaleState(
-        saved
+        nextLocale
       );
 
       document.documentElement.lang =
-        saved;
+        nextLocale;
 
-      return;
+      return () => {
+        active = false;
+      };
     }
 
-    const detected:
-      AppLocale =
-      navigator.language
-        .toLowerCase()
-        .startsWith("pt")
-        ? "pt-BR"
-        : "en-US";
+    async function detectMarket() {
+      try {
+        const response =
+          await fetch(
+            "/api/market",
+            {
+              cache:
+                "no-store",
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            "market detection failed"
+          );
+        }
+
+        const data:
+          {
+            marketCode?: string;
+          } =
+          await response.json();
+
+        if (
+          !active ||
+          !isMarketCode(
+            data.marketCode
+          )
+        ) {
+          return;
+        }
+
+        const detectedMarket =
+          data.marketCode;
+
+        const detectedLocale =
+          localeForMarket(
+            detectedMarket
+          );
+
+        setMarketState(
+          detectedMarket
+        );
+
+        setLocaleState(
+          detectedLocale
+        );
+
+        document.documentElement.lang =
+          detectedLocale;
+      } catch {
+        if (!active) {
+          return;
+        }
+
+        const browserLocale =
+          navigator.language
+            .toLowerCase();
+
+        const detectedLocale:
+          AppLocale =
+          browserLocale.startsWith(
+            "pt"
+          )
+            ? "pt-BR"
+            : browserLocale.startsWith(
+                  "en-au"
+                )
+              ? "en-AU"
+              : browserLocale.startsWith(
+                    "en-gb"
+                  )
+                ? "en-GB"
+                : "en-US";
+
+        setLocaleState(
+          detectedLocale
+        );
+
+        document.documentElement.lang =
+          detectedLocale;
+      }
+    }
+
+    void detectMarket();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  function setMarket(
+    nextMarket:
+      MarketCode
+  ) {
+    setMarketState(
+      nextMarket
+    );
+
+    window.localStorage.setItem(
+      MARKET_STORAGE_KEY,
+      nextMarket
+    );
+
+    const nextLocale =
+      localeForMarket(
+        nextMarket
+      );
 
     setLocaleState(
-      detected
+      nextLocale
+    );
+
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      nextLocale
     );
 
     document.documentElement.lang =
-      detected;
-  }, []);
-
-  function setMarket(nextMarket: MarketCode) {
-    setMarketState(nextMarket);
-    window.localStorage.setItem(MARKET_STORAGE_KEY, nextMarket);
-
-    const nextLocale: AppLocale =
-      nextMarket === "BR" ? "pt-BR" : "en-US";
-
-    setLocaleState(nextLocale);
-    window.localStorage.setItem(STORAGE_KEY, nextLocale);
-    document.documentElement.lang = nextLocale;
+      nextLocale;
   }
 
   function setLocale(
@@ -132,8 +302,9 @@ export function LanguageProvider({
       () => ({
         locale,
         isEnglish:
-          locale ===
-          "en-US",
+          locale.startsWith(
+            "en"
+          ),
         market,
         setMarket,
         setLocale,
@@ -141,8 +312,9 @@ export function LanguageProvider({
           pt,
           en
         ) =>
-          locale ===
-          "en-US"
+          locale.startsWith(
+            "en"
+          )
             ? en
             : pt,
       }),

@@ -13,9 +13,13 @@ export type AppLocale =
   | "pt-BR"
   | "en-US";
 
+export type MarketCode = "BR" | "US" | "GB";
+
 type LanguageContextValue = {
   locale: AppLocale;
   isEnglish: boolean;
+  market: MarketCode;
+  setMarket: (market: MarketCode) => void;
   setLocale: (
     locale: AppLocale
   ) => void;
@@ -32,6 +36,8 @@ const LanguageContext =
 
 const STORAGE_KEY =
   "orbitta-language";
+const MARKET_STORAGE_KEY =
+  "orbitta-market";
 
 export function LanguageProvider({
   children,
@@ -46,7 +52,17 @@ export function LanguageProvider({
       "pt-BR"
     );
 
+  const [market, setMarketState] =
+    useState<MarketCode>("BR");
+
   useEffect(() => {
+    const savedMarket =
+      window.localStorage.getItem(MARKET_STORAGE_KEY);
+
+    if (savedMarket === "BR" || savedMarket === "US" || savedMarket === "GB") {
+      setMarketState(savedMarket);
+    }
+
     const saved =
       window.localStorage.getItem(
         STORAGE_KEY
@@ -82,6 +98,18 @@ export function LanguageProvider({
       detected;
   }, []);
 
+  function setMarket(nextMarket: MarketCode) {
+    setMarketState(nextMarket);
+    window.localStorage.setItem(MARKET_STORAGE_KEY, nextMarket);
+
+    const nextLocale: AppLocale =
+      nextMarket === "BR" ? "pt-BR" : "en-US";
+
+    setLocaleState(nextLocale);
+    window.localStorage.setItem(STORAGE_KEY, nextLocale);
+    document.documentElement.lang = nextLocale;
+  }
+
   function setLocale(
     nextLocale:
       AppLocale
@@ -106,6 +134,8 @@ export function LanguageProvider({
         isEnglish:
           locale ===
           "en-US",
+        market,
+        setMarket,
         setLocale,
         text: (
           pt,
@@ -118,6 +148,7 @@ export function LanguageProvider({
       }),
       [
         locale,
+        market,
       ]
     );
 

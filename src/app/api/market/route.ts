@@ -14,6 +14,19 @@ function resolveMarket(country: string | null) {
     };
   }
 
+  const euroCountries = new Set([
+    "AT", "BE", "HR", "CY", "EE", "FI", "FR", "DE", "GR", "IE",
+    "IT", "LV", "LT", "LU", "MT", "NL", "PT", "SK", "SI", "ES",
+  ]);
+
+  if (normalized && euroCountries.has(normalized)) {
+    return {
+      marketCode: "EU",
+      countryCode: normalized,
+      currency: "EUR",
+    };
+  }
+
   return {
     marketCode: "US",
     countryCode: normalized || "US",

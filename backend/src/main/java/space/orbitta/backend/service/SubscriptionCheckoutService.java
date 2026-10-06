@@ -187,6 +187,26 @@ public class SubscriptionCheckoutService {
                                 : plan.getCurrency()
                 );
 
+        String requestedDisplayCurrency =
+                request.displayCurrency() != null
+                        ? request.displayCurrency().trim().toUpperCase()
+                        : null;
+
+        /*
+         * Europa usa o mesmo preço nominal internacional já cadastrado
+         * (ex.: 79,90), exibido em EUR. O Mercado Pago brasileiro recebe
+         * o equivalente em BRL congelado no checkout.
+         *
+         * Não aceitamos override arbitrário de moeda: EUR só pode derivar
+         * da oferta internacional USD já cadastrada.
+         */
+        if (
+                "EUR".equals(requestedDisplayCurrency) &&
+                "USD".equalsIgnoreCase(currency)
+        ) {
+            currency = "EUR";
+        }
+
         boolean alreadySubscribed =
                 clientProductRepository
                         .existsByUserIdAndCatalogPlanIdAndStatus(
@@ -279,8 +299,9 @@ public class SubscriptionCheckoutService {
                                 == billingCycle;
 
                 boolean settlementReady =
-                        !"USD".equalsIgnoreCase(
-                                currency
+                        !(
+                                "USD".equalsIgnoreCase(currency) ||
+                                "EUR".equalsIgnoreCase(currency)
                         )
                                 ||
                                 (
@@ -387,6 +408,19 @@ public class SubscriptionCheckoutService {
             );
 
         } else if (
+                "EUR".equalsIgnoreCase(
+                        currency
+                )
+        ) {
+            FxRateService.FxQuote quote =
+                    fxRateService.quoteEurToBrl(totalPrice);
+
+            checkout.setSettlementAmount(quote.settlementAmount());
+            checkout.setSettlementCurrency(quote.settlementCurrency());
+            checkout.setFxRate(quote.rate());
+            checkout.setFxQuotedAt(quote.quotedAt());
+
+        } else if (
                 "BRL".equalsIgnoreCase(
                         currency
                 )
@@ -418,7 +452,7 @@ public class SubscriptionCheckoutService {
 
         checkout.setExpiresAt(
                 LocalDateTime.now()
-                        .plusMinutes(30)
+                        .plusMinutes(15)
         );
 
         SubscriptionCheckout saved =
@@ -1332,6 +1366,9 @@ public class SubscriptionCheckoutService {
                                 == BillingCycle.ANNUAL ||
                         "USD".equalsIgnoreCase(
                                 checkout.getCurrency()
+                        ) ||
+                        "EUR".equalsIgnoreCase(
+                                checkout.getCurrency()
                         )
                 );
     }
@@ -1350,11 +1387,11 @@ public class SubscriptionCheckoutService {
         /*
          * BRL continua na assinatura Mercado Pago.
          *
-         * USD usa, temporariamente, o primeiro mês como
-         * pagamento único Mercado Pago convertido para BRL.
+         * USD e EUR usam pagamento único Mercado Pago convertido
+         * para BRL com a cotação congelada no checkout.
          *
-         * Stripe permanece conectada como fallback para
-         * outras moedas e para a migração recorrente futura.
+         * Stripe permanece conectada como fallback para outras
+         * moedas e para a migração recorrente futura.
          */
         String currency =
                 checkout.getCurrency();
@@ -1363,6 +1400,9 @@ public class SubscriptionCheckoutService {
                 currency
         ) &&
                 !"USD".equalsIgnoreCase(
+                        currency
+                ) &&
+                !"EUR".equalsIgnoreCase(
                         currency
                 );
     }

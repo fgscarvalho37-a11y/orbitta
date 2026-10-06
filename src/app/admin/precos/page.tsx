@@ -84,7 +84,7 @@ const MARKETS = [
     currency: "AUD",
     pt: "Austrália",
     en: "Australia",
-    gateway: "Stripe",
+    gateway: "Mercado Pago",
   },
 ] as const;
 

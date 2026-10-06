@@ -11,9 +11,7 @@ import {
 
 export type AppLocale =
   | "pt-BR"
-  | "en-US"
-  | "en-GB"
-  | "en-AU";
+  | "en-US";
 
 export type MarketCode =
   | "BR"
@@ -81,15 +79,9 @@ function localeForMarket(
     return "pt-BR";
   }
 
-  if (market === "GB") {
-    return "en-GB";
-  }
-
-  if (market === "AU") {
-    return "en-AU";
-  }
-
-  return "en-US";
+  return market === "BR"
+    ? "pt-BR"
+    : "en-US";
 }
 
 export function LanguageProvider({
@@ -138,9 +130,7 @@ export function LanguageProvider({
       const nextLocale:
         AppLocale =
         savedLocale === "pt-BR" ||
-        savedLocale === "en-US" ||
-        savedLocale === "en-GB" ||
-        savedLocale === "en-AU"
+        savedLocale === "en-US"
           ? savedLocale
           : localeForMarket(
               savedMarket
@@ -223,15 +213,7 @@ export function LanguageProvider({
             "pt"
           )
             ? "pt-BR"
-            : browserLocale.startsWith(
-                  "en-au"
-                )
-              ? "en-AU"
-              : browserLocale.startsWith(
-                    "en-gb"
-                  )
-                ? "en-GB"
-                : "en-US";
+            : "en-US";
 
         setLocaleState(
           detectedLocale
@@ -302,9 +284,8 @@ export function LanguageProvider({
       () => ({
         locale,
         isEnglish:
-          locale.startsWith(
-            "en"
-          ),
+          locale ===
+          "en-US",
         market,
         setMarket,
         setLocale,
@@ -312,9 +293,8 @@ export function LanguageProvider({
           pt,
           en
         ) =>
-          locale.startsWith(
-            "en"
-          )
+          locale ===
+          "en-US"
             ? en
             : pt,
       }),

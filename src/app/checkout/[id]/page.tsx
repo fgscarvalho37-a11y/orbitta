@@ -369,7 +369,7 @@ export default function CheckoutPage({
 
   const sourceCurrency = checkout.currency.toUpperCase();
   const isForeignMercadoPagoCheckout =
-    sourceCurrency === "USD" || sourceCurrency === "EUR";
+    sourceCurrency === "USD" || sourceCurrency === "EUR" || sourceCurrency === "GBP";
 
   const isAnnual =
     checkout.billingCycle === "ANNUAL";

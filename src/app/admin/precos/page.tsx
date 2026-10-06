@@ -72,6 +72,20 @@ const MARKETS = [
     en: "United States",
     gateway: "Mercado Pago",
   },
+  {
+    code: "GB",
+    currency: "GBP",
+    pt: "Reino Unido",
+    en: "United Kingdom",
+    gateway: "Mercado Pago",
+  },
+  {
+    code: "AU",
+    currency: "AUD",
+    pt: "Austrália",
+    en: "Australia",
+    gateway: "Stripe",
+  },
 ] as const;
 
 function moneyInput(value: number | undefined) {
@@ -414,8 +428,8 @@ export default function AdminRegionalPricingPage() {
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-white/30">
               {text(
-                "Por enquanto a Orbitta vende apenas no Brasil e nos Estados Unidos. Brasil cobra em BRL; nos EUA o preço comercial é em USD e o primeiro pagamento é convertido para BRL no Mercado Pago.",
-                "For now, Orbitta sells only in Brazil and the United States. Brazil is billed in BRL; in the US the commercial price is shown in USD and the first payment is converted to BRL for Mercado Pago."
+                "A Orbitta trabalha com preços regionais. Brasil usa BRL, Estados Unidos usa USD, Reino Unido usa GBP e Austrália usa AUD. O provedor de pagamento depende do mercado configurado.",
+                "Orbitta uses regional pricing. Brazil uses BRL, the United States uses USD, the United Kingdom uses GBP and Australia uses AUD. The payment provider depends on the configured market."
               )}
             </p>
           </div>
@@ -445,8 +459,8 @@ export default function AdminRegionalPricingPage() {
 
         <div className="mt-6 rounded-2xl border border-cyan-300/[0.08] bg-cyan-300/[0.025] px-5 py-4 text-xs leading-6 text-white/35">
           {text(
-            "O site detecta Brasil ou Estados Unidos pelo navegador e permite troca manual. O preço comercial continua fixo em cada moeda; apenas o checkout dos EUA converte o valor para BRL no momento da cobrança pelo Mercado Pago.",
-            "The website detects Brazil or the United States from the browser and allows manual switching. The commercial price remains fixed in each currency; only the US checkout converts the amount to BRL when charging through Mercado Pago."
+            "O site detecta o mercado automaticamente e permite troca manual entre Brasil, Estados Unidos, Reino Unido e Austrália. Cada região usa seu próprio preço e moeda cadastrados abaixo.",
+            "The website detects the market automatically and allows manual switching between Brazil, the United States, the United Kingdom and Australia. Each region uses its own price and currency configured below."
           )}
         </div>
 
@@ -524,8 +538,9 @@ export default function AdminRegionalPricingPage() {
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="text-sm font-medium text-white/70">
-                                {locale ===
-                                "en-US"
+                                {locale.startsWith(
+                                  "en"
+                                )
                                   ? market.en
                                   : market.pt}
                               </span>

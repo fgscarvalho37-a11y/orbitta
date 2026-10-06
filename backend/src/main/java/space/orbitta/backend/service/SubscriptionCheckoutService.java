@@ -201,10 +201,11 @@ public class SubscriptionCheckoutService {
          * da oferta internacional USD já cadastrada.
          */
         if (
-                "EUR".equals(requestedDisplayCurrency) &&
+                ("EUR".equals(requestedDisplayCurrency) ||
+                 "GBP".equals(requestedDisplayCurrency)) &&
                 "USD".equalsIgnoreCase(currency)
         ) {
-            currency = "EUR";
+            currency = requestedDisplayCurrency;
         }
 
         boolean alreadySubscribed =
@@ -301,7 +302,8 @@ public class SubscriptionCheckoutService {
                 boolean settlementReady =
                         !(
                                 "USD".equalsIgnoreCase(currency) ||
-                                "EUR".equalsIgnoreCase(currency)
+                                "EUR".equalsIgnoreCase(currency) ||
+                                "GBP".equalsIgnoreCase(currency)
                         )
                                 ||
                                 (
@@ -414,6 +416,19 @@ public class SubscriptionCheckoutService {
         ) {
             FxRateService.FxQuote quote =
                     fxRateService.quoteEurToBrl(totalPrice);
+
+            checkout.setSettlementAmount(quote.settlementAmount());
+            checkout.setSettlementCurrency(quote.settlementCurrency());
+            checkout.setFxRate(quote.rate());
+            checkout.setFxQuotedAt(quote.quotedAt());
+
+        } else if (
+                "GBP".equalsIgnoreCase(
+                        currency
+                )
+        ) {
+            FxRateService.FxQuote quote =
+                    fxRateService.quoteGbpToBrl(totalPrice);
 
             checkout.setSettlementAmount(quote.settlementAmount());
             checkout.setSettlementCurrency(quote.settlementCurrency());
@@ -1369,6 +1384,9 @@ public class SubscriptionCheckoutService {
                         ) ||
                         "EUR".equalsIgnoreCase(
                                 checkout.getCurrency()
+                        ) ||
+                        "GBP".equalsIgnoreCase(
+                                checkout.getCurrency()
                         )
                 );
     }
@@ -1403,6 +1421,9 @@ public class SubscriptionCheckoutService {
                         currency
                 ) &&
                 !"EUR".equalsIgnoreCase(
+                        currency
+                ) &&
+                !"GBP".equalsIgnoreCase(
                         currency
                 );
     }

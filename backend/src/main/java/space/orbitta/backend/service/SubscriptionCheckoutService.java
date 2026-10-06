@@ -202,7 +202,8 @@ public class SubscriptionCheckoutService {
          */
         if (
                 ("EUR".equals(requestedDisplayCurrency) ||
-                 "GBP".equals(requestedDisplayCurrency)) &&
+                 "GBP".equals(requestedDisplayCurrency) ||
+                 "AUD".equals(requestedDisplayCurrency)) &&
                 "USD".equalsIgnoreCase(currency)
         ) {
             currency = requestedDisplayCurrency;
@@ -303,7 +304,8 @@ public class SubscriptionCheckoutService {
                         !(
                                 "USD".equalsIgnoreCase(currency) ||
                                 "EUR".equalsIgnoreCase(currency) ||
-                                "GBP".equalsIgnoreCase(currency)
+                                "GBP".equalsIgnoreCase(currency) ||
+                                "AUD".equalsIgnoreCase(currency)
                         )
                                 ||
                                 (
@@ -434,6 +436,29 @@ public class SubscriptionCheckoutService {
             checkout.setSettlementCurrency(quote.settlementCurrency());
             checkout.setFxRate(quote.rate());
             checkout.setFxQuotedAt(quote.quotedAt());
+
+        } else if (
+                "AUD".equalsIgnoreCase(
+                        currency
+                )
+        ) {
+            FxRateService.FxQuote quote =
+                    fxRateService.quoteAudToBrl(
+                            totalPrice
+                    );
+
+            checkout.setSettlementAmount(
+                    quote.settlementAmount()
+            );
+            checkout.setSettlementCurrency(
+                    quote.settlementCurrency()
+            );
+            checkout.setFxRate(
+                    quote.rate()
+            );
+            checkout.setFxQuotedAt(
+                    quote.quotedAt()
+            );
 
         } else if (
                 "BRL".equalsIgnoreCase(
@@ -1387,6 +1412,9 @@ public class SubscriptionCheckoutService {
                         ) ||
                         "GBP".equalsIgnoreCase(
                                 checkout.getCurrency()
+                        ) ||
+                        "AUD".equalsIgnoreCase(
+                                checkout.getCurrency()
                         )
                 );
     }
@@ -1424,6 +1452,9 @@ public class SubscriptionCheckoutService {
                         currency
                 ) &&
                 !"GBP".equalsIgnoreCase(
+                        currency
+                ) &&
+                !"AUD".equalsIgnoreCase(
                         currency
                 );
     }

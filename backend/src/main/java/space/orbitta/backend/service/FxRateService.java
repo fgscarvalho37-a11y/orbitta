@@ -16,6 +16,9 @@ public class FxRateService {
     private static final String USD_BRL_URL =
             "https://api.frankfurter.dev/v2/rate/USD/BRL";
 
+    private static final String EUR_BRL_URL =
+            "https://api.frankfurter.dev/v2/rate/EUR/BRL";
+
     private static final Duration CACHE_TTL =
             Duration.ofMinutes(15);
 
@@ -26,6 +29,7 @@ public class FxRateService {
             new RestTemplate();
 
     private CachedRate usdBrlCache;
+    private CachedRate eurBrlCache;
 
     public synchronized FxQuote quoteUsdToBrl(
             BigDecimal usdAmount
@@ -63,6 +67,61 @@ public class FxRateService {
                 rate,
                 LocalDateTime.now()
         );
+    }
+
+    public synchronized FxQuote quoteEurToBrl(
+            BigDecimal eurAmount
+    ) {
+        if (eurAmount == null || eurAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Valor em EUR inválido para conversão.");
+        }
+
+        BigDecimal rate = getEurBrlRate();
+        BigDecimal converted = eurAmount.multiply(rate).setScale(2, RoundingMode.HALF_UP);
+
+        return new FxQuote(
+                "EUR",
+                "BRL",
+                eurAmount,
+                converted,
+                rate,
+                LocalDateTime.now()
+        );
+    }
+
+    private BigDecimal getEurBrlRate() {
+        LocalDateTime now = LocalDateTime.now();
+
+        if (eurBrlCache != null && eurBrlCache.fetchedAt().plus(CACHE_TTL).isAfter(now)) {
+            return eurBrlCache.rate();
+        }
+
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(EUR_BRL_URL, Map.class);
+            Map<?, ?> body = response.getBody();
+            Object rawRate = body != null ? body.get("rate") : null;
+
+            if (rawRate == null) {
+                throw new IllegalStateException("Cotação EUR/BRL não retornada.");
+            }
+
+            BigDecimal rate = new BigDecimal(String.valueOf(rawRate));
+            if (rate.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalStateException("Cotação EUR/BRL inválida.");
+            }
+
+            eurBrlCache = new CachedRate(rate, now);
+            return rate;
+        } catch (RuntimeException exception) {
+            if (eurBrlCache != null && eurBrlCache.fetchedAt().plus(STALE_FALLBACK_TTL).isAfter(now)) {
+                return eurBrlCache.rate();
+            }
+
+            throw new IllegalStateException(
+                    "Não foi possível obter a cotação EUR/BRL agora. Tente novamente em alguns instantes.",
+                    exception
+            );
+        }
     }
 
     private BigDecimal getUsdBrlRate() {

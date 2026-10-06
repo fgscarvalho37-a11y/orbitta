@@ -75,10 +75,6 @@ function isMarketCode(
 function localeForMarket(
   market: MarketCode
 ): AppLocale {
-  if (market === "BR") {
-    return "pt-BR";
-  }
-
   return market === "BR"
     ? "pt-BR"
     : "en-US";

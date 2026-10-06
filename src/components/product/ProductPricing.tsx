@@ -69,7 +69,7 @@ type ProductPricingProps = {
   slug: string;
 };
 
-type MarketCode = "BR" | "US";
+type MarketCode = "BR" | "US" | "EU";
 type BillingCycle = "MONTHLY" | "ANNUAL";
 
 const MARKET_META: Record<
@@ -89,6 +89,11 @@ const MARKET_META: Record<
     pt: "Estados Unidos",
     en: "United States",
     currency: "USD",
+  },
+  EU: {
+    pt: "Europa",
+    en: "Europe",
+    currency: "EUR",
   },
 };
 
@@ -260,11 +265,35 @@ export default function ProductPricing({
     useState<string | null>(null);
 
   useEffect(() => {
-    // The public language selector doubles as the storefront market selector:
-    // PT shows the Brazil/BRL offer and EN shows the U.S./USD offer.
-    // This prevents a Brazilian browser previewing the English site from
-    // still seeing BRL prices during international sales demos.
-    setMarket(isEnglish ? "US" : "BR");
+    let cancelled = false;
+
+    async function resolveMarket() {
+      try {
+        const response = await fetch("/api/market", {
+          cache: "no-store",
+          headers: { Accept: "application/json" },
+        });
+
+        if (!response.ok) throw new Error("market unavailable");
+
+        const data: { marketCode?: string } = await response.json();
+        const resolved =
+          data.marketCode === "EU"
+            ? "EU"
+            : data.marketCode === "BR"
+              ? "BR"
+              : "US";
+
+        if (!cancelled) setMarket(resolved);
+      } catch {
+        if (!cancelled) setMarket(isEnglish ? "US" : "BR");
+      }
+    }
+
+    void resolveMarket();
+    return () => {
+      cancelled = true;
+    };
   }, [isEnglish]);
 
   useEffect(() => {
@@ -343,6 +372,22 @@ export default function ProductPricing({
 
     if (regional) {
       return regional;
+    }
+
+    if (market === "EU") {
+      const internationalPrice = prices.find(
+        (price) =>
+          price.active &&
+          price.regionCode === "US" &&
+          price.currency.toUpperCase() === "USD"
+      );
+
+      if (internationalPrice) {
+        return {
+          ...internationalPrice,
+          currency: "EUR",
+        };
+      }
     }
 
     if (market === "BR" && prices.length === 0) {
@@ -485,6 +530,7 @@ export default function ProductPricing({
             planId: plan.id,
             priceId,
             billingCycle,
+            displayCurrency: price.currency,
           }),
         }
       );

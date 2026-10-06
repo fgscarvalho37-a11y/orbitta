@@ -69,7 +69,7 @@ type ProductPricingProps = {
   slug: string;
 };
 
-type MarketCode = "BR" | "US" | "EU";
+type MarketCode = "BR" | "US" | "GB";
 type BillingCycle = "MONTHLY" | "ANNUAL";
 
 const MARKET_META: Record<
@@ -90,10 +90,10 @@ const MARKET_META: Record<
     en: "United States",
     currency: "USD",
   },
-  EU: {
-    pt: "Europa",
-    en: "Europe",
-    currency: "EUR",
+  GB: {
+    pt: "Reino Unido",
+    en: "United Kingdom",
+    currency: "GBP",
   },
 };
 
@@ -249,7 +249,7 @@ export default function ProductPricing({
   slug,
 }: ProductPricingProps) {
   const router = useRouter();
-  const { locale, isEnglish, text } = useLanguage();
+  const { locale, isEnglish, text, market: selectedMarket } = useLanguage();
 
   const [product, setProduct] =
     useState<CatalogProduct | null>(null);
@@ -265,36 +265,8 @@ export default function ProductPricing({
     useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function resolveMarket() {
-      try {
-        const response = await fetch("/api/market", {
-          cache: "no-store",
-          headers: { Accept: "application/json" },
-        });
-
-        if (!response.ok) throw new Error("market unavailable");
-
-        const data: { marketCode?: string } = await response.json();
-        const resolved =
-          data.marketCode === "EU"
-            ? "EU"
-            : data.marketCode === "BR"
-              ? "BR"
-              : "US";
-
-        if (!cancelled) setMarket(resolved);
-      } catch {
-        if (!cancelled) setMarket(isEnglish ? "US" : "BR");
-      }
-    }
-
-    void resolveMarket();
-    return () => {
-      cancelled = true;
-    };
-  }, [isEnglish]);
+    setMarket(selectedMarket);
+  }, [selectedMarket]);
 
   useEffect(() => {
     let cancelled = false;
@@ -374,7 +346,7 @@ export default function ProductPricing({
       return regional;
     }
 
-    if (market === "EU") {
+    if (market === "GB") {
       const internationalPrice = prices.find(
         (price) =>
           price.active &&
@@ -385,7 +357,7 @@ export default function ProductPricing({
       if (internationalPrice) {
         return {
           ...internationalPrice,
-          currency: "EUR",
+          currency: "GBP",
         };
       }
     }

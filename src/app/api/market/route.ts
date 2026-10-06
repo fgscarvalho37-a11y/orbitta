@@ -14,6 +14,33 @@ function resolveMarket(country: string | null) {
     };
   }
 
+  if (
+    normalized === "GB" ||
+    normalized === "UK"
+  ) {
+    return {
+      marketCode: "GB",
+      countryCode: "GB",
+      currency: "GBP",
+    };
+  }
+
+  if (normalized === "AU") {
+    return {
+      marketCode: "AU",
+      countryCode: "AU",
+      currency: "AUD",
+    };
+  }
+
+  if (normalized === "CA") {
+    return {
+      marketCode: "CA",
+      countryCode: "CA",
+      currency: "CAD",
+    };
+  }
+
   const euroCountries = new Set([
     "AT", "BE", "HR", "CY", "EE", "FI", "FR", "DE", "GR", "IE",
     "IT", "LV", "LT", "LU", "MT", "NL", "PT", "SK", "SI", "ES",

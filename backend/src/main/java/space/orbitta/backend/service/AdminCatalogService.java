@@ -660,7 +660,8 @@ public class AdminCatalogService {
                         "US",
                         "EU",
                         "GB",
-                        "CA"
+                        "CA",
+                        "AU"
                 ).contains(
                         region
                 )
@@ -682,6 +683,7 @@ public class AdminCatalogService {
             case "EU" -> "EUR";
             case "GB" -> "GBP";
             case "CA" -> "CAD";
+            case "AU" -> "AUD";
             default ->
                     throw new IllegalArgumentException(
                             "Região não suportada."
@@ -698,6 +700,7 @@ public class AdminCatalogService {
             case "EU" -> 20;
             case "GB" -> 30;
             case "CA" -> 40;
+            case "AU" -> 50;
             default -> 99;
         };
     }

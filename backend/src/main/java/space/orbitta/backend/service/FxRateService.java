@@ -22,6 +22,9 @@ public class FxRateService {
     private static final String GBP_BRL_URL =
             "https://api.frankfurter.dev/v2/rate/GBP/BRL";
 
+    private static final String AUD_BRL_URL =
+            "https://api.frankfurter.dev/v2/rate/AUD/BRL";
+
     private static final Duration CACHE_TTL =
             Duration.ofMinutes(15);
 
@@ -34,6 +37,7 @@ public class FxRateService {
     private CachedRate usdBrlCache;
     private CachedRate eurBrlCache;
     private CachedRate gbpBrlCache;
+    private CachedRate audBrlCache;
 
     public synchronized FxQuote quoteUsdToBrl(
             BigDecimal usdAmount
@@ -111,6 +115,130 @@ public class FxRateService {
             }
             throw new IllegalStateException(
                     "Não foi possível obter a cotação GBP/BRL agora. Tente novamente em alguns instantes.",
+                    exception
+            );
+        }
+    }
+
+    public synchronized FxQuote quoteAudToBrl(
+            BigDecimal audAmount
+    ) {
+        if (
+                audAmount == null ||
+                audAmount.compareTo(
+                        BigDecimal.ZERO
+                ) <= 0
+        ) {
+            throw new IllegalArgumentException(
+                    "Valor em AUD inválido para conversão."
+            );
+        }
+
+        BigDecimal rate =
+                getAudBrlRate();
+
+        BigDecimal converted =
+                audAmount
+                        .multiply(
+                                rate
+                        )
+                        .setScale(
+                                2,
+                                RoundingMode.HALF_UP
+                        );
+
+        return new FxQuote(
+                "AUD",
+                "BRL",
+                audAmount,
+                converted,
+                rate,
+                LocalDateTime.now()
+        );
+    }
+
+    private BigDecimal getAudBrlRate() {
+        LocalDateTime now =
+                LocalDateTime.now();
+
+        if (
+                audBrlCache != null &&
+                audBrlCache.fetchedAt()
+                        .plus(
+                                CACHE_TTL
+                        )
+                        .isAfter(
+                                now
+                        )
+        ) {
+            return audBrlCache.rate();
+        }
+
+        try {
+            ResponseEntity<Map> response =
+                    restTemplate.getForEntity(
+                            AUD_BRL_URL,
+                            Map.class
+                    );
+
+            Map<?, ?> body =
+                    response.getBody();
+
+            Object rawRate =
+                    body != null
+                            ? body.get(
+                                    "rate"
+                            )
+                            : null;
+
+            if (rawRate == null) {
+                throw new IllegalStateException(
+                        "Cotação AUD/BRL não retornada."
+                );
+            }
+
+            BigDecimal rate =
+                    new BigDecimal(
+                            String.valueOf(
+                                    rawRate
+                            )
+                    );
+
+            if (
+                    rate.compareTo(
+                            BigDecimal.ZERO
+                    ) <= 0
+            ) {
+                throw new IllegalStateException(
+                        "Cotação AUD/BRL inválida."
+                );
+            }
+
+            audBrlCache =
+                    new CachedRate(
+                            rate,
+                            now
+                    );
+
+            return rate;
+        } catch (
+                RuntimeException exception
+        ) {
+            if (
+                    audBrlCache != null &&
+                    audBrlCache.fetchedAt()
+                            .plus(
+                                    STALE_FALLBACK_TTL
+                            )
+                            .isAfter(
+                                    now
+                            )
+            ) {
+                return audBrlCache.rate();
+            }
+
+            throw new IllegalStateException(
+                    "Não foi possível obter a cotação AUD/BRL agora. Tente novamente em alguns instantes.",
                     exception
             );
         }

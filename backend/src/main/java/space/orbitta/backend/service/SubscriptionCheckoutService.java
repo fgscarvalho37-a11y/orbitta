@@ -23,6 +23,7 @@ import space.orbitta.backend.repository.ClientProductRepository;
 import space.orbitta.backend.repository.SubscriptionCheckoutRepository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -58,6 +59,8 @@ public class SubscriptionCheckoutService {
     private final UserService userService;
     private final CatalogService catalogService;
 
+    private final CommercialSettingsService commercialSettingsService;
+
     private final MercadoPagoSubscriptionService mercadoPagoSubscriptionService;
 
     private final MercadoPagoOneTimeService mercadoPagoOneTimeService;
@@ -75,6 +78,7 @@ public class SubscriptionCheckoutService {
             ClientProductRepository clientProductRepository,
             UserService userService,
             CatalogService catalogService,
+            CommercialSettingsService commercialSettingsService,
             MercadoPagoSubscriptionService mercadoPagoSubscriptionService,
             MercadoPagoOneTimeService mercadoPagoOneTimeService,
             MercadoPagoSubscriptionSyncService mercadoPagoSubscriptionSyncService,
@@ -93,6 +97,9 @@ public class SubscriptionCheckoutService {
 
         this.catalogService =
                 catalogService;
+
+        this.commercialSettingsService =
+                commercialSettingsService;
 
         this.mercadoPagoSubscriptionService =
                 mercadoPagoSubscriptionService;

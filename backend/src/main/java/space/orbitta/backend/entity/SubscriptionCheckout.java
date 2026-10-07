@@ -125,6 +125,15 @@ public class SubscriptionCheckout {
     private boolean customSiteIntegration = false;
 
     @Column(
+            name = "custom_site_integration_price",
+            nullable = false,
+            precision = 12,
+            scale = 2
+    )
+    private BigDecimal customSiteIntegrationPrice =
+            BigDecimal.ZERO;
+
+    @Column(
             name = "settlement_amount",
             precision = 12,
             scale = 2
@@ -239,6 +248,11 @@ public class SubscriptionCheckout {
         if (billingCycle == null) {
             billingCycle =
                     BillingCycle.MONTHLY;
+        }
+
+        if (customSiteIntegrationPrice == null) {
+            customSiteIntegrationPrice =
+                    BigDecimal.ZERO;
         }
     }
 
@@ -362,6 +376,19 @@ public class SubscriptionCheckout {
     ) {
         this.customSiteIntegration =
                 customSiteIntegration;
+    }
+
+    public BigDecimal getCustomSiteIntegrationPrice() {
+        return customSiteIntegrationPrice;
+    }
+
+    public void setCustomSiteIntegrationPrice(
+            BigDecimal customSiteIntegrationPrice
+    ) {
+        this.customSiteIntegrationPrice =
+                customSiteIntegrationPrice != null
+                        ? customSiteIntegrationPrice
+                        : BigDecimal.ZERO;
     }
 
     public BigDecimal getSettlementAmount() {

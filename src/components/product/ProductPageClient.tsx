@@ -627,6 +627,50 @@ export default function ProductPageClient({
         </div>
       </section>
 
+      {displayProduct.slug === "pizzasystem" && (
+        <section className="mx-auto max-w-[1440px] px-6 pb-10 lg:px-12 lg:pb-16">
+          <div className="grid items-center gap-8 rounded-[32px] border border-cyan-300/12 bg-[#08101d] p-7 sm:p-10 lg:grid-cols-[1fr_auto] lg:p-12">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-cyan-300/55">
+                {text(
+                  "Quer um design totalmente personalizado?",
+                  "Want a fully custom design?"
+                )}
+              </p>
+
+              <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
+                {text(
+                  "Conecte uma Landing Page Personalizada ao PizzaSystem.",
+                  "Connect a Custom Landing Page to PizzaSystem."
+                )}
+              </h2>
+
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/40">
+                {text(
+                  "O site padrão continua incluído. A opção personalizada é um serviço premium para marcas que querem uma experiência visual exclusiva, usando o mesmo cardápio, pedidos e pagamentos do PizzaSystem.",
+                  "The standard website remains included. The custom option is a premium service for brands that want a unique visual experience while keeping the same PizzaSystem menu, orders and payments."
+                )}
+              </p>
+            </div>
+
+            <Link
+              href="/landing-page"
+              className="group inline-flex items-center justify-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
+            >
+              {text(
+                "Conheça nossas Landing Pages",
+                "Explore Custom Landing Pages"
+              )}
+
+              <ArrowRight
+                size={16}
+                className="transition-transform group-hover:translate-x-1"
+              />
+            </Link>
+          </div>
+        </section>
+      )}
+
       <ProductPricing slug={displayProduct.slug} />
 
       {/* CTA */}

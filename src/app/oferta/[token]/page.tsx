@@ -417,8 +417,8 @@ export default function CustomOfferPage() {
                     size={13}
                   />
                   {text(
-                    "Este link só pode ser aceito pela conta do cliente escolhido pela Orbitta.",
-                    "This link can only be accepted by the client account selected by Orbitta."
+                    "O comprador é identificado automaticamente pela conta usada para aceitar a oferta.",
+                    "The buyer is identified automatically by the account used to accept the offer."
                   )}
                 </div>
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import ProductShowcase from "@/components/ProductShowcase";
+import CustomLandingPageSection from "@/components/CustomLandingPageSection";
 import { useLanguage } from "@/i18n/LanguageProvider";
 
 export default function ProductsPage() {
@@ -13,6 +14,7 @@ export default function ProductsPage() {
       <Header />
 
       <ProductShowcase />
+      <CustomLandingPageSection />
 
       <footer className="border-t border-white/[0.06] px-6 py-8 text-xs text-white/25">
         <div className="mx-auto flex max-w-[1440px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

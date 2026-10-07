@@ -27,6 +27,7 @@ import {
 import ProductPricing from "@/components/product/ProductPricing";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageProvider";
+import { formatUsd, useCommercialSettings } from "@/hooks/useCommercialSettings";
 
 type ProductPageClientProps = {
   product: OrbittaProduct;
@@ -89,6 +90,17 @@ export default function ProductPageClient({
 }: ProductPageClientProps) {
   const { locale, isEnglish, text } =
     useLanguage();
+
+  const {
+    customSiteIntegrationFeeUsd,
+  } =
+    useCommercialSettings();
+
+  const integrationFee =
+    formatUsd(
+      customSiteIntegrationFeeUsd,
+      locale
+    );
 
   const displayProduct =
     localizeProduct(
@@ -647,14 +659,14 @@ export default function ProductPageClient({
 
               <p className="mt-4 max-w-2xl text-sm leading-6 text-white/40">
                 {text(
-                  "O site padrão continua incluído. Se você quiser um site personalizado conectado ao PizzaSystem, a implantação custa US$ 200 uma única vez. Depois, permanece apenas a mensalidade normal do PizzaSystem.",
-                  "The standard website remains included. If you want a custom website connected to PizzaSystem, integration setup is a one-time US$ 200 fee. After that, only the normal PizzaSystem subscription remains."
+                  `O site padrão continua incluído. Se você quiser um site personalizado conectado ao PizzaSystem, a implantação custa ${integrationFee} uma única vez. Depois, permanece apenas a mensalidade normal do PizzaSystem.`,
+                  `The standard website remains included. If you want a custom website connected to PizzaSystem, integration setup is a one-time ${integrationFee} fee. After that, only the normal PizzaSystem subscription remains.`
                 )}
               </p>
 
               <div className="mt-5 inline-flex items-end gap-2 rounded-2xl border border-cyan-300/10 bg-cyan-300/[0.035] px-4 py-3">
                 <span className="text-2xl font-semibold text-white">
-                  US$ 200
+                  {integrationFee}
                 </span>
                 <span className="pb-0.5 text-xs text-white/35">
                   {text(

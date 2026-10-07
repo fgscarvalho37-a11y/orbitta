@@ -59,15 +59,6 @@ type CatalogProduct = {
   plans: CatalogPlan[];
 };
 
-type CsrfResponse = {
-  token: string;
-  headerName: string;
-};
-
-type CheckoutResponse = {
-  id: number;
-};
-
 type ProductPricingProps = {
   slug: string;
 };
@@ -238,30 +229,6 @@ function englishPlanName(plan: CatalogPlan) {
   return plan.name;
 }
 
-async function readErrorMessage(response: Response) {
-  const responseText = await response.text();
-
-  if (!responseText) {
-    return "Não foi possível concluir a solicitação.";
-  }
-
-  try {
-    const data = JSON.parse(responseText);
-
-    if (typeof data?.message === "string" && data.message.trim()) {
-      return data.message;
-    }
-
-    if (typeof data?.error === "string" && data.error.trim()) {
-      return data.error;
-    }
-  } catch {
-    // resposta não JSON
-  }
-
-  return "Não foi possível concluir a solicitação.";
-}
-
 export default function ProductPricing({
   slug,
 }: ProductPricingProps) {
@@ -394,7 +361,7 @@ export default function ProductPricing({
     return null;
   }
 
-  async function handleContract(
+  function handleContract(
     plan: CatalogPlan,
     price: RegionalPrice
   ) {
@@ -402,162 +369,50 @@ export default function ProductPricing({
       return;
     }
 
-    try {
-      setContractingPlanId(plan.id);
-      setCheckoutError(null);
+    setContractingPlanId(
+      plan.id
+    );
+    setCheckoutError(
+      null
+    );
 
-      const priceId =
-        price.id > 0 ? price.id : null;
+    const params =
+      new URLSearchParams();
 
-      const returnUrl =
-        `/checkout/start?planId=${plan.id}` +
-        `${priceId ? `&priceId=${priceId}` : ""}` +
-        `&billingCycle=${billingCycle}`;
+    params.set(
+      "planId",
+      String(
+        plan.id
+      )
+    );
 
-      const meResponse = await fetch(
-        `${API_URL}/api/auth/me`,
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-          headers: {
-            Accept: "application/json",
-          },
-        }
+    if (price.id > 0) {
+      params.set(
+        "priceId",
+        String(
+          price.id
+        )
       );
-
-      if (
-        meResponse.status === 401 ||
-        meResponse.status === 403
-      ) {
-        router.push(
-          `/login?returnUrl=${encodeURIComponent(
-            returnUrl
-          )}`
-        );
-        return;
-      }
-
-      if (!meResponse.ok) {
-        throw new Error(
-          text(
-            "Não foi possível verificar sua sessão.",
-            "We could not verify your session."
-          )
-        );
-      }
-
-      const activeProductsResponse = await fetch(
-        `${API_URL}/api/client/products/active`,
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (activeProductsResponse.ok) {
-        const activeProducts: Array<{
-          name?: string;
-        }> = await activeProductsResponse.json();
-
-        const alreadyHasProduct =
-          activeProducts.some(
-            (activeProduct) =>
-              activeProduct.name
-                ?.trim()
-                .toLowerCase() ===
-              product?.name
-                ?.trim()
-                .toLowerCase()
-          );
-
-        if (alreadyHasProduct) {
-          router.push("/painel");
-          return;
-        }
-      }
-
-      const csrfResponse = await fetch(
-        `${API_URL}/api/csrf`,
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (!csrfResponse.ok) {
-        throw new Error(
-          text(
-            "Não foi possível iniciar a contratação.",
-            "We could not start your subscription."
-          )
-        );
-      }
-
-      const csrf: CsrfResponse =
-        await csrfResponse.json();
-
-      const checkoutResponse = await fetch(
-        `${API_URL}/api/checkout/subscriptions`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            [csrf.headerName]: csrf.token,
-          },
-          body: JSON.stringify({
-            planId: plan.id,
-            priceId,
-            billingCycle,
-            displayCurrency: price.currency,
-          }),
-        }
-      );
-
-      if (
-        checkoutResponse.status === 401 ||
-        checkoutResponse.status === 403
-      ) {
-        router.push(
-          `/login?returnUrl=${encodeURIComponent(
-            returnUrl
-          )}`
-        );
-        return;
-      }
-
-      if (!checkoutResponse.ok) {
-        throw new Error(
-          await readErrorMessage(checkoutResponse)
-        );
-      }
-
-      const checkout: CheckoutResponse =
-        await checkoutResponse.json();
-
-      router.push(`/checkout/${checkout.id}`);
-    } catch (error) {
-      setCheckoutError(
-        error instanceof Error
-          ? error.message
-          : text(
-              "Não foi possível iniciar a contratação.",
-              "We could not start your subscription."
-            )
-      );
-    } finally {
-      setContractingPlanId(null);
     }
+
+    params.set(
+      "billingCycle",
+      billingCycle
+    );
+
+    params.set(
+      "productSlug",
+      slug
+    );
+
+    params.set(
+      "displayCurrency",
+      price.currency
+    );
+
+    router.push(
+      `/checkout/start?${params.toString()}`
+    );
   }
 
   if (loading) {
@@ -856,7 +711,7 @@ export default function ProductPricing({
                     type="button"
                     onClick={() =>
                       price &&
-                      void handleContract(plan, price)
+                      handleContract(plan, price)
                     }
                     disabled={
                       contractingPlanId !== null ||

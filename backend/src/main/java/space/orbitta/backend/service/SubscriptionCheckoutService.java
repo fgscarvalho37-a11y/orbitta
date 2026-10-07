@@ -216,6 +216,35 @@ public class SubscriptionCheckoutService {
             currency = requestedDisplayCurrency;
         }
 
+        boolean customSiteIntegration =
+                request.customSiteIntegration();
+
+        BigDecimal customSiteIntegrationPrice =
+                BigDecimal.ZERO;
+
+        if (customSiteIntegration) {
+            if (
+                    product.getSlug() == null ||
+                    !"pizzasystem".equalsIgnoreCase(
+                            product.getSlug()
+                    )
+            ) {
+                throw new IllegalArgumentException(
+                        "A integração de site personalizado está disponível somente para o PizzaSystem."
+                );
+            }
+
+            customSiteIntegrationPrice =
+                    customSiteIntegrationFeeInCurrency(
+                            currency
+                    );
+
+            setupPrice =
+                    setupPrice.add(
+                            customSiteIntegrationPrice
+                    );
+        }
+
         boolean alreadySubscribed =
                 clientProductRepository
                         .existsByUserIdAndCatalogPlanIdAndStatus(
@@ -305,7 +334,9 @@ public class SubscriptionCheckoutService {
                                         currency
                                 ) &&
                         checkout.getBillingCycle()
-                                == billingCycle;
+                                == billingCycle &&
+                        checkout.isCustomSiteIntegration()
+                                == customSiteIntegration;
 
                 boolean settlementReady =
                         !(
@@ -371,6 +402,14 @@ public class SubscriptionCheckoutService {
 
         checkout.setSetupPrice(
                 setupPrice
+        );
+
+        checkout.setCustomSiteIntegration(
+                customSiteIntegration
+        );
+
+        checkout.setCustomSiteIntegrationPrice(
+                customSiteIntegrationPrice
         );
 
         checkout.setCurrency(
@@ -1844,6 +1883,90 @@ public class SubscriptionCheckoutService {
         }
 
         return value;
+    }
+
+    private BigDecimal customSiteIntegrationFeeInCurrency(
+            String currency
+    ) {
+        BigDecimal usdFee =
+                commercialSettingsService
+                        .get()
+                        .customSiteIntegrationFeeUsd();
+
+        if (
+                usdFee == null ||
+                usdFee.compareTo(
+                        BigDecimal.ZERO
+                ) <= 0
+        ) {
+            return BigDecimal.ZERO;
+        }
+
+        String normalized =
+                normalizeCurrency(
+                        currency
+                );
+
+        if ("USD".equals(normalized)) {
+            return usdFee.setScale(
+                    2,
+                    RoundingMode.HALF_UP
+            );
+        }
+
+        BigDecimal usdBrlRate =
+                fxRateService
+                        .quoteUsdToBrl(
+                                BigDecimal.ONE
+                        )
+                        .rate();
+
+        if ("BRL".equals(normalized)) {
+            return usdFee
+                    .multiply(
+                            usdBrlRate
+                    )
+                    .setScale(
+                            2,
+                            RoundingMode.HALF_UP
+                    );
+        }
+
+        BigDecimal targetBrlRate =
+                switch (normalized) {
+                    case "EUR" ->
+                            fxRateService
+                                    .quoteEurToBrl(
+                                            BigDecimal.ONE
+                                    )
+                                    .rate();
+                    case "GBP" ->
+                            fxRateService
+                                    .quoteGbpToBrl(
+                                            BigDecimal.ONE
+                                    )
+                                    .rate();
+                    case "AUD" ->
+                            fxRateService
+                                    .quoteAudToBrl(
+                                            BigDecimal.ONE
+                                    )
+                                    .rate();
+                    default ->
+                            throw new IllegalArgumentException(
+                                    "Moeda não suportada para a integração de site personalizado."
+                            );
+                };
+
+        return usdFee
+                .multiply(
+                        usdBrlRate
+                )
+                .divide(
+                        targetBrlRate,
+                        2,
+                        RoundingMode.HALF_UP
+                );
     }
 
     private String normalizeCurrency(

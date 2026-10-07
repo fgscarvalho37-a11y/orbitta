@@ -5,7 +5,6 @@ import space.orbitta.backend.entity.CustomOfferType;
 import java.math.BigDecimal;
 
 public record CreateCustomOfferRequest(
-        Long userId,
         CustomOfferType offerType,
         Long planId,
         String title,

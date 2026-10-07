@@ -43,6 +43,11 @@ const navigationGroups = [
         href: "/admin/suporte",
         icon: CircleHelp,
       },
+      {
+        name: "Orçamentos",
+        href: "/admin/orcamentos",
+        icon: FileText,
+      },
     ],
   },
   {
@@ -99,6 +104,7 @@ const NAV_EN: Record<string, string> = {
   "Pagamentos": "Payments",
   "Links personalizados": "Custom links",
   "Suporte": "Support",
+  "Orçamentos": "Quote requests",
   "Configurações": "Settings",
   "Operação": "Operations",
   "Catálogo": "Catalog",

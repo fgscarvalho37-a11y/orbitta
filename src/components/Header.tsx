@@ -55,6 +55,13 @@ export default function Header() {
         >
           {text("Produtos", "Products")}
         </a>
+
+        <a
+          className="transition duration-200 hover:text-white"
+          href="/landing-page"
+        >
+          {text("Landing Pages", "Landing Pages")}
+        </a>
       </nav>
 
       <div className="flex items-center gap-3">

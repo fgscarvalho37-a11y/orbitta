@@ -58,6 +58,13 @@ export default function Header() {
 
         <a
           className="transition duration-200 hover:text-white"
+          href="/sites-avulsos"
+        >
+          {text("Sites avulsos", "Standalone Sites")}
+        </a>
+
+        <a
+          className="transition duration-200 hover:text-white"
           href="/landing-page"
         >
           {text("Landing Pages", "Landing Pages")}

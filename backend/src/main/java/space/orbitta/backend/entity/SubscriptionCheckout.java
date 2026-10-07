@@ -119,6 +119,12 @@ public class SubscriptionCheckout {
     private boolean oneTimeOnly = false;
 
     @Column(
+            name = "custom_site_integration",
+            nullable = false
+    )
+    private boolean customSiteIntegration = false;
+
+    @Column(
             name = "settlement_amount",
             precision = 12,
             scale = 2
@@ -345,6 +351,17 @@ public class SubscriptionCheckout {
     ) {
         this.oneTimeOnly =
                 oneTimeOnly;
+    }
+
+    public boolean isCustomSiteIntegration() {
+        return customSiteIntegration;
+    }
+
+    public void setCustomSiteIntegration(
+            boolean customSiteIntegration
+    ) {
+        this.customSiteIntegration =
+                customSiteIntegration;
     }
 
     public BigDecimal getSettlementAmount() {

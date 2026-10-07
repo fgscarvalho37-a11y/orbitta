@@ -1646,24 +1646,25 @@ public class SubscriptionCheckoutService {
                 (
                         checkout.isOneTimeOnly() ||
                         (
-                "BRL".equalsIgnoreCase(
-                        checkout.getSettlementCurrency()
-                ) &&
-                (
-                        checkout.getBillingCycle()
-                                == BillingCycle.ANNUAL ||
-                        "USD".equalsIgnoreCase(
-                                checkout.getCurrency()
-                        ) ||
-                        "EUR".equalsIgnoreCase(
-                                checkout.getCurrency()
-                        ) ||
-                        "GBP".equalsIgnoreCase(
-                                checkout.getCurrency()
-                        ) ||
-                        "AUD".equalsIgnoreCase(
-                                checkout.getCurrency()
-                        )
+                                "BRL".equalsIgnoreCase(
+                                        checkout.getSettlementCurrency()
+                                ) &&
+                                (
+                                        checkout.getBillingCycle()
+                                                == BillingCycle.ANNUAL ||
+                                        "USD".equalsIgnoreCase(
+                                                checkout.getCurrency()
+                                        ) ||
+                                        "EUR".equalsIgnoreCase(
+                                                checkout.getCurrency()
+                                        ) ||
+                                        "GBP".equalsIgnoreCase(
+                                                checkout.getCurrency()
+                                        ) ||
+                                        "AUD".equalsIgnoreCase(
+                                                checkout.getCurrency()
+                                        )
+                                )
                         )
                 );
     }

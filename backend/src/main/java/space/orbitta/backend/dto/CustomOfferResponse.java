@@ -47,17 +47,26 @@ public record CustomOfferResponse(
                                 LocalDateTime.now()
                         );
 
+        var user =
+                offer.getUser();
+
         return new CustomOfferResponse(
                 offer.getId(),
                 offer.getToken(),
                 offer.getOfferType().name(),
-                offer.getUser().getId(),
-                (
-                        offer.getUser().getFirstName() +
-                        " " +
-                        offer.getUser().getLastName()
-                ).trim(),
-                offer.getUser().getEmail(),
+                user != null
+                        ? user.getId()
+                        : null,
+                user != null
+                        ? (
+                                user.getFirstName() +
+                                " " +
+                                user.getLastName()
+                        ).trim()
+                        : null,
+                user != null
+                        ? user.getEmail()
+                        : null,
                 offer.getCatalogPlan() != null
                         ? offer.getCatalogPlan().getId()
                         : null,

@@ -12,6 +12,7 @@ import {
   FileText,
   Globe2,
   LayoutDashboard,
+  Link2,
   LogOut,
   Orbit,
   ReceiptText,
@@ -72,6 +73,11 @@ const navigationGroups = [
         href: "/admin/pagamentos",
         icon: CreditCard,
       },
+      {
+        name: "Links personalizados",
+        href: "/admin/links-pagamento",
+        icon: Link2,
+      },
     ],
   },
 ];
@@ -91,6 +97,7 @@ const NAV_EN: Record<string, string> = {
   "Preços regionais": "Regional pricing",
   "Faturas": "Invoices",
   "Pagamentos": "Payments",
+  "Links personalizados": "Custom links",
   "Suporte": "Support",
   "Configurações": "Settings",
   "Operação": "Operations",

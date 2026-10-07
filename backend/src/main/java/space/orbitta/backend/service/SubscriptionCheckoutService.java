@@ -507,6 +507,251 @@ public class SubscriptionCheckoutService {
 
     /*
      * =========================================================
+     * CHECKOUT PERSONALIZADO CRIADO PELO ADMIN
+     * =========================================================
+     */
+    @Transactional
+    public SubscriptionCheckoutResponse createCustomCheckout(
+            User user,
+            CatalogProduct product,
+            CatalogPlan plan,
+            String offerTitle,
+            BigDecimal monthlyPrice,
+            BigDecimal setupPrice,
+            String currency,
+            boolean oneTimeOnly
+    ) {
+        if (
+                user == null ||
+                product == null ||
+                plan == null
+        ) {
+            throw new IllegalArgumentException(
+                    "Cliente, produto e plano são obrigatórios."
+            );
+        }
+
+        BigDecimal normalizedMonthly =
+                requireNonNegativePrice(
+                        monthlyPrice != null
+                                ? monthlyPrice
+                                : BigDecimal.ZERO,
+                        "Valor mensal"
+                );
+
+        BigDecimal normalizedSetup =
+                requireNonNegativePrice(
+                        setupPrice != null
+                                ? setupPrice
+                                : BigDecimal.ZERO,
+                        "Taxa inicial"
+                );
+
+        if (
+                oneTimeOnly &&
+                normalizedSetup.compareTo(
+                        BigDecimal.ZERO
+                ) <= 0
+        ) {
+            throw new IllegalArgumentException(
+                    "A cobrança única precisa ter valor maior que zero."
+            );
+        }
+
+        if (
+                !oneTimeOnly &&
+                normalizedMonthly.compareTo(
+                        BigDecimal.ZERO
+                ) <= 0
+        ) {
+            throw new IllegalArgumentException(
+                    "A mensalidade personalizada precisa ser maior que zero."
+            );
+        }
+
+        String normalizedCurrency =
+                normalizeCurrency(
+                        currency
+                );
+
+        SubscriptionCheckout checkout =
+                new SubscriptionCheckout();
+
+        checkout.setUser(
+                user
+        );
+        checkout.setCatalogProduct(
+                product
+        );
+        checkout.setCatalogPlan(
+                plan
+        );
+        checkout.setProductName(
+                product.getName()
+        );
+        checkout.setPlanName(
+                offerTitle != null &&
+                !offerTitle.isBlank()
+                        ? offerTitle.trim()
+                        : plan.getName()
+        );
+        checkout.setMonthlyPrice(
+                normalizedMonthly
+        );
+        checkout.setSetupPrice(
+                normalizedSetup
+        );
+        checkout.setCurrency(
+                normalizedCurrency
+        );
+        checkout.setBillingCycle(
+                BillingCycle.MONTHLY
+        );
+        checkout.setOneTimeOnly(
+                oneTimeOnly
+        );
+
+        BigDecimal totalPrice =
+                normalizedMonthly.add(
+                        normalizedSetup
+                );
+
+        if (
+                "USD".equalsIgnoreCase(
+                        normalizedCurrency
+                )
+        ) {
+            FxRateService.FxQuote quote =
+                    fxRateService.quoteUsdToBrl(
+                            totalPrice
+                    );
+
+            checkout.setSettlementAmount(
+                    quote.settlementAmount()
+            );
+            checkout.setSettlementCurrency(
+                    quote.settlementCurrency()
+            );
+            checkout.setFxRate(
+                    quote.rate()
+            );
+            checkout.setFxQuotedAt(
+                    quote.quotedAt()
+            );
+
+        } else if (
+                "EUR".equalsIgnoreCase(
+                        normalizedCurrency
+                )
+        ) {
+            FxRateService.FxQuote quote =
+                    fxRateService.quoteEurToBrl(
+                            totalPrice
+                    );
+
+            checkout.setSettlementAmount(
+                    quote.settlementAmount()
+            );
+            checkout.setSettlementCurrency(
+                    quote.settlementCurrency()
+            );
+            checkout.setFxRate(
+                    quote.rate()
+            );
+            checkout.setFxQuotedAt(
+                    quote.quotedAt()
+            );
+
+        } else if (
+                "GBP".equalsIgnoreCase(
+                        normalizedCurrency
+                )
+        ) {
+            FxRateService.FxQuote quote =
+                    fxRateService.quoteGbpToBrl(
+                            totalPrice
+                    );
+
+            checkout.setSettlementAmount(
+                    quote.settlementAmount()
+            );
+            checkout.setSettlementCurrency(
+                    quote.settlementCurrency()
+            );
+            checkout.setFxRate(
+                    quote.rate()
+            );
+            checkout.setFxQuotedAt(
+                    quote.quotedAt()
+            );
+
+        } else if (
+                "AUD".equalsIgnoreCase(
+                        normalizedCurrency
+                )
+        ) {
+            FxRateService.FxQuote quote =
+                    fxRateService.quoteAudToBrl(
+                            totalPrice
+                    );
+
+            checkout.setSettlementAmount(
+                    quote.settlementAmount()
+            );
+            checkout.setSettlementCurrency(
+                    quote.settlementCurrency()
+            );
+            checkout.setFxRate(
+                    quote.rate()
+            );
+            checkout.setFxQuotedAt(
+                    quote.quotedAt()
+            );
+
+        } else if (
+                "BRL".equalsIgnoreCase(
+                        normalizedCurrency
+                )
+        ) {
+            checkout.setSettlementAmount(
+                    totalPrice
+            );
+            checkout.setSettlementCurrency(
+                    "BRL"
+            );
+            checkout.setFxRate(
+                    BigDecimal.ONE
+            );
+            checkout.setFxQuotedAt(
+                    LocalDateTime.now()
+            );
+        }
+
+        checkout.setStatus(
+                SubscriptionCheckoutStatus.PENDING
+        );
+        checkout.setExternalReference(
+                generateExternalReference()
+        );
+        checkout.setExpiresAt(
+                LocalDateTime.now()
+                        .plusMinutes(
+                                30
+                        )
+        );
+
+        SubscriptionCheckout saved =
+                checkoutRepository.save(
+                        checkout
+                );
+
+        return SubscriptionCheckoutResponse.from(
+                saved
+        );
+    }
+
+    /*
+     * =========================================================
      * CHECKOUT ABERTO DO CLIENTE
      * =========================================================
      */
@@ -1398,6 +1643,9 @@ public class SubscriptionCheckoutService {
 
         return checkout != null &&
                 checkout.getSettlementAmount() != null &&
+                (
+                        checkout.isOneTimeOnly() ||
+                        (
                 "BRL".equalsIgnoreCase(
                         checkout.getSettlementCurrency()
                 ) &&
@@ -1415,6 +1663,7 @@ public class SubscriptionCheckoutService {
                         ) ||
                         "AUD".equalsIgnoreCase(
                                 checkout.getCurrency()
+                        )
                         )
                 );
     }

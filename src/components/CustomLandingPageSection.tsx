@@ -53,14 +53,14 @@ export default function CustomLandingPageSection() {
 
             <h2 className="mt-7 max-w-2xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] sm:text-6xl">
               {text(
-                "Landing Page Personalizada.",
-                "Custom Landing Page."
+                "Sites avulsos e Landing Pages.",
+                "Standalone Sites & Landing Pages."
               )}
 
               <span className="mt-2 block text-white/30">
                 {text(
-                  "Um site que realmente parece seu.",
-                  "A website that actually feels like yours."
+                  "Com ou sem PizzaSystem.",
+                  "With or without PizzaSystem."
                 )}
               </span>
             </h2>
@@ -94,12 +94,12 @@ export default function CustomLandingPageSection() {
             </div>
 
             <Link
-              href="/landing-page"
+              href="/sites-avulsos"
               className="group mt-9 inline-flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
             >
               {text(
-                "Conhecer o serviço",
-                "Explore the service"
+                "Conhecer sites avulsos",
+                "Explore standalone sites"
               )}
 
               <ArrowUpRight

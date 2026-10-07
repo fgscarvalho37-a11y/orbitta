@@ -57,6 +57,12 @@ type PriceDraft = {
   active: boolean;
 };
 
+type CommercialSettings = {
+  customSiteIntegrationFeeUsd: number;
+  currency: string;
+  updatedAt: string | null;
+};
+
 const MARKETS = [
   {
     code: "BR",
@@ -141,6 +147,18 @@ export default function AdminRegionalPricingPage() {
   const [success, setSuccess] =
     useState<string | null>(null);
 
+  const [
+    customSiteIntegrationFee,
+    setCustomSiteIntegrationFee,
+  ] =
+    useState("200");
+
+  const [
+    savingCustomSiteFee,
+    setSavingCustomSiteFee,
+  ] =
+    useState(false);
+
   const load = useCallback(
     async (manual = false) => {
       try {
@@ -150,16 +168,32 @@ export default function AdminRegionalPricingPage() {
 
         setError(null);
 
-        const response = await secureFetch(
-          `${API_URL}/api/admin/catalog/products`,
-          {
-            credentials: "include",
-            cache: "no-store",
-            headers: {
-              Accept: "application/json",
-            },
-          }
-        );
+        const [
+          response,
+          commercialSettingsResponse,
+        ] =
+          await Promise.all([
+            secureFetch(
+              `${API_URL}/api/admin/catalog/products`,
+              {
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  Accept: "application/json",
+                },
+              }
+            ),
+            secureFetch(
+              `${API_URL}/api/admin/commercial-settings`,
+              {
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  Accept: "application/json",
+                },
+              }
+            ),
+          ]);
 
         if (
           response.status === 401 ||
@@ -180,6 +214,20 @@ export default function AdminRegionalPricingPage() {
 
         const data: CatalogProduct[] =
           await response.json();
+
+        if (
+          commercialSettingsResponse.ok
+        ) {
+          const commercialSettings:
+            CommercialSettings =
+            await commercialSettingsResponse.json();
+
+          setCustomSiteIntegrationFee(
+            moneyInput(
+              commercialSettings.customSiteIntegrationFeeUsd
+            )
+          );
+        }
 
         const nextDrafts:
           Record<string, PriceDraft> = {};
@@ -395,6 +443,112 @@ export default function AdminRegionalPricingPage() {
     }
   }
 
+  async function saveCustomSiteIntegrationFee() {
+    const value =
+      parseMoney(
+        customSiteIntegrationFee
+      );
+
+    if (
+      Number.isNaN(
+        value
+      ) ||
+      value < 0
+    ) {
+      setError(
+        text(
+          "Informe uma taxa de integração válida.",
+          "Enter a valid integration fee."
+        )
+      );
+      return;
+    }
+
+    try {
+      setSavingCustomSiteFee(
+        true
+      );
+      setError(null);
+      setSuccess(null);
+
+      const response =
+        await secureFetch(
+          `${API_URL}/api/admin/commercial-settings`,
+          {
+            method: "PUT",
+            credentials:
+              "include",
+            headers: {
+              "Content-Type":
+                "application/json",
+              Accept:
+                "application/json",
+            },
+            body:
+              JSON.stringify({
+                customSiteIntegrationFeeUsd:
+                  value,
+              }),
+          }
+        );
+
+      if (!response.ok) {
+        let message =
+          text(
+            "Não foi possível salvar a taxa de integração.",
+            "Could not save the integration fee."
+          );
+
+        try {
+          const data =
+            await response.json();
+
+          message =
+            data.message ??
+            data.error ??
+            message;
+        } catch {
+        }
+
+        throw new Error(
+          message
+        );
+      }
+
+      const updated:
+        CommercialSettings =
+        await response.json();
+
+      setCustomSiteIntegrationFee(
+        moneyInput(
+          updated.customSiteIntegrationFeeUsd
+        )
+      );
+
+      setSuccess(
+        text(
+          "Taxa de integração do site atualizada.",
+          "Custom site integration fee updated."
+        )
+      );
+    } catch (
+      caught
+    ) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : text(
+              "Não foi possível salvar.",
+              "Could not save."
+            )
+      );
+    } finally {
+      setSavingCustomSiteFee(
+        false
+      );
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -456,6 +610,95 @@ export default function AdminRegionalPricingPage() {
             )}
           </button>
         </header>
+
+        <section className="mt-6 rounded-[28px] border border-violet-300/[0.1] bg-[#08101d] p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-violet-200/45">
+                <CircleDollarSign
+                  size={13}
+                />
+                {text(
+                  "Sites personalizados",
+                  "Custom websites"
+                )}
+              </div>
+
+              <h2 className="mt-2 text-xl font-semibold text-white/85">
+                {text(
+                  "Taxa de integração com PizzaSystem",
+                  "PizzaSystem integration fee"
+                )}
+              </h2>
+
+              <p className="mt-2 max-w-2xl text-xs leading-6 text-white/30">
+                {text(
+                  "Cobrada uma única vez somente quando um site personalizado é integrado ao PizzaSystem. O site padrão do PizzaSystem continua sem essa taxa.",
+                  "Charged once only when a custom website is integrated with PizzaSystem. The standard PizzaSystem website keeps no such fee."
+                )}
+              </p>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-[170px_auto]">
+              <label>
+                <span className="text-[9px] uppercase tracking-[0.13em] text-white/25">
+                  {text(
+                    "Taxa em USD",
+                    "Fee in USD"
+                  )}
+                </span>
+
+                <div className="mt-2 flex h-11 items-center rounded-xl border border-white/[0.07] bg-white/[0.025] px-3">
+                  <span className="mr-2 text-xs font-semibold text-white/30">
+                    US$
+                  </span>
+
+                  <input
+                    inputMode="decimal"
+                    value={
+                      customSiteIntegrationFee
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setCustomSiteIntegrationFee(
+                        event.target.value
+                      )
+                    }
+                    className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none"
+                  />
+                </div>
+              </label>
+
+              <button
+                type="button"
+                onClick={() =>
+                  void saveCustomSiteIntegrationFee()
+                }
+                disabled={
+                  savingCustomSiteFee
+                }
+                className="mt-auto flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-xs font-semibold text-[#07101c] transition hover:bg-violet-50 disabled:opacity-50"
+              >
+                {savingCustomSiteFee ? (
+                  <Loader2
+                    size={13}
+                    className="animate-spin"
+                  />
+                ) : (
+                  <Save
+                    size={13}
+                  />
+                )}
+
+                {text(
+                  "Salvar taxa",
+                  "Save fee"
+                )}
+              </button>
+            </div>
+          </div>
+        </section>
 
         <div className="mt-6 rounded-2xl border border-cyan-300/[0.08] bg-cyan-300/[0.025] px-5 py-4 text-xs leading-6 text-white/35">
           {text(

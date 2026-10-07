@@ -59,7 +59,7 @@ export default function LandingPageService() {
     useLanguage();
 
   const quoteUrl =
-    "/login?returnUrl=%2Fpainel%2Fsuporte";
+    "/orcamento";
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050914] text-white">
@@ -545,8 +545,8 @@ export default function LandingPageService() {
 
           <p className="relative mt-5 max-w-2xl text-base leading-7 text-white/40">
             {text(
-              "Solicite um orçamento pela sua área Orbitta. O valor é definido conforme escopo, conteúdo, integrações e domínio.",
-              "Request a quote through your Orbitta account. Pricing is defined according to scope, content, integrations and domain requirements."
+              "Preencha o formulário de orçamento sem criar conta. O valor é definido conforme escopo, conteúdo, integrações e domínio.",
+              "Request a quote through the public form without creating an account. Pricing is defined according to scope, content, integrations and domain requirements."
             )}
           </p>
 

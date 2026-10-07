@@ -39,6 +39,9 @@ type SubscriptionCheckout = {
   monthlyPrice: number;
   billingAmount: number;
   billingCycle: "MONTHLY" | "ANNUAL";
+  oneTimeOnly?: boolean;
+  customSiteIntegration?: boolean;
+  customSiteIntegrationPrice?: number;
   setupPrice: number;
   totalPrice: number;
   currency: string;
@@ -162,6 +165,22 @@ export default function CheckoutPage({
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  const customSiteIntegrationPrice =
+    Number(
+      checkout?.customSiteIntegrationPrice ??
+        0
+    );
+
+  const baseSetupPrice =
+    Math.max(
+      0,
+      Number(
+        checkout?.setupPrice ??
+          0
+      ) -
+        customSiteIntegrationPrice
+    );
 
   async function loadCheckout() {
     try {
@@ -495,7 +514,10 @@ export default function CheckoutPage({
                 <div className="flex items-center justify-between rounded-2xl border border-white/[0.05] bg-white/[0.018] px-5 py-4">
                   <div>
                     <div className="text-xs text-white/55">
-                      {text("Taxa de implantação", "Setup fee")}
+                      {text(
+                        "Taxa de implantação do plano",
+                        "Plan setup fee"
+                      )}
                     </div>
 
                     <div className="mt-1 text-[10px] text-white/20">
@@ -504,15 +526,43 @@ export default function CheckoutPage({
                   </div>
 
                   <div className="text-sm font-medium text-white/75">
-                    {checkout.setupPrice > 0
+                    {baseSetupPrice > 0
                       ? formatCurrency(
-                          checkout.setupPrice,
+                          baseSetupPrice,
                           checkout.currency,
                           locale
                         )
                       : text("Grátis", "Free")}
                   </div>
                 </div>
+
+                {checkout.customSiteIntegration && (
+                  <div className="flex items-center justify-between rounded-2xl border border-cyan-300/[0.09] bg-cyan-300/[0.025] px-5 py-4">
+                    <div>
+                      <div className="text-xs text-cyan-100/70">
+                        {text(
+                          "Site personalizado integrado",
+                          "Integrated custom website"
+                        )}
+                      </div>
+
+                      <div className="mt-1 text-[10px] text-white/22">
+                        {text(
+                          "Adicional escolhido na compra · pagamento único",
+                          "Add-on selected during purchase · one-time charge"
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-sm font-medium text-cyan-100/80">
+                      {formatCurrency(
+                        customSiteIntegrationPrice,
+                        checkout.currency,
+                        locale
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {hasBrlSettlement ? (
                   <div className="rounded-2xl border border-cyan-300/[0.08] bg-cyan-300/[0.025] px-5 py-4">
@@ -629,23 +679,39 @@ export default function CheckoutPage({
 
               <div className="flex justify-between gap-4 text-xs">
                 <span className="text-white/30">
-                  {text("Implantação", "Setup")}
+                  {text(
+                    "Implantação do plano",
+                    "Plan setup"
+                  )}
                 </span>
 
                 <span className="text-white/60">
-                  {checkout.setupPrice > 0
-                    ? formatCurrency(
-                        checkout.setupPrice,
-                        checkout.currency,
-                        locale
-                      )
-                    : formatCurrency(
-                        0,
-                        checkout.currency,
-                        locale
-                      )}
+                  {formatCurrency(
+                    baseSetupPrice,
+                    checkout.currency,
+                    locale
+                  )}
                 </span>
               </div>
+
+              {checkout.customSiteIntegration && (
+                <div className="flex justify-between gap-4 text-xs">
+                  <span className="text-cyan-100/55">
+                    {text(
+                      "Site personalizado",
+                      "Custom website"
+                    )}
+                  </span>
+
+                  <span className="text-cyan-100/70">
+                    {formatCurrency(
+                      customSiteIntegrationPrice,
+                      checkout.currency,
+                      locale
+                    )}
+                  </span>
+                </div>
+              )}
 
             </div>
 

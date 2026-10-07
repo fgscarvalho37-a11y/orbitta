@@ -27,7 +27,6 @@ import {
 import ProductPricing from "@/components/product/ProductPricing";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageProvider";
-import { formatUsd, useCommercialSettings } from "@/hooks/useCommercialSettings";
 
 type ProductPageClientProps = {
   product: OrbittaProduct;
@@ -90,17 +89,6 @@ export default function ProductPageClient({
 }: ProductPageClientProps) {
   const { locale, isEnglish, text } =
     useLanguage();
-
-  const {
-    customSiteIntegrationFeeUsd,
-  } =
-    useCommercialSettings();
-
-  const integrationFee =
-    formatUsd(
-      customSiteIntegrationFeeUsd,
-      locale
-    );
 
   const displayProduct =
     localizeProduct(
@@ -638,62 +626,6 @@ export default function ProductPageClient({
           )}
         </div>
       </section>
-
-      {displayProduct.slug === "pizzasystem" && (
-        <section className="mx-auto max-w-[1440px] px-6 pb-10 lg:px-12 lg:pb-16">
-          <div className="grid items-center gap-8 rounded-[32px] border border-cyan-300/12 bg-[#08101d] p-7 sm:p-10 lg:grid-cols-[1fr_auto] lg:p-12">
-            <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-cyan-300/55">
-                {text(
-                  "Quer um design totalmente personalizado?",
-                  "Want a fully custom design?"
-                )}
-              </p>
-
-              <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-                {text(
-                  "Conecte uma Landing Page Personalizada ao PizzaSystem.",
-                  "Connect a Custom Landing Page to PizzaSystem."
-                )}
-              </h2>
-
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/40">
-                {text(
-                  `O site padrão continua incluído. Se você quiser um site personalizado conectado ao PizzaSystem, a implantação custa ${integrationFee} uma única vez. Depois, permanece apenas a mensalidade normal do PizzaSystem.`,
-                  `The standard website remains included. If you want a custom website connected to PizzaSystem, integration setup is a one-time ${integrationFee} fee. After that, only the normal PizzaSystem subscription remains.`
-                )}
-              </p>
-
-              <div className="mt-5 inline-flex items-end gap-2 rounded-2xl border border-cyan-300/10 bg-cyan-300/[0.035] px-4 py-3">
-                <span className="text-2xl font-semibold text-white">
-                  {integrationFee}
-                </span>
-                <span className="pb-0.5 text-xs text-white/35">
-                  {text(
-                    "implantação única",
-                    "one-time setup"
-                  )}
-                </span>
-              </div>
-            </div>
-
-            <Link
-              href="/sites-avulsos"
-              className="group inline-flex items-center justify-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
-            >
-              {text(
-                "Ver sites personalizados",
-                "Explore custom websites"
-              )}
-
-              <ArrowRight
-                size={16}
-                className="transition-transform group-hover:translate-x-1"
-              />
-            </Link>
-          </div>
-        </section>
-      )}
 
       <ProductPricing slug={displayProduct.slug} />
 

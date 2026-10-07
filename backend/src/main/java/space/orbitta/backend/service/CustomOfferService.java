@@ -73,30 +73,10 @@ public class CustomOfferService {
     ) {
         if (
                 request == null ||
-                request.userId() == null ||
                 request.offerType() == null
         ) {
             throw new IllegalArgumentException(
-                    "Cliente e tipo da oferta são obrigatórios."
-            );
-        }
-
-        User user =
-                userRepository
-                        .findByIdAndRole(
-                                request.userId(),
-                                User.Role.CLIENT
-                        )
-                        .orElseThrow(
-                                () ->
-                                        new IllegalArgumentException(
-                                                "Cliente não encontrado."
-                                        )
-                        );
-
-        if (!user.isActive()) {
-            throw new IllegalArgumentException(
-                    "O cliente selecionado está inativo."
+                    "Tipo da oferta é obrigatório."
             );
         }
 
@@ -215,7 +195,7 @@ public class CustomOfferService {
                         )
         );
         offer.setUser(
-                user
+                null
         );
         offer.setOfferType(
                 type
@@ -319,14 +299,59 @@ public class CustomOfferService {
 
         if (
                 authenticatedEmail == null ||
+                authenticatedEmail.isBlank()
+        ) {
+            throw new IllegalArgumentException(
+                    "Entre na sua conta para aceitar esta oferta."
+            );
+        }
+
+        String normalizedEmail =
+                authenticatedEmail
+                        .trim()
+                        .toLowerCase(
+                                Locale.ROOT
+                        );
+
+        User buyer =
+                userRepository
+                        .findByEmailIgnoreCase(
+                                normalizedEmail
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                "Cliente não encontrado."
+                                        )
+                        );
+
+        if (
+                buyer.getRole() !=
+                        User.Role.CLIENT ||
+                !buyer.isActive()
+        ) {
+            throw new IllegalArgumentException(
+                    "A oferta precisa ser aceita por uma conta de cliente ativa."
+            );
+        }
+
+        if (offer.getUser() == null) {
+            offer.setUser(
+                    buyer
+            );
+            customOfferRepository
+                    .saveAndFlush(
+                            offer
+                    );
+        } else if (
                 !offer.getUser()
                         .getEmail()
                         .equalsIgnoreCase(
-                                authenticatedEmail.trim()
+                                normalizedEmail
                         )
         ) {
             throw new IllegalArgumentException(
-                    "Esta oferta foi criada para outro cliente."
+                    "Esta oferta já foi vinculada a outro cliente."
             );
         }
 
@@ -336,7 +361,7 @@ public class CustomOfferService {
                         subscriptionCheckoutService
                                 .findForUser(
                                         offer.getCheckoutId(),
-                                        authenticatedEmail
+                                        normalizedEmail
                                 );
 
                 if (

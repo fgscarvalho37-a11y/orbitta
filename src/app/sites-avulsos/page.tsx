@@ -18,7 +18,6 @@ import { motion } from "motion/react";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageProvider";
-import { formatUsd, useCommercialSettings } from "@/hooks/useCommercialSettings";
 
 const quoteUrl =
   "/login?returnUrl=%2Fpainel%2Fsuporte";
@@ -59,20 +58,8 @@ const features = [
 export default function StandaloneSitesPage() {
   const {
     text,
-    locale,
   } =
     useLanguage();
-
-  const {
-    customSiteIntegrationFeeUsd,
-  } =
-    useCommercialSettings();
-
-  const integrationFee =
-    formatUsd(
-      customSiteIntegrationFeeUsd,
-      locale
-    );
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050914] text-white">
@@ -282,28 +269,15 @@ export default function StandaloneSitesPage() {
                 <div className="mt-7 rounded-2xl border border-cyan-300/10 bg-cyan-300/[0.035] p-5">
                   <p className="text-xs uppercase tracking-[0.16em] text-cyan-200/45">
                     {text(
-                      "Implantação da integração",
-                      "Integration setup"
+                      "Integração opcional",
+                      "Optional integration"
                     )}
                   </p>
 
-                  <div className="mt-2 flex items-end gap-2">
-                    <span className="text-4xl font-semibold tracking-[-0.04em]">
-                      {integrationFee}
-                    </span>
-
-                    <span className="pb-1 text-xs text-white/35">
-                      {text(
-                        "uma única vez",
-                        "one time"
-                      )}
-                    </span>
-                  </div>
-
-                  <p className="mt-3 text-xs leading-5 text-white/35">
+                  <p className="mt-3 text-sm leading-6 text-white/45">
                     {text(
-                      "Depois da implantação, permanece somente a mensalidade normal do plano PizzaSystem contratado. Não há uma segunda mensalidade só pela integração do site.",
-                      "After setup, you only keep paying the normal PizzaSystem plan subscription. There is no second monthly fee just for the website integration."
+                      "Se você contratar o PizzaSystem, poderá adicionar o site personalizado durante a compra. O valor da integração aparece somente nessa etapa.",
+                      "If you subscribe to PizzaSystem, you can add the custom website during purchase. The integration price appears only at that step."
                     )}
                   </p>
                 </div>
@@ -318,8 +292,8 @@ export default function StandaloneSitesPage() {
 
                   <p className="mt-2 text-xs leading-5 text-white/35">
                     {text(
-                      `O site padrão do PizzaSystem continua incluído no plano e não cobra essa taxa. ${integrationFee} vale somente para a integração de um site personalizado.`,
-                      `The standard PizzaSystem website remains included with the plan and does not have this fee. ${integrationFee} applies only when integrating a custom website.`
+                      "O site padrão do PizzaSystem continua incluído no plano. O adicional personalizado só é apresentado no momento da compra.",
+                      "The standard PizzaSystem website remains included with the plan. The custom add-on is shown only during purchase."
                     )}
                   </p>
                 </div>

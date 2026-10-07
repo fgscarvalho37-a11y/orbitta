@@ -20,16 +20,7 @@ import {
 import { secureFetch } from "@/lib/secureFetch";
 import { useLanguage } from "@/i18n/LanguageProvider";
 
-const API_URL =
-  "/backend";
-
-type Client = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  active: boolean;
-};
+const API_URL = "/backend";
 
 type CatalogPlan = {
   id: number;
@@ -58,9 +49,9 @@ type CustomOffer = {
   id: number;
   token: string;
   offerType: OfferType;
-  userId: number;
-  clientName: string;
-  clientEmail: string;
+  userId: number | null;
+  clientName: string | null;
+  clientEmail: string | null;
   planId: number | null;
   title: string;
   description: string | null;
@@ -80,33 +71,19 @@ type CommercialSettings = {
   customSiteIntegrationFeeUsd: number;
 };
 
-function parseMoney(
-  value: string
-) {
-  const normalized =
-    value
-      .trim()
-      .replace(
-        /\s/g,
-        ""
-      )
-      .replace(
-        ",",
-        "."
-      );
+function parseMoney(value: string) {
+  const normalized = value
+    .trim()
+    .replace(/\s/g, "")
+    .replace(",", ".");
 
   if (!normalized) {
     return 0;
   }
 
-  const parsed =
-    Number(
-      normalized
-    );
+  const parsed = Number(normalized);
 
-  return Number.isFinite(
-    parsed
-  )
+  return Number.isFinite(parsed)
     ? parsed
     : NaN;
 }
@@ -117,20 +94,12 @@ function formatMoney(
   locale: string
 ) {
   try {
-    return new Intl.NumberFormat(
-      locale,
-      {
-        style:
-          "currency",
-        currency,
-      }
-    ).format(
-      value
-    );
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+    }).format(value);
   } catch {
-    return `${currency} ${value.toFixed(
-      2
-    )}`;
+    return `${currency} ${value.toFixed(2)}`;
   }
 }
 
@@ -138,19 +107,13 @@ function typeLabel(
   type: OfferType,
   english: boolean
 ) {
-  if (
-    type ===
-    "SITE_ONLY"
-  ) {
+  if (type === "SITE_ONLY") {
     return english
       ? "Standalone website"
       : "Site avulso";
   }
 
-  if (
-    type ===
-    "SITE_PLUS_PIZZASYSTEM"
-  ) {
+  if (type === "SITE_PLUS_PIZZASYSTEM") {
     return english
       ? "Website + PizzaSystem"
       : "Site + PizzaSystem";
@@ -160,158 +123,61 @@ function typeLabel(
 }
 
 export default function CustomPaymentLinksPage() {
-  const {
-    locale,
-    text,
-  } =
+  const { locale, text } =
     useLanguage();
 
-  const [
-    clients,
-    setClients,
-  ] =
-    useState<Client[]>(
-      []
-    );
+  const [products, setProducts] =
+    useState<CatalogProduct[]>([]);
 
-  const [
-    products,
-    setProducts,
-  ] =
-    useState<CatalogProduct[]>(
-      []
-    );
+  const [offers, setOffers] =
+    useState<CustomOffer[]>([]);
 
-  const [
-    offers,
-    setOffers,
-  ] =
-    useState<CustomOffer[]>(
-      []
-    );
+  const [offerType, setOfferType] =
+    useState<OfferType>("PIZZASYSTEM");
 
-  const [
-    clientId,
-    setClientId,
-  ] =
+  const [planId, setPlanId] =
     useState("");
 
-  const [
-    offerType,
-    setOfferType,
-  ] =
-    useState<OfferType>(
-      "PIZZASYSTEM"
-    );
+  const [title, setTitle] =
+    useState("PizzaSystem");
 
-  const [
-    planId,
-    setPlanId,
-  ] =
+  const [description, setDescription] =
     useState("");
 
-  const [
-    title,
-    setTitle,
-  ] =
+  const [currency, setCurrency] =
+    useState("USD");
+
+  const [monthlyPrice, setMonthlyPrice] =
     useState("");
 
-  const [
-    description,
-    setDescription,
-  ] =
+  const [setupPrice, setSetupPrice] =
+    useState("0");
+
+  const [validDays, setValidDays] =
+    useState("7");
+
+  const [integrationFee, setIntegrationFee] =
+    useState(200);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [togglingId, setTogglingId] =
+    useState<number | null>(null);
+
+  const [copiedToken, setCopiedToken] =
+    useState<string | null>(null);
+
+  const [lastCreated, setLastCreated] =
+    useState<CustomOffer | null>(null);
+
+  const [error, setError] =
     useState("");
 
-  const [
-    currency,
-    setCurrency,
-  ] =
-    useState(
-      "USD"
-    );
-
-  const [
-    monthlyPrice,
-    setMonthlyPrice,
-  ] =
-    useState("");
-
-  const [
-    setupPrice,
-    setSetupPrice,
-  ] =
-    useState("");
-
-  const [
-    validDays,
-    setValidDays,
-  ] =
-    useState(
-      "7"
-    );
-
-  const [
-    integrationFee,
-    setIntegrationFee,
-  ] =
-    useState(
-      200
-    );
-
-  const [
-    loading,
-    setLoading,
-  ] =
-    useState(
-      true
-    );
-
-  const [
-    saving,
-    setSaving,
-  ] =
-    useState(
-      false
-    );
-
-  const [
-    togglingId,
-    setTogglingId,
-  ] =
-    useState<
-      number | null
-    >(
-      null
-    );
-
-  const [
-    copiedToken,
-    setCopiedToken,
-  ] =
-    useState<
-      string | null
-    >(
-      null
-    );
-
-  const [
-    lastCreated,
-    setLastCreated,
-  ] =
-    useState<CustomOffer | null>(
-      null
-    );
-
-  const [
-    error,
-    setError,
-  ] =
-    useState("");
-
-  const [
-    success,
-    setSuccess,
-  ] =
+  const [success, setSuccess] =
     useState("");
 
   const pizzaPlans =
@@ -319,203 +185,121 @@ export default function CustomPaymentLinksPage() {
       () =>
         products
           .filter(
-            (
-              product
-            ) =>
+            (product) =>
               product.slug ===
               "pizzasystem"
           )
           .flatMap(
-            (
-              product
-            ) =>
-              product.plans ??
-              []
+            (product) =>
+              product.plans ?? []
           )
           .filter(
-            (
-              plan
-            ) =>
+            (plan) =>
               plan.active
           ),
-      [
-        products,
-      ]
+      [products]
     );
 
   const load =
-    useCallback(
-      async () => {
-        try {
-          setLoading(
-            true
-          );
-          setError(
-            ""
-          );
+    useCallback(async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-          const [
-            clientsResponse,
-            productsResponse,
-            offersResponse,
-            settingsResponse,
-          ] =
-            await Promise.all([
-              secureFetch(
-                `${API_URL}/api/admin/clients`,
-                {
-                  credentials:
-                    "include",
-                  cache:
-                    "no-store",
-                }
-              ),
-              secureFetch(
-                `${API_URL}/api/admin/catalog/products`,
-                {
-                  credentials:
-                    "include",
-                  cache:
-                    "no-store",
-                }
-              ),
-              secureFetch(
-                `${API_URL}/api/admin/custom-offers`,
-                {
-                  credentials:
-                    "include",
-                  cache:
-                    "no-store",
-                }
-              ),
-              secureFetch(
-                `${API_URL}/api/admin/commercial-settings`,
-                {
-                  credentials:
-                    "include",
-                  cache:
-                    "no-store",
-                }
-              ),
-            ]);
+        const [
+          productsResponse,
+          offersResponse,
+          settingsResponse,
+        ] = await Promise.all([
+          secureFetch(
+            `${API_URL}/api/admin/catalog/products`,
+            {
+              credentials: "include",
+              cache: "no-store",
+            }
+          ),
+          secureFetch(
+            `${API_URL}/api/admin/custom-offers`,
+            {
+              credentials: "include",
+              cache: "no-store",
+            }
+          ),
+          secureFetch(
+            `${API_URL}/api/admin/commercial-settings`,
+            {
+              credentials: "include",
+              cache: "no-store",
+            }
+          ),
+        ]);
 
-          if (
-            clientsResponse.status ===
-              401 ||
-            clientsResponse.status ===
-              403
-          ) {
-            window.location.href =
-              "/login?returnUrl=%2Fadmin%2Flinks-pagamento";
-            return;
-          }
-
-          if (
-            !clientsResponse.ok ||
-            !productsResponse.ok ||
-            !offersResponse.ok
-          ) {
-            throw new Error(
-              text(
-                "Não foi possível carregar os links personalizados.",
-                "Could not load custom payment links."
-              )
-            );
-          }
-
-          const clientData:
-            Client[] =
-            await clientsResponse.json();
-
-          const productData:
-            CatalogProduct[] =
-            await productsResponse.json();
-
-          const offerData:
-            CustomOffer[] =
-            await offersResponse.json();
-
-          setClients(
-            clientData
-          );
-          setProducts(
-            productData
-          );
-          setOffers(
-            offerData
-          );
-
-          if (
-            settingsResponse.ok
-          ) {
-            const settings:
-              CommercialSettings =
-              await settingsResponse.json();
-
-            setIntegrationFee(
-              Number(
-                settings.customSiteIntegrationFeeUsd ??
-                  200
-              )
-            );
-          }
-
-          setClientId(
-            (
-              current
-            ) =>
-              current ||
-              (
-                clientData.find(
-                  (
-                    client
-                  ) =>
-                    client.active
-                )?.id != null
-                  ? String(
-                      clientData.find(
-                        (
-                          client
-                        ) =>
-                          client.active
-                      )!.id
-                    )
-                  : ""
-              )
-          );
-        } catch (
-          caught
+        if (
+          productsResponse.status === 401 ||
+          productsResponse.status === 403
         ) {
-          setError(
-            caught instanceof Error
-              ? caught.message
-              : text(
-                  "Não foi possível carregar.",
-                  "Could not load."
-                )
-          );
-        } finally {
-          setLoading(
-            false
+          window.location.href =
+            "/login?returnUrl=%2Fadmin%2Flinks-pagamento";
+          return;
+        }
+
+        if (
+          !productsResponse.ok ||
+          !offersResponse.ok
+        ) {
+          throw new Error(
+            text(
+              "Não foi possível carregar os links personalizados.",
+              "Could not load custom payment links."
+            )
           );
         }
-      },
-      [
-        text,
-      ]
-    );
+
+        const productData:
+          CatalogProduct[] =
+          await productsResponse.json();
+
+        const offerData:
+          CustomOffer[] =
+          await offersResponse.json();
+
+        setProducts(productData);
+        setOffers(offerData);
+
+        if (settingsResponse.ok) {
+          const settings:
+            CommercialSettings =
+            await settingsResponse.json();
+
+          setIntegrationFee(
+            Number(
+              settings.customSiteIntegrationFeeUsd ??
+              200
+            )
+          );
+        }
+      } catch (caught) {
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : text(
+                "Não foi possível carregar.",
+                "Could not load."
+              )
+        );
+      } finally {
+        setLoading(false);
+      }
+    }, [text]);
 
   useEffect(() => {
     void load();
-  }, [
-    load,
-  ]);
+  }, [load]);
 
   useEffect(() => {
     if (
       planId ||
-      pizzaPlans.length ===
-        0
+      pizzaPlans.length === 0
     ) {
       return;
     }
@@ -525,35 +309,18 @@ export default function CustomPaymentLinksPage() {
         pizzaPlans[0].id
       )
     );
-  }, [
-    pizzaPlans,
-    planId,
-  ]);
+  }, [pizzaPlans, planId]);
 
   function handleTypeChange(
-    next:
-      OfferType
+    next: OfferType
   ) {
-    setOfferType(
-      next
-    );
-    setSuccess(
-      ""
-    );
-    setError(
-      ""
-    );
+    setOfferType(next);
+    setSuccess("");
+    setError("");
 
-    if (
-      next ===
-      "SITE_ONLY"
-    ) {
-      setMonthlyPrice(
-        ""
-      );
-      setSetupPrice(
-        ""
-      );
+    if (next === "SITE_ONLY") {
+      setMonthlyPrice("");
+      setSetupPrice("");
       setTitle(
         text(
           "Site personalizado",
@@ -563,14 +330,9 @@ export default function CustomPaymentLinksPage() {
       return;
     }
 
-    if (
-      next ===
-      "SITE_PLUS_PIZZASYSTEM"
-    ) {
+    if (next === "SITE_PLUS_PIZZASYSTEM") {
       setSetupPrice(
-        String(
-          integrationFee
-        )
+        String(integrationFee)
       );
       setTitle(
         text(
@@ -581,18 +343,13 @@ export default function CustomPaymentLinksPage() {
       return;
     }
 
-    setSetupPrice(
-      "0"
-    );
-    setTitle(
-      "PizzaSystem"
-    );
+    setSetupPrice("0");
+    setTitle("PizzaSystem");
   }
 
   async function createOffer() {
     const parsedMonthly =
-      offerType ===
-      "SITE_ONLY"
+      offerType === "SITE_ONLY"
         ? 0
         : parseMoney(
             monthlyPrice
@@ -604,23 +361,10 @@ export default function CustomPaymentLinksPage() {
       );
 
     const parsedValidDays =
-      Number(
-        validDays
-      );
-
-    if (!clientId) {
-      setError(
-        text(
-          "Selecione um cliente.",
-          "Select a client."
-        )
-      );
-      return;
-    }
+      Number(validDays);
 
     if (
-      offerType !==
-        "SITE_ONLY" &&
+      offerType !== "SITE_ONLY" &&
       !planId
     ) {
       setError(
@@ -633,16 +377,11 @@ export default function CustomPaymentLinksPage() {
     }
 
     if (
-      Number.isNaN(
-        parsedMonthly
-      ) ||
-      parsedMonthly <
-        0 ||
+      Number.isNaN(parsedMonthly) ||
+      parsedMonthly < 0 ||
       (
-        offerType !==
-          "SITE_ONLY" &&
-        parsedMonthly <=
-          0
+        offerType !== "SITE_ONLY" &&
+        parsedMonthly <= 0
       )
     ) {
       setError(
@@ -655,21 +394,15 @@ export default function CustomPaymentLinksPage() {
     }
 
     if (
-      Number.isNaN(
-        parsedSetup
-      ) ||
-      parsedSetup <
-        0 ||
+      Number.isNaN(parsedSetup) ||
+      parsedSetup < 0 ||
       (
-        offerType ===
-          "SITE_ONLY" &&
-        parsedSetup <=
-          0
+        offerType === "SITE_ONLY" &&
+        parsedSetup <= 0
       )
     ) {
       setError(
-        offerType ===
-          "SITE_ONLY"
+        offerType === "SITE_ONLY"
           ? text(
               "Informe o valor único do site.",
               "Enter the one-time website price."
@@ -683,13 +416,9 @@ export default function CustomPaymentLinksPage() {
     }
 
     if (
-      !Number.isInteger(
-        parsedValidDays
-      ) ||
-      parsedValidDays <
-        1 ||
-      parsedValidDays >
-        90
+      !Number.isInteger(parsedValidDays) ||
+      parsedValidDays < 1 ||
+      parsedValidDays > 90
     ) {
       setError(
         text(
@@ -701,58 +430,40 @@ export default function CustomPaymentLinksPage() {
     }
 
     try {
-      setSaving(
-        true
-      );
-      setError(
-        ""
-      );
-      setSuccess(
-        ""
-      );
+      setSaving(true);
+      setError("");
+      setSuccess("");
 
       const response =
         await secureFetch(
           `${API_URL}/api/admin/custom-offers`,
           {
-            method:
-              "POST",
-            credentials:
-              "include",
+            method: "POST",
+            credentials: "include",
             headers: {
-              "Content-Type":
-                "application/json",
-              Accept:
-                "application/json",
+              "Content-Type": "application/json",
+              Accept: "application/json",
             },
-            body:
-              JSON.stringify({
-                userId:
-                  Number(
-                    clientId
-                  ),
-                offerType,
-                planId:
-                  offerType ===
-                  "SITE_ONLY"
-                    ? null
-                    : Number(
-                        planId
-                      ),
-                title:
-                  title.trim() ||
-                  null,
-                description:
-                  description.trim() ||
-                  null,
-                monthlyPrice:
-                  parsedMonthly,
-                setupPrice:
-                  parsedSetup,
-                currency,
-                validDays:
-                  parsedValidDays,
-              }),
+            body: JSON.stringify({
+              offerType,
+              planId:
+                offerType === "SITE_ONLY"
+                  ? null
+                  : Number(planId),
+              title:
+                title.trim() ||
+                null,
+              description:
+                description.trim() ||
+                null,
+              monthlyPrice:
+                parsedMonthly,
+              setupPrice:
+                parsedSetup,
+              currency,
+              validDays:
+                parsedValidDays,
+            }),
           }
         );
 
@@ -760,8 +471,7 @@ export default function CustomPaymentLinksPage() {
         await response
           .json()
           .catch(
-            () =>
-              null
+            () => null
           );
 
       if (!response.ok) {
@@ -779,25 +489,21 @@ export default function CustomPaymentLinksPage() {
         body;
 
       setOffers(
-        (
-          current
-        ) => [
+        (current) => [
           created,
           ...current,
         ]
       );
-      setLastCreated(
-        created
-      );
+
+      setLastCreated(created);
+
       setSuccess(
         text(
-          "Link personalizado criado.",
-          "Custom payment link created."
+          "Link criado. O comprador será identificado automaticamente quando aceitar a oferta.",
+          "Link created. The buyer will be identified automatically when they accept the offer."
         )
       );
-    } catch (
-      caught
-    ) {
+    } catch (caught) {
       setError(
         caught instanceof Error
           ? caught.message
@@ -807,15 +513,11 @@ export default function CustomPaymentLinksPage() {
             )
       );
     } finally {
-      setSaving(
-        false
-      );
+      setSaving(false);
     }
   }
 
-  function offerUrl(
-    token: string
-  ) {
+  function offerUrl(token: string) {
     if (
       typeof window ===
       "undefined"
@@ -826,27 +528,19 @@ export default function CustomPaymentLinksPage() {
     return `${window.location.origin}/oferta/${token}`;
   }
 
-  async function copyLink(
-    token: string
-  ) {
+  async function copyLink(token: string) {
     try {
       await navigator.clipboard.writeText(
-        offerUrl(
-          token
-        )
+        offerUrl(token)
       );
-      setCopiedToken(
-        token
-      );
+
+      setCopiedToken(token);
 
       window.setTimeout(
         () => {
           setCopiedToken(
-            (
-              current
-            ) =>
-              current ===
-              token
+            (current) =>
+              current === token
                 ? null
                 : current
           );
@@ -864,28 +558,20 @@ export default function CustomPaymentLinksPage() {
   }
 
   async function toggleOffer(
-    offer:
-      CustomOffer
+    offer: CustomOffer
   ) {
     try {
-      setTogglingId(
-        offer.id
-      );
-      setError(
-        ""
-      );
+      setTogglingId(offer.id);
+      setError("");
 
       const response =
         await secureFetch(
           `${API_URL}/api/admin/custom-offers/${offer.id}/status`,
           {
-            method:
-              "PATCH",
-            credentials:
-              "include",
+            method: "PATCH",
+            credentials: "include",
             headers: {
-              "Content-Type":
-                "application/json",
+              "Content-Type": "application/json",
             },
             body:
               JSON.stringify({
@@ -899,8 +585,7 @@ export default function CustomPaymentLinksPage() {
         await response
           .json()
           .catch(
-            () =>
-              null
+            () => null
           );
 
       if (!response.ok) {
@@ -914,22 +599,15 @@ export default function CustomPaymentLinksPage() {
       }
 
       setOffers(
-        (
-          current
-        ) =>
+        (current) =>
           current.map(
-            (
-              item
-            ) =>
-              item.id ===
-              offer.id
+            (item) =>
+              item.id === offer.id
                 ? body
                 : item
           )
       );
-    } catch (
-      caught
-    ) {
+    } catch (caught) {
       setError(
         caught instanceof Error
           ? caught.message
@@ -939,16 +617,12 @@ export default function CustomPaymentLinksPage() {
             )
       );
     } finally {
-      setTogglingId(
-        null
-      );
+      setTogglingId(null);
     }
   }
 
   const isEnglish =
-    locale.startsWith(
-      "en"
-    );
+    locale.startsWith("en");
 
   if (loading) {
     return (
@@ -967,9 +641,7 @@ export default function CustomPaymentLinksPage() {
         <header className="flex flex-col gap-6 border-b border-white/[0.06] pb-8 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-violet-200/35">
-              <Link2
-                size={13}
-              />
+              <Link2 size={13} />
               {text(
                 "Venda personalizada",
                 "Custom sales"
@@ -985,8 +657,8 @@ export default function CustomPaymentLinksPage() {
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-white/30">
               {text(
-                "Crie uma oferta exclusiva para cada cliente sem alterar os preços públicos. Você pode cobrar um site avulso, uma mensalidade personalizada do PizzaSystem ou uma taxa inicial + mensalidade.",
-                "Create an exclusive offer for each client without changing public prices. Charge for a standalone website, a custom PizzaSystem monthly fee, or a setup fee plus subscription."
+                "Você define a oferta e gera o link. Não precisa escolher cliente: a conta que aceitar a oferta é vinculada automaticamente como comprador.",
+                "Define the offer and generate the link. You do not need to choose a client: the account that accepts the offer is automatically linked as the buyer."
               )}
             </p>
           </div>
@@ -998,9 +670,7 @@ export default function CustomPaymentLinksPage() {
             }
             className="flex h-11 items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 text-xs text-white/45 transition hover:bg-white/[0.05] hover:text-white/70"
           >
-            <RefreshCw
-              size={14}
-            />
+            <RefreshCw size={14} />
             {text(
               "Atualizar",
               "Refresh"
@@ -1016,81 +686,28 @@ export default function CustomPaymentLinksPage() {
 
         {success && (
           <div className="mt-5 flex items-center gap-2 rounded-2xl border border-emerald-300/[0.08] bg-emerald-300/[0.035] px-5 py-4 text-xs text-emerald-100/70">
-            <Check
-              size={13}
-            />
+            <Check size={13} />
             {success}
           </div>
         )}
 
         <section className="mt-7 rounded-[28px] border border-white/[0.06] bg-[#08101d] p-6 sm:p-7">
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-cyan-200/45">
-            <CircleDollarSign
-              size={13}
-            />
+            <CircleDollarSign size={13} />
             {text(
               "Nova oferta",
               "New offer"
             )}
           </div>
 
+          <div className="mt-4 rounded-2xl border border-violet-300/[0.08] bg-violet-300/[0.025] px-4 py-3 text-xs leading-5 text-violet-100/55">
+            {text(
+              "O link nasce sem cliente. Quando alguém entrar na própria conta e aceitar a oferta, a Orbitta vincula automaticamente aquela conta ao link.",
+              "The link starts without a client. When someone signs in and accepts the offer, Orbitta automatically links that account to the offer."
+            )}
+          </div>
+
           <div className="mt-6 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-            <label>
-              <span className="text-[9px] uppercase tracking-[0.13em] text-white/25">
-                {text(
-                  "Cliente",
-                  "Client"
-                )}
-              </span>
-
-              <select
-                value={
-                  clientId
-                }
-                onChange={(
-                  event
-                ) =>
-                  setClientId(
-                    event.target.value
-                  )
-                }
-                className="mt-2 h-11 w-full rounded-xl border border-white/[0.07] bg-[#07101c] px-3 text-sm text-white/70 outline-none"
-              >
-                <option value="">
-                  {text(
-                    "Selecione",
-                    "Select"
-                  )}
-                </option>
-
-                {clients
-                  .filter(
-                    (
-                      client
-                    ) =>
-                      client.active
-                  )
-                  .map(
-                    (
-                      client
-                    ) => (
-                      <option
-                        key={
-                          client.id
-                        }
-                        value={
-                          client.id
-                        }
-                      >
-                        {client.firstName}{" "}
-                        {client.lastName} —{" "}
-                        {client.email}
-                      </option>
-                    )
-                  )}
-              </select>
-            </label>
-
             <label>
               <span className="text-[9px] uppercase tracking-[0.13em] text-white/25">
                 {text(
@@ -1100,12 +717,8 @@ export default function CustomPaymentLinksPage() {
               </span>
 
               <select
-                value={
-                  offerType
-                }
-                onChange={(
-                  event
-                ) =>
+                value={offerType}
+                onChange={(event) =>
                   handleTypeChange(
                     event.target
                       .value as
@@ -1132,8 +745,7 @@ export default function CustomPaymentLinksPage() {
               </select>
             </label>
 
-            {offerType !==
-              "SITE_ONLY" && (
+            {offerType !== "SITE_ONLY" && (
               <label>
                 <span className="text-[9px] uppercase tracking-[0.13em] text-white/25">
                   {text(
@@ -1143,12 +755,8 @@ export default function CustomPaymentLinksPage() {
                 </span>
 
                 <select
-                  value={
-                    planId
-                  }
-                  onChange={(
-                    event
-                  ) =>
+                  value={planId}
+                  onChange={(event) =>
                     setPlanId(
                       event.target.value
                     )
@@ -1156,16 +764,10 @@ export default function CustomPaymentLinksPage() {
                   className="mt-2 h-11 w-full rounded-xl border border-white/[0.07] bg-[#07101c] px-3 text-sm text-white/70 outline-none"
                 >
                   {pizzaPlans.map(
-                    (
-                      plan
-                    ) => (
+                    (plan) => (
                       <option
-                        key={
-                          plan.id
-                        }
-                        value={
-                          plan.id
-                        }
+                        key={plan.id}
+                        value={plan.id}
                       >
                         {plan.name}
                       </option>
@@ -1178,67 +780,45 @@ export default function CustomPaymentLinksPage() {
             <label>
               <span className="text-[9px] uppercase tracking-[0.13em] text-white/25">
                 {text(
-                  "Título da oferta",
-                  "Offer title"
-                )}
-              </span>
-
-              <input
-                value={
-                  title
-                }
-                onChange={(
-                  event
-                ) =>
-                  setTitle(
-                    event.target.value
-                  )
-                }
-                placeholder={text(
-                  "Ex: PizzaSystem Premium - João",
-                  "Example: PizzaSystem Premium - John"
-                )}
-                className="mt-2 h-11 w-full rounded-xl border border-white/[0.07] bg-[#07101c] px-3 text-sm text-white/70 outline-none"
-              />
-            </label>
-
-            <label>
-              <span className="text-[9px] uppercase tracking-[0.13em] text-white/25">
-                {text(
                   "Moeda",
                   "Currency"
                 )}
               </span>
 
               <select
-                value={
-                  currency
-                }
-                onChange={(
-                  event
-                ) =>
+                value={currency}
+                onChange={(event) =>
                   setCurrency(
                     event.target.value
                   )
                 }
                 className="mt-2 h-11 w-full rounded-xl border border-white/[0.07] bg-[#07101c] px-3 text-sm text-white/70 outline-none"
               >
-                <option value="BRL">
-                  BRL
-                </option>
-                <option value="USD">
-                  USD
-                </option>
-                <option value="GBP">
-                  GBP
-                </option>
-                <option value="AUD">
-                  AUD
-                </option>
-                <option value="EUR">
-                  EUR
-                </option>
+                <option value="BRL">BRL</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+                <option value="AUD">AUD</option>
+                <option value="EUR">EUR</option>
               </select>
+            </label>
+
+            <label>
+              <span className="text-[9px] uppercase tracking-[0.13em] text-white/25">
+                {text(
+                  "Título da oferta",
+                  "Offer title"
+                )}
+              </span>
+
+              <input
+                value={title}
+                onChange={(event) =>
+                  setTitle(
+                    event.target.value
+                  )
+                }
+                className="mt-2 h-11 w-full rounded-xl border border-white/[0.07] bg-[#07101c] px-3 text-sm text-white/70 outline-none"
+              />
             </label>
 
             <label>
@@ -1254,12 +834,8 @@ export default function CustomPaymentLinksPage() {
                   type="number"
                   min={1}
                   max={90}
-                  value={
-                    validDays
-                  }
-                  onChange={(
-                    event
-                  ) =>
+                  value={validDays}
+                  onChange={(event) =>
                     setValidDays(
                       event.target.value
                     )
@@ -1275,8 +851,7 @@ export default function CustomPaymentLinksPage() {
               </div>
             </label>
 
-            {offerType ===
-              "SITE_ONLY" ? (
+            {offerType === "SITE_ONLY" ? (
               <label>
                 <span className="text-[9px] uppercase tracking-[0.13em] text-white/25">
                   {text(
@@ -1287,12 +862,8 @@ export default function CustomPaymentLinksPage() {
 
                 <input
                   inputMode="decimal"
-                  value={
-                    setupPrice
-                  }
-                  onChange={(
-                    event
-                  ) =>
+                  value={setupPrice}
+                  onChange={(event) =>
                     setSetupPrice(
                       event.target.value
                     )
@@ -1313,12 +884,8 @@ export default function CustomPaymentLinksPage() {
 
                   <input
                     inputMode="decimal"
-                    value={
-                      monthlyPrice
-                    }
-                    onChange={(
-                      event
-                    ) =>
+                    value={monthlyPrice}
+                    onChange={(event) =>
                       setMonthlyPrice(
                         event.target.value
                       )
@@ -1344,12 +911,8 @@ export default function CustomPaymentLinksPage() {
 
                   <input
                     inputMode="decimal"
-                    value={
-                      setupPrice
-                    }
-                    onChange={(
-                      event
-                    ) =>
+                    value={setupPrice}
+                    onChange={(event) =>
                       setSetupPrice(
                         event.target.value
                       )
@@ -1371,12 +934,8 @@ export default function CustomPaymentLinksPage() {
             </span>
 
             <textarea
-              value={
-                description
-              }
-              onChange={(
-                event
-              ) =>
+              value={description}
+              onChange={(event) =>
                 setDescription(
                   event.target.value
                 )
@@ -1391,41 +950,28 @@ export default function CustomPaymentLinksPage() {
             />
           </label>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() =>
-                void createOffer()
-              }
-              disabled={
-                saving
-              }
-              className="flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-xs font-semibold text-[#07101c] transition hover:bg-violet-50 disabled:opacity-50"
-            >
-              {saving ? (
-                <Loader2
-                  size={13}
-                  className="animate-spin"
-                />
-              ) : (
-                <Link2
-                  size={13}
-                />
-              )}
+          <button
+            type="button"
+            onClick={() =>
+              void createOffer()
+            }
+            disabled={saving}
+            className="mt-6 flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-xs font-semibold text-[#07101c] transition hover:bg-violet-50 disabled:opacity-50"
+          >
+            {saving ? (
+              <Loader2
+                size={13}
+                className="animate-spin"
+              />
+            ) : (
+              <Link2 size={13} />
+            )}
 
-              {text(
-                "Gerar link personalizado",
-                "Generate custom link"
-              )}
-            </button>
-
-            <p className="text-xs leading-5 text-white/25">
-              {text(
-                "O preço fica salvo somente nesta oferta e neste cliente.",
-                "The price is saved only for this offer and this client."
-              )}
-            </p>
-          </div>
+            {text(
+              "Gerar link",
+              "Generate link"
+            )}
+          </button>
 
           {lastCreated && (
             <div className="mt-6 rounded-2xl border border-emerald-300/[0.1] bg-emerald-300/[0.035] p-5">
@@ -1458,24 +1004,14 @@ export default function CustomPaymentLinksPage() {
                 >
                   {copiedToken ===
                   lastCreated.token ? (
-                    <Check
-                      size={13}
-                    />
+                    <Check size={13} />
                   ) : (
-                    <Copy
-                      size={13}
-                    />
+                    <Copy size={13} />
                   )}
-                  {copiedToken ===
-                  lastCreated.token
-                    ? text(
-                        "Copiado",
-                        "Copied"
-                      )
-                    : text(
-                        "Copiar",
-                        "Copy"
-                      )}
+                  {text(
+                    "Copiar",
+                    "Copy"
+                  )}
                 </button>
               </div>
             </div>
@@ -1492,8 +1028,7 @@ export default function CustomPaymentLinksPage() {
             </h2>
           </div>
 
-          {offers.length ===
-          0 ? (
+          {offers.length === 0 ? (
             <div className="px-6 py-14 text-center text-sm text-white/25">
               {text(
                 "Nenhuma oferta personalizada criada ainda.",
@@ -1503,21 +1038,15 @@ export default function CustomPaymentLinksPage() {
           ) : (
             <div className="divide-y divide-white/[0.045]">
               {offers.map(
-                (
-                  offer
-                ) => (
+                (offer) => (
                   <article
-                    key={
-                      offer.id
-                    }
+                    key={offer.id}
                     className="grid gap-5 px-6 py-5 xl:grid-cols-[1.2fr_0.85fr_0.9fr_auto] xl:items-center"
                   >
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-semibold text-white/75">
-                          {
-                            offer.title
-                          }
+                          {offer.title}
                         </span>
 
                         <span className="rounded-full border border-violet-300/[0.08] bg-violet-300/[0.035] px-2.5 py-1 text-[9px] text-violet-100/55">
@@ -1526,83 +1055,42 @@ export default function CustomPaymentLinksPage() {
                             isEnglish
                           )}
                         </span>
-
-                        <span
-                          className={
-                            offer.active &&
-                            !offer.expired
-                              ? "rounded-full border border-emerald-300/[0.08] bg-emerald-300/[0.035] px-2.5 py-1 text-[9px] text-emerald-100/60"
-                              : "rounded-full border border-red-300/[0.08] bg-red-300/[0.035] px-2.5 py-1 text-[9px] text-red-100/60"
-                          }
-                        >
-                          {offer.expired
-                            ? text(
-                                "Expirado",
-                                "Expired"
-                              )
-                            : offer.active
-                              ? text(
-                                  "Ativo",
-                                  "Active"
-                                )
-                              : text(
-                                  "Desativado",
-                                  "Disabled"
-                                )}
-                        </span>
                       </div>
 
                       <div className="mt-2 flex items-center gap-2 text-xs text-white/28">
-                        <UserRound
-                          size={12}
-                        />
-                        {
-                          offer.clientName
-                        }{" "}
-                        ·{" "}
-                        {
-                          offer.clientEmail
-                        }
+                        <UserRound size={12} />
+                        {offer.clientEmail
+                          ? `${offer.clientName ?? ""} · ${offer.clientEmail}`
+                          : text(
+                              "Aguardando comprador",
+                              "Waiting for buyer"
+                            )}
                       </div>
                     </div>
 
                     <div>
                       {offer.oneTimeOnly ? (
-                        <>
-                          <div className="text-[9px] uppercase tracking-[0.14em] text-white/22">
-                            {text(
-                              "Pagamento único",
-                              "One-time payment"
-                            )}
-                          </div>
-
-                          <div className="mt-1 text-lg font-semibold text-white/78">
-                            {formatMoney(
-                              offer.setupPrice,
-                              offer.currency,
-                              locale
-                            )}
-                          </div>
-                        </>
+                        <div className="text-lg font-semibold text-white/78">
+                          {formatMoney(
+                            offer.setupPrice,
+                            offer.currency,
+                            locale
+                          )}
+                        </div>
                       ) : (
                         <>
-                          <div className="text-[9px] uppercase tracking-[0.14em] text-white/22">
-                            {text(
-                              "Mensalidade",
-                              "Monthly"
-                            )}
-                          </div>
-
-                          <div className="mt-1 text-lg font-semibold text-white/78">
+                          <div className="text-lg font-semibold text-white/78">
                             {formatMoney(
                               offer.monthlyPrice,
                               offer.currency,
                               locale
                             )}
+                            <span className="ml-1 text-[10px] font-normal text-white/25">
+                              /mês
+                            </span>
                           </div>
 
-                          {offer.setupPrice >
-                            0 && (
+                          {offer.setupPrice > 0 && (
                             <div className="mt-1 text-[10px] text-white/28">
                               +{" "}
                               {formatMoney(
@@ -1629,10 +1117,7 @@ export default function CustomPaymentLinksPage() {
 
                       {offer.checkoutId && (
                         <div className="mt-1 text-[9px] text-cyan-200/40">
-                          Checkout #
-                          {
-                            offer.checkoutId
-                          }
+                          Checkout #{offer.checkoutId}
                         </div>
                       )}
                     </div>
@@ -1645,17 +1130,13 @@ export default function CustomPaymentLinksPage() {
                             offer.token
                           )
                         }
-                        className="flex h-9 items-center gap-2 rounded-xl border border-white/[0.07] px-3 text-[10px] text-white/45 transition hover:text-white/70"
+                        className="flex h-9 items-center gap-2 rounded-xl border border-white/[0.07] px-3 text-[10px] text-white/45"
                       >
                         {copiedToken ===
                         offer.token ? (
-                          <Check
-                            size={12}
-                          />
+                          <Check size={12} />
                         ) : (
-                          <Copy
-                            size={12}
-                          />
+                          <Copy size={12} />
                         )}
                         {text(
                           "Copiar",
@@ -1687,9 +1168,7 @@ export default function CustomPaymentLinksPage() {
                             className="animate-spin"
                           />
                         ) : (
-                          <Power
-                            size={12}
-                          />
+                          <Power size={12} />
                         )}
 
                         {offer.active

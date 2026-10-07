@@ -6,6 +6,7 @@ public record CreateSubscriptionRequest(
         Long planId,
         Long priceId,
         BillingCycle billingCycle,
-        String displayCurrency
+        String displayCurrency,
+        boolean customSiteIntegration
 ) {
 }

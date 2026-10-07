@@ -20,7 +20,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageProvider";
 
 const quoteUrl =
-  "/login?returnUrl=%2Fpainel%2Fsuporte";
+  "/orcamento";
 
 const features = [
   {

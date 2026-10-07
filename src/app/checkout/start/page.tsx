@@ -443,7 +443,12 @@ export default function CheckoutStartPage() {
               );
 
           if (regional) {
-            return regional;
+            return {
+              ...regional,
+              currency:
+                purchase.displayCurrency ??
+                regional.currency,
+            };
           }
         }
 

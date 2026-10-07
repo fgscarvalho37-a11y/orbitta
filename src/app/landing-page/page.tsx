@@ -165,8 +165,8 @@ export default function LandingPageService() {
 
             <p className="mt-5 text-xs leading-5 text-white/28">
               {text(
-                "Preço sob orçamento. Nenhum valor fixo é aplicado antes da definição do projeto.",
-                "Pricing is quote-based. No fixed price is applied before the project scope is defined."
+                "Site avulso: preço sob orçamento. Integração com PizzaSystem: US$ 200 de implantação uma única vez + a mensalidade normal do PizzaSystem.",
+                "Standalone website: custom quote. PizzaSystem integration: one-time US$ 200 setup fee + the normal PizzaSystem subscription."
               )}
             </p>
           </motion.div>
@@ -355,8 +355,8 @@ export default function LandingPageService() {
 
             <p className="mt-5 text-base leading-7 text-white/38">
               {text(
-                "A Landing Page Personalizada é um serviço adicional para quem quer uma identidade e uma estrutura totalmente próprias. Ela não substitui nem remove o site padrão incluso no PizzaSystem.",
-                "The Custom Landing Page is an additional service for businesses that want a fully custom identity and structure. It does not replace or remove the standard site included with PizzaSystem."
+                "A Landing Page Personalizada pode ser contratada como site avulso ou integrada ao PizzaSystem. O site padrão do PizzaSystem continua incluído. A integração personalizada tem implantação única de US$ 200 e depois segue apenas a mensalidade normal do PizzaSystem.",
+                "A Custom Landing Page can be purchased as a standalone website or integrated with PizzaSystem. The standard PizzaSystem website remains included. Custom integration has a one-time US$ 200 setup fee, then only the normal PizzaSystem subscription continues."
               )}
             </p>
           </div>

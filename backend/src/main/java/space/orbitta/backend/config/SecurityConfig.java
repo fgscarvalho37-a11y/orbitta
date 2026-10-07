@@ -152,7 +152,8 @@ public class SecurityConfig {
                         .permitAll()
 
                         .requestMatchers(
-                                "/api/catalog/**"
+                                "/api/catalog/**",
+                                "/api/commercial-settings"
                         )
                         .permitAll()
 

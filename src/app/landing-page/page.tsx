@@ -18,6 +18,7 @@ import { motion } from "motion/react";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageProvider";
+import { formatUsd, useCommercialSettings } from "@/hooks/useCommercialSettings";
 
 const benefits = [
   {
@@ -55,8 +56,20 @@ const benefits = [
 export default function LandingPageService() {
   const {
     text,
+    locale,
   } =
     useLanguage();
+
+  const {
+    customSiteIntegrationFeeUsd,
+  } =
+    useCommercialSettings();
+
+  const integrationFee =
+    formatUsd(
+      customSiteIntegrationFeeUsd,
+      locale
+    );
 
   const quoteUrl =
     "/login?returnUrl=%2Fpainel%2Fsuporte";
@@ -165,8 +178,8 @@ export default function LandingPageService() {
 
             <p className="mt-5 text-xs leading-5 text-white/28">
               {text(
-                "Site avulso: preço sob orçamento. Integração com PizzaSystem: US$ 200 de implantação uma única vez + a mensalidade normal do PizzaSystem.",
-                "Standalone website: custom quote. PizzaSystem integration: one-time US$ 200 setup fee + the normal PizzaSystem subscription."
+                `Site avulso: preço sob orçamento. Integração com PizzaSystem: ${integrationFee} de implantação uma única vez + a mensalidade normal do PizzaSystem.`,
+                `Standalone website: custom quote. PizzaSystem integration: one-time ${integrationFee} setup fee + the normal PizzaSystem subscription.`
               )}
             </p>
           </motion.div>
@@ -355,8 +368,8 @@ export default function LandingPageService() {
 
             <p className="mt-5 text-base leading-7 text-white/38">
               {text(
-                "A Landing Page Personalizada pode ser contratada como site avulso ou integrada ao PizzaSystem. O site padrão do PizzaSystem continua incluído. A integração personalizada tem implantação única de US$ 200 e depois segue apenas a mensalidade normal do PizzaSystem.",
-                "A Custom Landing Page can be purchased as a standalone website or integrated with PizzaSystem. The standard PizzaSystem website remains included. Custom integration has a one-time US$ 200 setup fee, then only the normal PizzaSystem subscription continues."
+                `A Landing Page Personalizada pode ser contratada como site avulso ou integrada ao PizzaSystem. O site padrão do PizzaSystem continua incluído. A integração personalizada tem implantação única de ${integrationFee} e depois segue apenas a mensalidade normal do PizzaSystem.`,
+                `A Custom Landing Page can be purchased as a standalone website or integrated with PizzaSystem. The standard PizzaSystem website remains included. Custom integration has a one-time ${integrationFee} setup fee, then only the normal PizzaSystem subscription continues.`
               )}
             </p>
           </div>

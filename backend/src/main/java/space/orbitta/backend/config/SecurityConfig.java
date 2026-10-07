@@ -165,6 +165,12 @@ public class SecurityConfig {
                         .permitAll()
 
                         .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/quote-requests"
+                        )
+                        .permitAll()
+
+                        .requestMatchers(
                                 "/api/admin/**"
                         )
                         .hasRole("ADMIN")

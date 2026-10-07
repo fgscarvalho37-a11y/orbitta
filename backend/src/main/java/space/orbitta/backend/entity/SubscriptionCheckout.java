@@ -113,6 +113,12 @@ public class SubscriptionCheckout {
             BillingCycle.MONTHLY;
 
     @Column(
+            name = "one_time_only",
+            nullable = false
+    )
+    private boolean oneTimeOnly = false;
+
+    @Column(
             name = "settlement_amount",
             precision = 12,
             scale = 2
@@ -328,6 +334,17 @@ public class SubscriptionCheckout {
     public int getRenewalMonths() {
         return getBillingCycle()
                 .getRenewalMonths();
+    }
+
+    public boolean isOneTimeOnly() {
+        return oneTimeOnly;
+    }
+
+    public void setOneTimeOnly(
+            boolean oneTimeOnly
+    ) {
+        this.oneTimeOnly =
+                oneTimeOnly;
     }
 
     public BigDecimal getSettlementAmount() {

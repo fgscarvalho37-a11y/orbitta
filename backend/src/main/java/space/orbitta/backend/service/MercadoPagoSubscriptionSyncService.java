@@ -411,17 +411,22 @@ public class MercadoPagoSubscriptionSyncService {
                     LocalDate.now();
         }
 
-        ClientProduct product =
-                ensureClientProduct(
-                        checkout,
-                        Map.of(
+        Map<?, ?> renewalMetadata =
+                checkout.isOneTimeOnly()
+                        ? Map.of()
+                        : Map.of(
                                 "next_payment_date",
                                 paidDate
                                         .plusMonths(
                                                 checkout.getRenewalMonths()
                                         )
                                         .toString()
-                        )
+                        );
+
+        ClientProduct product =
+                ensureClientProduct(
+                        checkout,
+                        renewalMetadata
                 );
 
         ensureInvoice(
@@ -1060,7 +1065,12 @@ public class MercadoPagoSubscriptionSyncService {
                         )
                 );
 
-        if (nextPaymentDate != null) {
+        if (checkout.isOneTimeOnly()) {
+            product.setRenewalDate(
+                    null
+            );
+
+        } else if (nextPaymentDate != null) {
 
             product.setRenewalDate(
                     nextPaymentDate

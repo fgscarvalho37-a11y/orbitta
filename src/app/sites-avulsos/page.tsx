@@ -18,6 +18,7 @@ import { motion } from "motion/react";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/i18n/LanguageProvider";
+import { formatUsd, useCommercialSettings } from "@/hooks/useCommercialSettings";
 
 const quoteUrl =
   "/login?returnUrl=%2Fpainel%2Fsuporte";
@@ -58,8 +59,20 @@ const features = [
 export default function StandaloneSitesPage() {
   const {
     text,
+    locale,
   } =
     useLanguage();
+
+  const {
+    customSiteIntegrationFeeUsd,
+  } =
+    useCommercialSettings();
+
+  const integrationFee =
+    formatUsd(
+      customSiteIntegrationFeeUsd,
+      locale
+    );
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050914] text-white">
@@ -276,7 +289,7 @@ export default function StandaloneSitesPage() {
 
                   <div className="mt-2 flex items-end gap-2">
                     <span className="text-4xl font-semibold tracking-[-0.04em]">
-                      US$ 200
+                      {integrationFee}
                     </span>
 
                     <span className="pb-1 text-xs text-white/35">
@@ -305,8 +318,8 @@ export default function StandaloneSitesPage() {
 
                   <p className="mt-2 text-xs leading-5 text-white/35">
                     {text(
-                      "O site padrão do PizzaSystem continua incluído no plano e não cobra essa taxa. Os US$ 200 valem somente para a integração de um site personalizado.",
-                      "The standard PizzaSystem website remains included with the plan and does not have this fee. The $200 applies only when integrating a custom website."
+                      `O site padrão do PizzaSystem continua incluído no plano e não cobra essa taxa. ${integrationFee} vale somente para a integração de um site personalizado.`,
+                      `The standard PizzaSystem website remains included with the plan and does not have this fee. ${integrationFee} applies only when integrating a custom website.`
                     )}
                   </p>
                 </div>

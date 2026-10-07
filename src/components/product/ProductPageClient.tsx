@@ -647,19 +647,31 @@ export default function ProductPageClient({
 
               <p className="mt-4 max-w-2xl text-sm leading-6 text-white/40">
                 {text(
-                  "O site padrão continua incluído. A opção personalizada é um serviço premium para marcas que querem uma experiência visual exclusiva, usando o mesmo cardápio, pedidos e pagamentos do PizzaSystem.",
-                  "The standard website remains included. The custom option is a premium service for brands that want a unique visual experience while keeping the same PizzaSystem menu, orders and payments."
+                  "O site padrão continua incluído. Se você quiser um site personalizado conectado ao PizzaSystem, a implantação custa US$ 200 uma única vez. Depois, permanece apenas a mensalidade normal do PizzaSystem.",
+                  "The standard website remains included. If you want a custom website connected to PizzaSystem, integration setup is a one-time US$ 200 fee. After that, only the normal PizzaSystem subscription remains."
                 )}
               </p>
+
+              <div className="mt-5 inline-flex items-end gap-2 rounded-2xl border border-cyan-300/10 bg-cyan-300/[0.035] px-4 py-3">
+                <span className="text-2xl font-semibold text-white">
+                  US$ 200
+                </span>
+                <span className="pb-0.5 text-xs text-white/35">
+                  {text(
+                    "implantação única",
+                    "one-time setup"
+                  )}
+                </span>
+              </div>
             </div>
 
             <Link
-              href="/landing-page"
+              href="/sites-avulsos"
               className="group inline-flex items-center justify-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
             >
               {text(
-                "Conheça nossas Landing Pages",
-                "Explore Custom Landing Pages"
+                "Ver sites personalizados",
+                "Explore custom websites"
               )}
 
               <ArrowRight

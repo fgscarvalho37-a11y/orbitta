@@ -513,7 +513,7 @@ export default function CheckoutPage({
                         ? text("Pagamento do valor configurado para o projeto.", "Payment for the configured website project price.")
                         : isAnnual
                           ? text(
-                            "12 meses de acesso pelo valor equivalente a 10 mensalidades.
+                            "12 meses de acesso pelo valor equivalente a 10 mensalidades.",
                             "12 months of access for the price of 10 monthly payments."
                           )
                         : isForeignMercadoPagoCheckout

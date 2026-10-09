@@ -794,7 +794,12 @@ export default function CheckoutPage({
                     >
                       {text("Política de Privacidade", "Privacy Policy")}
                     </Link>
-                    . {isAnnual
+                    . {checkout.oneTimeOnly
+                      ? text(
+                          "Estou ciente do valor total e da modalidade sem mensalidade escolhida para este projeto.",
+                          "I understand the total and the configured non-recurring billing option for this project."
+                        )
+                      : isAnnual
                       ? text(
                           "Estou ciente de que o plano anual é pago antecipadamente, concede 12 meses de acesso e custa o equivalente a 10 mensalidades, além de eventual taxa inicial indicada neste checkout.",
                           "I understand that the annual plan is prepaid, provides 12 months of access, and costs the equivalent of 10 monthly payments, plus any setup fee shown in this checkout."
@@ -867,7 +872,12 @@ export default function CheckoutPage({
               </p>
             ) : canPay ? (
               <p className="mt-3 text-center text-[10px] leading-4 text-white/20">
-                {isAnnual
+                {checkout.oneTimeOnly
+                  ? text(
+                      `Você será redirecionado para ${gatewayName} para pagar o valor deste projeto.`,
+                      `You will be redirected to ${gatewayName} to pay for this project.`
+                    )
+                  : isAnnual
                   ? text(
                       `Você será redirecionado para ${gatewayName} para concluir o pagamento anual antecipado.`,
                       `You will be redirected to ${gatewayName} to complete the prepaid annual payment.`

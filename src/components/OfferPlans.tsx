@@ -58,11 +58,14 @@ export default function OfferPlans() {
       .then((response) => response.ok ? response.json() : Promise.reject(new Error("Plan not available")))
       .then((product: CatalogProduct) => {
         const plan = product.plans?.[0];
-        const regional = plan?.regionalPrices?.find((price) => price.regionCode === market)
-          ?? plan?.regionalPrices?.find((price) => price.regionCode === "US");
-        const fallbackCurrency = market === "BR" ? "BRL" : market === "GB" ? "GBP" :
-          market === "AU" ? "AUD" : market === "EU" ? "EUR" : null;
-        const selected = regional ? { ...regional, currency: fallbackCurrency && regional.regionCode !== market ? fallbackCurrency : regional.currency } : null;
+        const base = plan?.regionalPrices?.find((price) => price.regionCode === "US")
+          ?? plan?.regionalPrices?.find((price) => price.regionCode === market);
+        // The number is identical across countries: 99 BRL / 99 USD /
+        // 99 GBP / 99 EUR, not a currency conversion.
+        const displayCurrency = market === "BR" ? "BRL" : market === "GB" ? "GBP" :
+          market === "AU" ? "AUD" : market === "EU" ? "EUR" :
+          market === "CA" ? "CAD" : "USD";
+        const selected = base ? { ...base, currency: displayCurrency } : null;
         if (alive) setPlanPrice(selected);
       })
       .catch(() => { if (alive) setPlanPrice(null); });
@@ -72,7 +75,8 @@ export default function OfferPlans() {
   const siteMonthly = Number(standaloneSiteMonthlyPriceUsd ?? 0);
   const bundleMonthly = Number(bundleMonthlyPriceUsd ?? 0);
   const localCurrency = market === "BR" ? "BRL" : market === "GB" ? "GBP" :
-    market === "AU" ? "AUD" : market === "EU" ? "EUR" : "USD";
+    market === "AU" ? "AUD" : market === "EU" ? "EUR" :
+    market === "CA" ? "CAD" : "USD";
   const cards = [
     {
       key: "site",

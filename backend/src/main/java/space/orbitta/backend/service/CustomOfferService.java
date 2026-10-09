@@ -506,8 +506,8 @@ public class CustomOfferService {
             case "GB" -> "GBP";
             case "EU" -> "EUR";
             case "AU" -> "AUD";
-            // CAD is not supported by the current FX service; Canada is billed USD.
-            case "CA", "US" -> "USD";
+            case "CA" -> "CAD";
+            case "US" -> "USD";
             default -> "USD";
         };
     }

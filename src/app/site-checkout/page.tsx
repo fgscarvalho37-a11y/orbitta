@@ -10,7 +10,7 @@ import { useCommercialSettings } from "@/hooks/useCommercialSettings";
 
 const currencyForMarket = (market: string) =>
   market === "BR" ? "BRL" : market === "GB" ? "GBP" :
-  market === "AU" ? "AUD" : market === "EU" ? "EUR" : "USD";
+  market === "AU" ? "AUD" : market === "EU" ? "EUR" : market === "CA" ? "CAD" : "USD";
 const money = (amount: number, locale: string, currency: string) =>
   new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
 

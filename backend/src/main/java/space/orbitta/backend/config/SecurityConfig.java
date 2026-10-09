@@ -153,6 +153,12 @@ public class SecurityConfig {
                         .permitAll()
 
                         .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/public/custom-storefronts/**"
+                        )
+                        .permitAll()
+
+                        .requestMatchers(
                                 "/api/catalog/**",
                                 "/api/commercial-settings"
                         )

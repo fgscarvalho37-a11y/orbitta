@@ -431,7 +431,7 @@ public class CustomOfferService {
      * A user cannot supply or alter the price, currency, or billing cadence.
      */
     @Transactional
-    public SubscriptionCheckoutResponse createStandaloneSiteCheckout(String email) {
+    public SubscriptionCheckoutResponse createStandaloneSiteCheckout(String email, String market) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Entre na sua conta para contratar o site.");
         }
@@ -456,7 +456,7 @@ public class CustomOfferService {
                 "Site personalizado Orbitta",
                 monthly,
                 BigDecimal.ZERO,
-                "USD",
+                currencyForMarket(market),
                 false
         );
     }
@@ -466,7 +466,7 @@ public class CustomOfferService {
      * Both product access and the site-project brief are tied to this checkout.
      */
     @Transactional
-    public SubscriptionCheckoutResponse createBundleCheckout(String email) {
+    public SubscriptionCheckoutResponse createBundleCheckout(String email, String market) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Entre na sua conta para contratar o pacote.");
         }
@@ -492,8 +492,24 @@ public class CustomOfferService {
 
         return subscriptionCheckoutService.createCustomCheckout(
             buyer, product, plan, "Site + PizzaSystem",
-            monthly, BigDecimal.ZERO, "USD", false, true
+            monthly, BigDecimal.ZERO, currencyForMarket(market), false, true
         );
+    }
+
+    // Three public subscription products share their admin-configured
+    // numeric price, but use the local currency of the selected market.
+    // Never accept arbitrary currency or amount from the client.
+    private static String currencyForMarket(String market) {
+        String country = market == null ? "US" : market.trim().toUpperCase(Locale.ROOT);
+        return switch(country) {
+            case "BR" -> "BRL";
+            case "GB" -> "GBP";
+            case "EU" -> "EUR";
+            case "AU" -> "AUD";
+            // CAD is not supported by the current FX service; Canada is billed USD.
+            case "CA", "US" -> "USD";
+            default -> "USD";
+        };
     }
 
     private CustomOffer findByToken(

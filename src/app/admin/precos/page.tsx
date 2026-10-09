@@ -63,6 +63,7 @@ type PriceDraft = {
 type CommercialSettings = {
   customSiteIntegrationFeeUsd: number;
   standaloneSitePriceUsd: number;
+  standaloneSiteMonthlyPriceUsd: number;
   currency: string;
   updatedAt: string | null;
 };
@@ -158,6 +159,7 @@ export default function AdminRegionalPricingPage() {
     useState("200");
 
   const [standaloneSitePrice, setStandaloneSitePrice] = useState("0");
+  const [standaloneSiteMonthlyPrice, setStandaloneSiteMonthlyPrice] = useState("0");
 
   const [
     savingCustomSiteFee,
@@ -230,6 +232,7 @@ export default function AdminRegionalPricingPage() {
 
           setCustomSiteIntegrationFee(moneyInput(commercialSettings.customSiteIntegrationFeeUsd));
           setStandaloneSitePrice(moneyInput(commercialSettings.standaloneSitePriceUsd ?? 0));
+          setStandaloneSiteMonthlyPrice(moneyInput(commercialSettings.standaloneSiteMonthlyPriceUsd ?? 0));
         }
 
         const nextDrafts:
@@ -480,8 +483,14 @@ export default function AdminRegionalPricingPage() {
     }
 
     const siteValue = parseMoney(standaloneSitePrice);
+    const siteMonthlyValue = parseMoney(standaloneSiteMonthlyPrice);
     if (!Number.isFinite(siteValue) || siteValue < 0) {
       setError(text("Informe um preço válido para o site avulso.", "Enter a valid standalone website price."));
+      return;
+    }
+
+    if (!Number.isFinite(siteMonthlyValue) || siteMonthlyValue < 0) {
+      setError(text("Informe uma mensalidade válida para o site.", "Enter a valid monthly website price."));
       return;
     }
 
@@ -510,6 +519,7 @@ export default function AdminRegionalPricingPage() {
                 customSiteIntegrationFeeUsd:
                   value,
                 standaloneSitePriceUsd: siteValue,
+                standaloneSiteMonthlyPriceUsd: siteMonthlyValue,
               }),
           }
         );
@@ -543,6 +553,7 @@ export default function AdminRegionalPricingPage() {
 
       setCustomSiteIntegrationFee(moneyInput(updated.customSiteIntegrationFeeUsd));
       setStandaloneSitePrice(moneyInput(updated.standaloneSitePriceUsd ?? 0));
+      setStandaloneSiteMonthlyPrice(moneyInput(updated.standaloneSiteMonthlyPriceUsd ?? 0));
 
       setSuccess(
         text(
@@ -633,7 +644,7 @@ export default function AdminRegionalPricingPage() {
         <section className="mt-6 rounded-[28px] border border-violet-300/[0.1] bg-[#08101d] p-6">
           <div className="mb-5 rounded-xl border border-white/[0.06] bg-white/[0.025] p-4">
             <label className="block text-xs text-white/65">
-              {text("Site avulso — preço inicial em USD (0 = sob orçamento)", "Standalone website — starting price in USD (0 = custom quote)")}
+              {text("Site avulso — implantação em USD (opcional)", "Standalone website — setup fee in USD (optional)")}
             </label>
             <input
               inputMode="decimal"
@@ -643,7 +654,21 @@ export default function AdminRegionalPricingPage() {
               className="mt-2 h-11 w-full max-w-xs rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 text-sm text-white outline-none"
             />
             <p className="mt-2 text-xs text-white/40">
-              {text("Valor inicial de referência; o orçamento final depende do projeto.", "Starting price only; the final quote depends on the project.")}
+              {text("A implantação é cobrada no primeiro pagamento, quando configurada.", "The setup fee is charged with the first payment, if configured.")}
+            </p>
+          </div>
+          <div className="mb-5 rounded-xl border border-white/[0.06] bg-white/[0.025] p-4">
+            <label className="block text-xs text-white/65">
+              {text("Mensalidade do site em USD (0 = sem recorrência)", "Website monthly price in USD (0 = no recurring charge)")}
+            </label>
+            <input
+              inputMode="decimal"
+              value={standaloneSiteMonthlyPrice}
+              onChange={(event) => setStandaloneSiteMonthlyPrice(event.target.value)}
+              className="mt-2 h-11 w-full max-w-xs rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 text-sm text-white outline-none"
+            />
+            <p className="mt-2 text-xs text-white/40">
+              {text("Você decide: mensalidade, implantação, ou os dois. Sem valor configurado, novas compras ficam bloqueadas.", "You decide: monthly charge, setup fee, or both. Checkout stays unavailable until pricing is set.")}
             </p>
           </div>
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">

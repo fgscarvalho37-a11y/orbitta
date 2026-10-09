@@ -269,6 +269,7 @@ export default function ProductPricing({
             cache: "no-store",
             headers: {
               Accept: "application/json",
+              "X-Orbitta-Market": selectedMarket,
             },
           }
         );
@@ -302,7 +303,7 @@ export default function ProductPricing({
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, selectedMarket]);
 
   const marketMeta = MARKET_META[market];
 
@@ -332,7 +333,7 @@ export default function ProductPricing({
       return regional;
     }
 
-    if (market === "GB") {
+    if (market === "GB" || market === "EU" || market === "AU") {
       const internationalPrice = prices.find(
         (price) =>
           price.active &&
@@ -343,7 +344,7 @@ export default function ProductPricing({
       if (internationalPrice) {
         return {
           ...internationalPrice,
-          currency: "GBP",
+          currency: market === "GB" ? "GBP" : market === "EU" ? "EUR" : "AUD",
         };
       }
     }
@@ -411,6 +412,11 @@ export default function ProductPricing({
       "displayCurrency",
       price.currency
     );
+
+    if (typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).get("bundle") === "1") {
+      params.set("customSiteIntegration", "1");
+    }
 
     router.push(
       `/checkout/start?${params.toString()}`

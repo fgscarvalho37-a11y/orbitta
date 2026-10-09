@@ -29,6 +29,12 @@ public class CommercialSettings {
     @Column(name = "standalone_site_monthly_price_usd", precision = 12, scale = 2)
     private BigDecimal standaloneSiteMonthlyPriceUsd = BigDecimal.ZERO;
 
+    @Column(name = "site_regular_monthly_price_usd", precision = 12, scale = 2)
+    private BigDecimal siteRegularMonthlyPriceUsd = BigDecimal.ZERO;
+
+    @Column(name = "bundle_regular_monthly_price_usd", precision = 12, scale = 2)
+    private BigDecimal bundleRegularMonthlyPriceUsd = BigDecimal.ZERO;
+
     @Column(name = "bundle_monthly_price_usd", precision = 12, scale = 2)
     private BigDecimal bundleMonthlyPriceUsd = BigDecimal.ZERO;
 
@@ -82,6 +88,22 @@ public class CommercialSettings {
 
     public void setStandaloneSiteMonthlyPriceUsd(BigDecimal value) {
         standaloneSiteMonthlyPriceUsd = value;
+    }
+
+    public BigDecimal getSiteRegularMonthlyPriceUsd() {
+        return siteRegularMonthlyPriceUsd == null ? BigDecimal.ZERO : siteRegularMonthlyPriceUsd;
+    }
+
+    public void setSiteRegularMonthlyPriceUsd(BigDecimal value) {
+        siteRegularMonthlyPriceUsd = value;
+    }
+
+    public BigDecimal getBundleRegularMonthlyPriceUsd() {
+        return bundleRegularMonthlyPriceUsd == null ? BigDecimal.ZERO : bundleRegularMonthlyPriceUsd;
+    }
+
+    public void setBundleRegularMonthlyPriceUsd(BigDecimal value) {
+        bundleRegularMonthlyPriceUsd = value;
     }
 
     public BigDecimal getBundleMonthlyPriceUsd() {

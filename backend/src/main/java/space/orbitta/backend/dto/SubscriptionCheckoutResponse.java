@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public record SubscriptionCheckoutResponse(
         Long id,
         Long productId,
+        String productSlug,
         Long planId,
         String productName,
         String planName,
@@ -52,6 +53,7 @@ public record SubscriptionCheckoutResponse(
         return new SubscriptionCheckoutResponse(
                 checkout.getId(),
                 checkout.getCatalogProduct().getId(),
+                checkout.getCatalogProduct().getSlug(),
                 checkout.getCatalogPlan().getId(),
                 checkout.getProductName(),
                 checkout.getPlanName(),

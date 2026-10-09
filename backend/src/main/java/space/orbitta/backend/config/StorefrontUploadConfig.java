@@ -3,16 +3,11 @@ package space.orbitta.backend.config;
 import jakarta.servlet.MultipartConfigElement;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.boot.web.servlet.MultipartConfigFactory;
-import org.springframework.util.unit.DataSize;
 
 @Configuration
 public class StorefrontUploadConfig {
     @Bean
     public MultipartConfigElement multipartConfigElement() {
-        MultipartConfigFactory factory = new MultipartConfigFactory();
-        factory.setMaxFileSize(DataSize.ofMegabytes(4));
-        factory.setMaxRequestSize(DataSize.ofMegabytes(5));
-        return factory.createMultipartConfig();
+        return new MultipartConfigElement("", 4_000_000L, 5_000_000L, 0);
     }
 }

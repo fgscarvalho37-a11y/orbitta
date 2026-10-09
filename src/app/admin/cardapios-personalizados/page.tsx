@@ -163,10 +163,10 @@ export default function BrandedStorefrontAdmin() {
             <button onClick={()=>reuse(site)} className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/70">
               {text("Trocar ZIP", "Replace ZIP")}
             </button>
-            {site.published && <Link href={`/p/${site.siteSlug}`} target="_blank"
+            <Link href={`/p/${site.siteSlug}${site.published ? "" : "?preview=1"}`} target="_blank"
               className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-3 py-2 text-xs">
-              {text("Abrir", "Open")}<ArrowUpRight size={14}/>
-            </Link>}
+              {site.published ? text("Abrir", "Open") : text("Pré-visualizar", "Preview")}<ArrowUpRight size={14}/>
+            </Link>
             <button disabled={workingId===site.id} onClick={()=>void toggle(site)}
               className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-[#07101c] disabled:opacity-40">
               {site.published?<EyeOff size={15}/>:<Eye size={15}/>}

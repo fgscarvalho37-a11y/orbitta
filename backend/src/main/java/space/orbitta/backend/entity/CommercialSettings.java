@@ -25,6 +25,10 @@ public class CommercialSettings {
     @Column(name = "standalone_site_price_usd", precision = 12, scale = 2)
     private BigDecimal standaloneSitePriceUsd = BigDecimal.ZERO;
 
+    // Optional recurring component for standalone website projects.
+    @Column(name = "standalone_site_monthly_price_usd", precision = 12, scale = 2)
+    private BigDecimal standaloneSiteMonthlyPriceUsd = BigDecimal.ZERO;
+
     @Column(
             name = "updated_at",
             nullable = false
@@ -66,6 +70,15 @@ public class CommercialSettings {
 
     public void setStandaloneSitePriceUsd(BigDecimal amount) {
         standaloneSitePriceUsd = amount;
+    }
+
+    public BigDecimal getStandaloneSiteMonthlyPriceUsd() {
+        return standaloneSiteMonthlyPriceUsd != null
+                ? standaloneSiteMonthlyPriceUsd : BigDecimal.ZERO;
+    }
+
+    public void setStandaloneSiteMonthlyPriceUsd(BigDecimal value) {
+        standaloneSiteMonthlyPriceUsd = value;
     }
 
     public LocalDateTime getUpdatedAt() {

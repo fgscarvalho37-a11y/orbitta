@@ -32,7 +32,7 @@ const MARKETS = [
   { code: "AU", currency: "AUD", pt: "Austrália", en: "Australia" },
   { code: "EU", currency: "EUR", pt: "Europa", en: "Europe" },
 ] as const;
-const DEFAULTS: Record<PlanKey, Omit<Draft, "price">> = {
+const DEFAULTS: Record<PlanKey, Omit<Draft, "price" | "regularPrice">> = {
   site: {
     descriptionPt: "Um site profissional criado para representar sua marca.",
     descriptionEn: "A professional website designed for your brand.",
@@ -63,7 +63,7 @@ function inputPrice(value: number | null | undefined) {
 function getCopy(settings: Settings, key: PlanKey, name: "DescriptionPt" | "DescriptionEn" | "FeaturesPt" | "FeaturesEn") {
   const prop = `${key}${name}` as ContentKey;
   const raw = settings[prop];
-  return raw === null || raw === undefined ? DEFAULTS[key][(name.charAt(0).toLowerCase() + name.slice(1)) as keyof Omit<Draft,"price">] : raw;
+  return raw === null || raw === undefined ? DEFAULTS[key][(name.charAt(0).toLowerCase() + name.slice(1)) as keyof Omit<Draft,"price" | "regularPrice">] : raw;
 }
 
 export default function OrbittaFixedPlansAdmin() {

@@ -18,4 +18,9 @@ public class StandaloneSiteCheckoutController {
     public ResponseEntity<SubscriptionCheckoutResponse> create(Authentication authentication) {
         return ResponseEntity.ok(offers.createStandaloneSiteCheckout(authentication.getName()));
     }
+
+    @PostMapping("/api/bundle-checkouts")
+    public ResponseEntity<SubscriptionCheckoutResponse> createBundle(Authentication authentication) {
+        return ResponseEntity.ok(offers.createBundleCheckout(authentication.getName()));
+    }
 }

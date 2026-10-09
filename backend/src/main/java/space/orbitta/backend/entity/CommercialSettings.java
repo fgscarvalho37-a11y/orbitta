@@ -21,6 +21,10 @@ public class CommercialSettings {
     private BigDecimal customSiteIntegrationFeeUsd =
             new BigDecimal("200.00");
 
+    // Public starting price for standalone custom sites, not an automatic charge.
+    @Column(name = "standalone_site_price_usd", precision = 12, scale = 2)
+    private BigDecimal standaloneSitePriceUsd = BigDecimal.ZERO;
+
     @Column(
             name = "updated_at",
             nullable = false
@@ -53,6 +57,15 @@ public class CommercialSettings {
     ) {
         this.customSiteIntegrationFeeUsd =
                 customSiteIntegrationFeeUsd;
+    }
+
+    public BigDecimal getStandaloneSitePriceUsd() {
+        return standaloneSitePriceUsd != null
+                ? standaloneSitePriceUsd : BigDecimal.ZERO;
+    }
+
+    public void setStandaloneSitePriceUsd(BigDecimal amount) {
+        standaloneSitePriceUsd = amount;
     }
 
     public LocalDateTime getUpdatedAt() {

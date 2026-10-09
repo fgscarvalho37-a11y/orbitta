@@ -106,7 +106,7 @@ export default function OfferPlans() {
         text("Uma operação, sem duplicar cadastros", "One operation, no duplicated setup"),
       ],
       price: planPrice ? money(planPrice.monthlyPrice, planPrice.currency, locale) : text("Consultar planos", "See pricing"),
-      suffix: text(`por mês + site personalizado (taxa única desde ${money(fee, "USD", locale)})`, `per month + custom website (one-time fee from ${money(fee, "USD", locale)})`),
+      suffix: text(`mensalidade + implantação de site personalizado: ${money(fee, "USD", locale)}`, `subscription + custom website setup: ${money(fee, "USD", locale)}`),
       href: "/produtos/pizzasystem?bundle=1#planos",
       cta: text("Escolher o pacote", "Choose the bundle"),
       featured: true,

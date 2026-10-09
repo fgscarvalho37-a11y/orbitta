@@ -210,7 +210,8 @@ public class SubscriptionCheckoutService {
                 ("BRL".equals(requestedDisplayCurrency) ||
                  "EUR".equals(requestedDisplayCurrency) ||
                  "GBP".equals(requestedDisplayCurrency) ||
-                 "AUD".equals(requestedDisplayCurrency)) &&
+                 "AUD".equals(requestedDisplayCurrency) ||
+                 "CAD".equals(requestedDisplayCurrency)) &&
                 "USD".equalsIgnoreCase(currency)
         ) {
             currency = requestedDisplayCurrency;
@@ -326,7 +327,8 @@ public class SubscriptionCheckoutService {
                                 "USD".equalsIgnoreCase(currency) ||
                                 "EUR".equalsIgnoreCase(currency) ||
                                 "GBP".equalsIgnoreCase(currency) ||
-                                "AUD".equalsIgnoreCase(currency)
+                                "AUD".equalsIgnoreCase(currency) ||
+                                "CAD".equalsIgnoreCase(currency)
                         )
                                 ||
                                 (
@@ -488,6 +490,17 @@ public class SubscriptionCheckoutService {
             checkout.setFxQuotedAt(
                     quote.quotedAt()
             );
+
+        } else if (
+                "CAD".equalsIgnoreCase(
+                        currency
+                )
+        ) {
+            FxRateService.FxQuote quote = fxRateService.quoteCadToBrl(totalPrice);
+            checkout.setSettlementAmount(quote.settlementAmount());
+            checkout.setSettlementCurrency(quote.settlementCurrency());
+            checkout.setFxRate(quote.rate());
+            checkout.setFxQuotedAt(quote.quotedAt());
 
         } else if (
                 "BRL".equalsIgnoreCase(
@@ -754,6 +767,17 @@ public class SubscriptionCheckoutService {
             checkout.setFxQuotedAt(
                     quote.quotedAt()
             );
+
+        } else if (
+                "CAD".equalsIgnoreCase(
+                        normalizedCurrency
+                )
+        ) {
+            FxRateService.FxQuote quote = fxRateService.quoteCadToBrl(totalPrice);
+            checkout.setSettlementAmount(quote.settlementAmount());
+            checkout.setSettlementCurrency(quote.settlementCurrency());
+            checkout.setFxRate(quote.rate());
+            checkout.setFxQuotedAt(quote.quotedAt());
 
         } else if (
                 "BRL".equalsIgnoreCase(
@@ -1713,7 +1737,8 @@ public class SubscriptionCheckoutService {
                                         ) ||
                                         "AUD".equalsIgnoreCase(
                                                 checkout.getCurrency()
-                                        )
+                                        ) ||
+                                        "CAD".equalsIgnoreCase(checkout.getCurrency())
                                 )
                         )
                 );
@@ -1767,7 +1792,8 @@ public class SubscriptionCheckoutService {
                 ) &&
                 !"AUD".equalsIgnoreCase(
                         currency
-                );
+                ) &&
+                !"CAD".equalsIgnoreCase(currency);
     }
 
     private String getMapString(
@@ -1967,6 +1993,8 @@ public class SubscriptionCheckoutService {
                                             BigDecimal.ONE
                                     )
                                     .rate();
+                    case "CAD" ->
+                            fxRateService.quoteCadToBrl(BigDecimal.ONE).rate();
                     default ->
                             throw new IllegalArgumentException(
                                     "Moeda não suportada para a integração de site personalizado."

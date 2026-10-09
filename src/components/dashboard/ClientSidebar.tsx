@@ -10,6 +10,7 @@ import {
   CircleHelp,
   CreditCard,
   Globe2,
+  LayoutTemplate,
   LayoutDashboard,
   LogOut,
   Orbit,
@@ -31,6 +32,11 @@ const navigation = [
     name: "Meus produtos",
     href: "/painel/produtos",
     icon: Boxes,
+  },
+  {
+    name: "Meus sites",
+    href: "/painel/sites",
+    icon: LayoutTemplate,
   },
   {
     name: "Assinaturas",
@@ -70,6 +76,7 @@ const secondaryNavigation = [
 const NAV_EN: Record<string, string> = {
   "Visão geral": "Overview",
   "Meus produtos": "My products",
+  "Meus sites": "My websites",
   "Assinaturas": "Subscriptions",
   "Pagamentos": "Payments",
   "Faturas": "Invoices",

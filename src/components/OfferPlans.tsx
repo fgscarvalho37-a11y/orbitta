@@ -31,7 +31,7 @@ function money(amount: number, currency: string, locale: string) {
 
 export default function OfferPlans() {
   const { text, market, locale } = useLanguage();
-  const { standaloneSitePriceUsd, customSiteIntegrationFeeUsd } = useCommercialSettings();
+  const { standaloneSitePriceUsd, standaloneSiteMonthlyPriceUsd, customSiteIntegrationFeeUsd } = useCommercialSettings();
   const [planPrice, setPlanPrice] = useState<RegionalPrice | null>(null);
 
   useEffect(() => {
@@ -54,6 +54,7 @@ export default function OfferPlans() {
   }, [market]);
 
   const sitePrice = Number(standaloneSitePriceUsd ?? 0);
+  const siteMonthly = Number(standaloneSiteMonthlyPriceUsd ?? 0);
   const fee = Number(customSiteIntegrationFeeUsd ?? 0);
   const cards = [
     {
@@ -66,10 +67,16 @@ export default function OfferPlans() {
         text("Responsivo para celular e computador", "Mobile and desktop ready"),
         text("Formulário, contato e identidade da marca", "Contact forms and brand identity"),
       ],
-      price: sitePrice > 0 ? money(sitePrice, "USD", locale) : text("Sob orçamento", "Custom quote"),
-      suffix: sitePrice > 0 ? text("a partir de · pagamento único", "starting at · one-time") : text("valor conforme o projeto", "priced for your project"),
-      href: "/orcamento",
-      cta: text("Solicitar site", "Request a website"),
+      price: siteMonthly > 0 ? money(siteMonthly, "USD", locale)
+        : sitePrice > 0 ? money(sitePrice, "USD", locale)
+        : text("Configurar preço", "Pricing in progress"),
+      suffix: siteMonthly > 0
+        ? text(`por mês${sitePrice > 0 ? ` · implantação: ${money(sitePrice, "USD", locale)}` : ""}`,
+               `per month${sitePrice > 0 ? ` · setup: ${money(sitePrice, "USD", locale)}` : ""}`)
+        : sitePrice > 0 ? text("valor do projeto configurado pela Orbitta", "project price set by Orbitta")
+        : text("temporariamente indisponível", "temporarily unavailable"),
+      href: "/site-checkout",
+      cta: text("Contratar site", "Order website"),
       featured: false,
     },
     {
@@ -99,7 +106,7 @@ export default function OfferPlans() {
         text("Uma operação, sem duplicar cadastros", "One operation, no duplicated setup"),
       ],
       price: planPrice ? money(planPrice.monthlyPrice, planPrice.currency, locale) : text("Consultar planos", "See pricing"),
-      suffix: text(`por mês + site personalizado (taxa única desde ${money(fee, "USD", locale)})`, `per month + custom website (one-time fee from ${money(fee, "USD", locale)})`),
+      suffix: text(`mensalidade + implantação de site personalizado: ${money(fee, "USD", locale)}`, `subscription + custom website setup: ${money(fee, "USD", locale)}`),
       href: "/produtos/pizzasystem?bundle=1#planos",
       cta: text("Escolher o pacote", "Choose the bundle"),
       featured: true,
@@ -154,7 +161,7 @@ export default function OfferPlans() {
           ))}
         </div>
         <p className="mt-7 text-center text-xs leading-6 text-white/35">
-          {text("Valores em USD para projetos de site; o checkout calcula a taxa de integração na moeda da contratação. Site avulso sujeito a orçamento e escopo.", "Website project estimates are in USD; the checkout calculates the integration fee in your selected currency. Standalone website quotes depend on scope.")}
+          {text("Site avulso: implantação e mensalidade são definidas no painel Orbitta. A cobrança e as condições exatas aparecem no checkout antes de pagar.", "Standalone websites: setup and monthly prices are configured by Orbitta. Exact charges and terms appear at checkout before payment.")}
         </p>
       </div>
     </section>

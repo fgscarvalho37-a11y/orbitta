@@ -12,6 +12,7 @@ type CommercialSettings = {
   customSiteIntegrationFeeUsd:
     number;
   standaloneSitePriceUsd: number;
+  standaloneSiteMonthlyPriceUsd: number;
   currency:
     string;
   updatedAt:
@@ -27,6 +28,7 @@ export function useCommercialSettings() {
       customSiteIntegrationFeeUsd:
         200,
       standaloneSitePriceUsd: 0,
+      standaloneSiteMonthlyPriceUsd: 0,
       currency:
         "USD",
       updatedAt:

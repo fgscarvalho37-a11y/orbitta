@@ -25,6 +25,9 @@ public class FxRateService {
     private static final String AUD_BRL_URL =
             "https://api.frankfurter.dev/v2/rate/AUD/BRL";
 
+    private static final String CAD_BRL_URL =
+            "https://api.frankfurter.dev/v2/rate/CAD/BRL";
+
     private static final Duration CACHE_TTL =
             Duration.ofMinutes(15);
 
@@ -38,6 +41,40 @@ public class FxRateService {
     private CachedRate eurBrlCache;
     private CachedRate gbpBrlCache;
     private CachedRate audBrlCache;
+    private CachedRate cadBrlCache;
+
+    public synchronized FxQuote quoteCadToBrl(BigDecimal amount) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException("Valor em CAD inválido para conversão.");
+        }
+        BigDecimal rate = getCadBrlRate();
+        return new FxQuote("CAD", "BRL", amount,
+            amount.multiply(rate).setScale(2, RoundingMode.HALF_UP),
+            rate, LocalDateTime.now());
+    }
+
+    private BigDecimal getCadBrlRate() {
+        LocalDateTime now = LocalDateTime.now();
+        if (cadBrlCache != null && cadBrlCache.fetchedAt().plus(CACHE_TTL).isAfter(now)) {
+            return cadBrlCache.rate();
+        }
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(CAD_BRL_URL, Map.class);
+            Map<?, ?> body = response.getBody();
+            Object raw = body == null ? null : body.get("rate");
+            if (raw == null) throw new IllegalStateException("Cotação CAD/BRL indisponível.");
+            BigDecimal rate = new BigDecimal(String.valueOf(raw));
+            if (rate.signum() <= 0) throw new IllegalStateException("Cotação CAD/BRL inválida.");
+            cadBrlCache = new CachedRate(rate, now);
+            return rate;
+        } catch (RuntimeException error) {
+            if (cadBrlCache != null && cadBrlCache.fetchedAt().plus(STALE_FALLBACK_TTL).isAfter(now)) {
+                return cadBrlCache.rate();
+            }
+            throw new IllegalStateException("Não foi possível obter a cotação CAD/BRL agora.", error);
+        }
+    }
+
 
     public synchronized FxQuote quoteUsdToBrl(
             BigDecimal usdAmount

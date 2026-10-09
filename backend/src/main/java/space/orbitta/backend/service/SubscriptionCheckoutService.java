@@ -180,12 +180,11 @@ public class SubscriptionCheckoutService {
                         : plan.getSetupPrice();
 
         BigDecimal setupPrice =
-                selectedSetupPrice != null
-                        ? requireNonNegativePrice(
-                                selectedSetupPrice,
-                                "Taxa de implantação"
-                        )
-                        : BigDecimal.ZERO;
+                "pizzasystem".equalsIgnoreCase(product.getSlug())
+                        ? BigDecimal.ZERO
+                        : selectedSetupPrice != null
+                            ? requireNonNegativePrice(selectedSetupPrice, "Taxa de implantação")
+                            : BigDecimal.ZERO;
 
         String currency =
                 normalizeCurrency(
@@ -223,26 +222,9 @@ public class SubscriptionCheckoutService {
                 BigDecimal.ZERO;
 
         if (customSiteIntegration) {
-            if (
-                    product.getSlug() == null ||
-                    !"pizzasystem".equalsIgnoreCase(
-                            product.getSlug()
-                    )
-            ) {
-                throw new IllegalArgumentException(
-                        "A integração de site personalizado está disponível somente para o PizzaSystem."
-                );
-            }
-
-            customSiteIntegrationPrice =
-                    customSiteIntegrationFeeInCurrency(
-                            currency
-                    );
-
-            setupPrice =
-                    setupPrice.add(
-                            customSiteIntegrationPrice
-                    );
+            throw new IllegalArgumentException(
+                    "O plano mensal Site + PizzaSystem possui checkout próprio na Orbitta."
+            );
         }
 
         boolean alreadySubscribed =
@@ -567,6 +549,22 @@ public class SubscriptionCheckoutService {
             String currency,
             boolean oneTimeOnly
     ) {
+        return createCustomCheckout(user, product, plan, offerTitle,
+                monthlyPrice, setupPrice, currency, oneTimeOnly, false);
+    }
+
+    @Transactional
+    public SubscriptionCheckoutResponse createCustomCheckout(
+            User user,
+            CatalogProduct product,
+            CatalogPlan plan,
+            String offerTitle,
+            BigDecimal monthlyPrice,
+            BigDecimal setupPrice,
+            String currency,
+            boolean oneTimeOnly,
+            boolean includeWebsite
+    ) {
         if (
                 user == null ||
                 product == null ||
@@ -656,6 +654,8 @@ public class SubscriptionCheckoutService {
         checkout.setOneTimeOnly(
                 oneTimeOnly
         );
+        checkout.setCustomSiteIntegration(includeWebsite);
+        checkout.setCustomSiteIntegrationPrice(BigDecimal.ZERO);
 
         BigDecimal totalPrice =
                 normalizedMonthly.add(
@@ -1686,6 +1686,9 @@ public class SubscriptionCheckoutService {
     private boolean shouldUseMercadoPagoOneTime(
             SubscriptionCheckout checkout
     ) {
+        if (isThreePlanMonthlySubscription(checkout)) {
+            return false;
+        }
 
         return checkout != null &&
                 checkout.getSettlementAmount() != null &&
@@ -1713,6 +1716,17 @@ public class SubscriptionCheckoutService {
                                 )
                         )
                 );
+    }
+
+    private boolean isThreePlanMonthlySubscription(SubscriptionCheckout checkout) {
+        if (checkout == null || checkout.isOneTimeOnly()
+            || checkout.getBillingCycle() != BillingCycle.MONTHLY
+            || checkout.getCatalogProduct() == null) {
+            return false;
+        }
+        String slug = checkout.getCatalogProduct().getSlug();
+        return "pizzasystem".equalsIgnoreCase(slug)
+            || "custom-site-service".equalsIgnoreCase(slug);
     }
 
     private boolean shouldUseStripe(

@@ -29,6 +29,9 @@ public class CommercialSettings {
     @Column(name = "standalone_site_monthly_price_usd", precision = 12, scale = 2)
     private BigDecimal standaloneSiteMonthlyPriceUsd = BigDecimal.ZERO;
 
+    @Column(name = "bundle_monthly_price_usd", precision = 12, scale = 2)
+    private BigDecimal bundleMonthlyPriceUsd = BigDecimal.ZERO;
+
     @Column(
             name = "updated_at",
             nullable = false
@@ -79,6 +82,14 @@ public class CommercialSettings {
 
     public void setStandaloneSiteMonthlyPriceUsd(BigDecimal value) {
         standaloneSiteMonthlyPriceUsd = value;
+    }
+
+    public BigDecimal getBundleMonthlyPriceUsd() {
+        return bundleMonthlyPriceUsd == null ? BigDecimal.ZERO : bundleMonthlyPriceUsd;
+    }
+
+    public void setBundleMonthlyPriceUsd(BigDecimal price) {
+        bundleMonthlyPriceUsd = price;
     }
 
     public LocalDateTime getUpdatedAt() {

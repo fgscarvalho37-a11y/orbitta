@@ -7,6 +7,7 @@ public record CommercialSettingsResponse(
         BigDecimal customSiteIntegrationFeeUsd,
         BigDecimal standaloneSitePriceUsd,
         BigDecimal standaloneSiteMonthlyPriceUsd,
+        BigDecimal bundleMonthlyPriceUsd,
         String currency,
         LocalDateTime updatedAt
 ) {

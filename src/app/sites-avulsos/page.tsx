@@ -8,8 +8,7 @@ import { useCommercialSettings } from "@/hooks/useCommercialSettings";
 
 export default function StandaloneSitesPage() {
   const { locale, text } = useLanguage();
-  const { standaloneSitePriceUsd, standaloneSiteMonthlyPriceUsd } = useCommercialSettings();
-  const setup = Number(standaloneSitePriceUsd ?? 0);
+  const { standaloneSiteMonthlyPriceUsd } = useCommercialSettings();
   const monthly = Number(standaloneSiteMonthlyPriceUsd ?? 0);
   const money = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "USD" }).format(n);
   return (
@@ -55,8 +54,7 @@ export default function StandaloneSitesPage() {
           <h2 className="mt-4 text-3xl font-semibold">{text("Escolha o site que seu negócio merece.", "Bring your next website online.")}</h2>
           <div className="mt-7 space-y-3 text-sm text-white/65">
             {monthly > 0 && <p className="flex items-center gap-3"><Check size={15} className="text-cyan-200" />{money(monthly)} {text("/ mês", "/ month")}</p>}
-            {setup > 0 && <p className="flex items-center gap-3"><Check size={15} className="text-cyan-200" />{text("Implantação:", "Setup fee:")} {money(setup)}</p>}
-            {!monthly && !setup && <p>{text("Os valores estão sendo configurados.", "Pricing is being configured.")}</p>}
+            {!monthly && <p>{text("Os valores estão sendo configurados.", "Pricing is being configured.")}</p>}
           </div>
           <Link href="/site-checkout" className="mt-8 inline-flex items-center gap-2 rounded-full bg-cyan-200 px-7 py-3.5 text-sm font-semibold text-[#07101c]">
             {text("Ir para o checkout", "Go to checkout")} <ArrowRight size={16} />

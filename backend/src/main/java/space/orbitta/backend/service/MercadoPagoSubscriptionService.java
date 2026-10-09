@@ -75,16 +75,22 @@ public class MercadoPagoSubscriptionService {
                 "months"
         );
 
+        // Mercado Pago Brazil creates BRL recurring subscriptions.
+        // For international prices, the converted BRL amount is locked for
+        // monthly recurring charges rather than issuing a one-time payment.
+        boolean settledInBrl = checkout.getSettlementAmount() != null
+                && "BRL".equalsIgnoreCase(checkout.getSettlementCurrency());
+
         autoRecurring.put(
                 "transaction_amount",
-                calculateInitialAmount(checkout)
+                settledInBrl
+                        ? checkout.getSettlementAmount()
+                        : calculateInitialAmount(checkout)
         );
 
         autoRecurring.put(
                 "currency_id",
-                checkout.getCurrency()
-                        .trim()
-                        .toUpperCase()
+                settledInBrl ? "BRL" : checkout.getCurrency().trim().toUpperCase()
         );
 
         Map<String, Object> body =

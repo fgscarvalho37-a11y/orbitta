@@ -242,8 +242,7 @@ export default function ProductPricing({
   const [loading, setLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
   const [market, setMarket] = useState<MarketCode>("BR");
-  const [billingCycle, setBillingCycle] =
-    useState<BillingCycle>("MONTHLY");
+  const [billingCycle] = useState<BillingCycle>("MONTHLY");
   const [expanded, setExpanded] = useState(false);
   const [contractingPlanId, setContractingPlanId] =
     useState<number | null>(null);
@@ -400,7 +399,7 @@ export default function ProductPricing({
 
     params.set(
       "billingCycle",
-      billingCycle
+      "MONTHLY"
     );
 
     params.set(
@@ -412,11 +411,6 @@ export default function ProductPricing({
       "displayCurrency",
       price.currency
     );
-
-    if (typeof window !== "undefined" &&
-        new URLSearchParams(window.location.search).get("bundle") === "1") {
-      params.set("customSiteIntegration", "1");
-    }
 
     router.push(
       `/checkout/start?${params.toString()}`
@@ -476,39 +470,10 @@ export default function ProductPricing({
 
           <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-white/40">
             {text(
-              "Escolha mensal ou anual. No anual você recebe 12 meses de acesso e paga o equivalente a 10 mensalidades.",
-              "Choose monthly or annual. The annual option gives you 12 months of access for the price of 10 monthly payments."
+              "Assinatura mensal, sem taxa de implantação ou pagamento avulso.",
+              "Monthly subscription, with no setup fee or one-time charge."
             )}
           </p>
-
-          <div className="mt-8 inline-flex rounded-full border border-white/[0.08] bg-black/20 p-1.5 backdrop-blur-xl">
-            <button
-              type="button"
-              onClick={() => setBillingCycle("MONTHLY")}
-              className={
-                billingCycle === "MONTHLY"
-                  ? "rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-[#07101c]"
-                  : "rounded-full px-5 py-2.5 text-xs text-white/40 transition hover:text-white/70"
-              }
-            >
-              {text("Mensal", "Monthly")}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setBillingCycle("ANNUAL")}
-              className={
-                billingCycle === "ANNUAL"
-                  ? "flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-[#07101c]"
-                  : "flex items-center gap-2 rounded-full px-5 py-2.5 text-xs text-white/40 transition hover:text-white/70"
-              }
-            >
-              {text("Anual", "Annual")}
-              <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-[9px] font-bold text-orange-700">
-                {text("Pague 10, use 12", "Pay 10, get 12")}
-              </span>
-            </button>
-          </div>
 
           <div className="mt-5 inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-white/25">
             <Globe2 size={12} />

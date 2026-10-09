@@ -462,11 +462,28 @@ public class AdminCatalogService {
                                 price
                         );
 
-        if (
-                "BR".equals(
-                        region
-                )
-        ) {
+        // PizzaSystem is one global nominal price: editing it in the admin
+        // propagates the exact number (not converted) to each market.
+        if ("pizzasystem".equalsIgnoreCase(plan.getProduct().getSlug())) {
+            for (String target : List.of("BR", "US", "GB", "EU", "AU", "CA")) {
+                if (target.equals(region)) continue;
+                CatalogPlanPrice translated = catalogPlanPriceRepository
+                        .findByPlanIdAndRegionCodeIgnoreCase(planId, target)
+                        .orElseGet(CatalogPlanPrice::new);
+                translated.setPlan(plan);
+                translated.setRegionCode(target);
+                translated.setCurrency(currencyForRegion(target));
+                translated.setMonthlyPrice(monthlyPrice);
+                translated.setRegularMonthlyPrice(regularMonthlyPrice);
+                translated.setSetupPrice(BigDecimal.ZERO);
+                translated.setActive(true);
+                translated.setDisplayOrder(displayOrderForRegion(target));
+                catalogPlanPriceRepository.save(translated);
+            }
+        }
+
+        if ("BR".equals(region) ||
+                "pizzasystem".equalsIgnoreCase(plan.getProduct().getSlug())) {
             plan.setMonthlyPrice(
                     monthlyPrice
             );

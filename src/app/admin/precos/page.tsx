@@ -64,6 +64,7 @@ type CommercialSettings = {
   customSiteIntegrationFeeUsd: number;
   standaloneSitePriceUsd: number;
   standaloneSiteMonthlyPriceUsd: number;
+  bundleMonthlyPriceUsd: number;
   currency: string;
   updatedAt: string | null;
 };
@@ -152,14 +153,8 @@ export default function AdminRegionalPricingPage() {
   const [success, setSuccess] =
     useState<string | null>(null);
 
-  const [
-    customSiteIntegrationFee,
-    setCustomSiteIntegrationFee,
-  ] =
-    useState("200");
-
-  const [standaloneSitePrice, setStandaloneSitePrice] = useState("0");
   const [standaloneSiteMonthlyPrice, setStandaloneSiteMonthlyPrice] = useState("0");
+  const [bundleMonthlyPrice, setBundleMonthlyPrice] = useState("0");
 
   const [
     savingCustomSiteFee,
@@ -230,9 +225,8 @@ export default function AdminRegionalPricingPage() {
             CommercialSettings =
             await commercialSettingsResponse.json();
 
-          setCustomSiteIntegrationFee(moneyInput(commercialSettings.customSiteIntegrationFeeUsd));
-          setStandaloneSitePrice(moneyInput(commercialSettings.standaloneSitePriceUsd ?? 0));
           setStandaloneSiteMonthlyPrice(moneyInput(commercialSettings.standaloneSiteMonthlyPriceUsd ?? 0));
+          setBundleMonthlyPrice(moneyInput(commercialSettings.bundleMonthlyPriceUsd ?? 0));
         }
 
         const nextDrafts:
@@ -461,121 +455,38 @@ export default function AdminRegionalPricingPage() {
     }
   }
 
-  async function saveCustomSiteIntegrationFee() {
-    const value =
-      parseMoney(
-        customSiteIntegrationFee
-      );
-
-    if (
-      Number.isNaN(
-        value
-      ) ||
-      value < 0
-    ) {
-      setError(
-        text(
-          "Informe uma taxa de integração válida.",
-          "Enter a valid integration fee."
-        )
-      );
+  async function saveMonthlyPlanPricing() {
+    const siteMonthly = parseMoney(standaloneSiteMonthlyPrice);
+    const bundleMonthly = parseMoney(bundleMonthlyPrice);
+    if (!Number.isFinite(siteMonthly) || siteMonthly < 0 ||
+        !Number.isFinite(bundleMonthly) || bundleMonthly < 0) {
+      setError(text("Informe mensalidades válidas.", "Enter valid monthly prices."));
       return;
     }
-
-    const siteValue = parseMoney(standaloneSitePrice);
-    const siteMonthlyValue = parseMoney(standaloneSiteMonthlyPrice);
-    if (!Number.isFinite(siteValue) || siteValue < 0) {
-      setError(text("Informe um preço válido para o site avulso.", "Enter a valid standalone website price."));
-      return;
-    }
-
-    if (!Number.isFinite(siteMonthlyValue) || siteMonthlyValue < 0) {
-      setError(text("Informe uma mensalidade válida para o site.", "Enter a valid monthly website price."));
-      return;
-    }
-
     try {
-      setSavingCustomSiteFee(
-        true
-      );
+      setSavingCustomSiteFee(true);
       setError(null);
       setSuccess(null);
-
-      const response =
-        await secureFetch(
-          `${API_URL}/api/admin/commercial-settings`,
-          {
-            method: "PUT",
-            credentials:
-              "include",
-            headers: {
-              "Content-Type":
-                "application/json",
-              Accept:
-                "application/json",
-            },
-            body:
-              JSON.stringify({
-                customSiteIntegrationFeeUsd:
-                  value,
-                standaloneSitePriceUsd: siteValue,
-                standaloneSiteMonthlyPriceUsd: siteMonthlyValue,
-              }),
-          }
-        );
-
+      const response = await secureFetch(`${API_URL}/api/admin/commercial-settings`, {
+        method: "PUT", credentials: "include",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          standaloneSiteMonthlyPriceUsd: siteMonthly,
+          bundleMonthlyPriceUsd: bundleMonthly,
+        }),
+      });
       if (!response.ok) {
-        let message =
-          text(
-            "Não foi possível salvar a taxa de integração.",
-            "Could not save the integration fee."
-          );
-
-        try {
-          const data =
-            await response.json();
-
-          message =
-            data.message ??
-            data.error ??
-            message;
-        } catch {
-        }
-
-        throw new Error(
-          message
-        );
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.message ?? text("Não foi possível salvar as mensalidades.", "Could not save monthly prices."));
       }
-
-      const updated:
-        CommercialSettings =
-        await response.json();
-
-      setCustomSiteIntegrationFee(moneyInput(updated.customSiteIntegrationFeeUsd));
-      setStandaloneSitePrice(moneyInput(updated.standaloneSitePriceUsd ?? 0));
+      const updated: CommercialSettings = await response.json();
       setStandaloneSiteMonthlyPrice(moneyInput(updated.standaloneSiteMonthlyPriceUsd ?? 0));
-
-      setSuccess(
-        text(
-          "Taxa de integração do site atualizada.",
-          "Custom site integration fee updated."
-        )
-      );
-    } catch (
-      caught
-    ) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : text(
-              "Não foi possível salvar.",
-              "Could not save."
-            )
-      );
+      setBundleMonthlyPrice(moneyInput(updated.bundleMonthlyPriceUsd ?? 0));
+      setSuccess(text("Mensalidades atualizadas.", "Monthly plan prices updated."));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : text("Erro ao salvar.", "Could not save."));
     } finally {
-      setSavingCustomSiteFee(
-        false
-      );
+      setSavingCustomSiteFee(false);
     }
   }
 
@@ -642,121 +553,37 @@ export default function AdminRegionalPricingPage() {
         </header>
 
         <section className="mt-6 rounded-[28px] border border-violet-300/[0.1] bg-[#08101d] p-6">
-          <div className="mb-5 rounded-xl border border-white/[0.06] bg-white/[0.025] p-4">
-            <label className="block text-xs text-white/65">
-              {text("Site avulso — implantação em USD (opcional)", "Standalone website — setup fee in USD (optional)")}
+          <div className="flex items-center gap-3 text-xs uppercase tracking-wider text-cyan-100/65">
+            <CircleDollarSign size={17} />
+            {text("Os três planos são mensais", "All three plans are monthly")}
+          </div>
+          <h2 className="mt-3 text-xl font-semibold text-white/90">
+            {text("Mensalidades independentes", "Independent monthly subscriptions")}
+          </h2>
+          <p className="mt-3 text-xs leading-6 text-white/40">
+            {text("Defina os valores de Site e Site + PizzaSystem. A mensalidade individual do PizzaSystem é configurada por região mais abaixo. Nenhum plano tem taxa inicial ou cobrança única.",
+              "Set Website and Website + PizzaSystem prices. PizzaSystem-only pricing is configured by region below. No plan charges a setup fee or one-time payment.")}
+          </p>
+          <div className="mt-7 grid gap-5 lg:grid-cols-2">
+            <label className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5">
+              <span className="block text-xs font-medium text-white/80">{text("Site — mensalidade (USD)", "Website — monthly (USD)")}</span>
+              <input inputMode="decimal" value={standaloneSiteMonthlyPrice}
+                onChange={(event) => setStandaloneSiteMonthlyPrice(event.target.value)}
+                className="mt-3 h-11 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-white outline-none"/>
             </label>
-            <input
-              inputMode="decimal"
-              aria-label={text("Preço do site avulso", "Standalone website price")}
-              value={standaloneSitePrice}
-              onChange={(event) => setStandaloneSitePrice(event.target.value)}
-              className="mt-2 h-11 w-full max-w-xs rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 text-sm text-white outline-none"
-            />
-            <p className="mt-2 text-xs text-white/40">
-              {text("A implantação é cobrada no primeiro pagamento, quando configurada.", "The setup fee is charged with the first payment, if configured.")}
-            </p>
-          </div>
-          <div className="mb-5 rounded-xl border border-white/[0.06] bg-white/[0.025] p-4">
-            <label className="block text-xs text-white/65">
-              {text("Mensalidade do site em USD (0 = sem recorrência)", "Website monthly price in USD (0 = no recurring charge)")}
+            <label className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.025] p-5">
+              <span className="block text-xs font-medium text-white/80">{text("Site + PizzaSystem — mensalidade (USD)", "Website + PizzaSystem — monthly (USD)")}</span>
+              <input inputMode="decimal" value={bundleMonthlyPrice}
+                onChange={(event) => setBundleMonthlyPrice(event.target.value)}
+                className="mt-3 h-11 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-white outline-none"/>
             </label>
-            <input
-              inputMode="decimal"
-              value={standaloneSiteMonthlyPrice}
-              onChange={(event) => setStandaloneSiteMonthlyPrice(event.target.value)}
-              className="mt-2 h-11 w-full max-w-xs rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 text-sm text-white outline-none"
-            />
-            <p className="mt-2 text-xs text-white/40">
-              {text("Você decide: mensalidade, implantação, ou os dois. Sem valor configurado, novas compras ficam bloqueadas.", "You decide: monthly charge, setup fee, or both. Checkout stays unavailable until pricing is set.")}
-            </p>
           </div>
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-violet-200/45">
-                <CircleDollarSign
-                  size={13}
-                />
-                {text(
-                  "Sites personalizados",
-                  "Custom websites"
-                )}
-              </div>
-
-              <h2 className="mt-2 text-xl font-semibold text-white/85">
-                {text(
-                  "Taxa de integração com PizzaSystem",
-                  "PizzaSystem integration fee"
-                )}
-              </h2>
-
-              <p className="mt-2 max-w-2xl text-xs leading-6 text-white/30">
-                {text(
-                  "Taxa inicial aplicada quando um site personalizado é integrado ao PizzaSystem. O preço recorrente do site avulso é configurado separadamente acima.",
-                  "Initial setup charge for integrating a custom website with PizzaSystem. Standalone website monthly pricing is configured separately above."
-                )}
-              </p>
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-[170px_auto]">
-              <label>
-                <span className="text-[9px] uppercase tracking-[0.13em] text-white/25">
-                  {text(
-                    "Taxa em USD",
-                    "Fee in USD"
-                  )}
-                </span>
-
-                <div className="mt-2 flex h-11 items-center rounded-xl border border-white/[0.07] bg-white/[0.025] px-3">
-                  <span className="mr-2 text-xs font-semibold text-white/30">
-                    US$
-                  </span>
-
-                  <input
-                    inputMode="decimal"
-                    value={
-                      customSiteIntegrationFee
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      setCustomSiteIntegrationFee(
-                        event.target.value
-                      )
-                    }
-                    className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none"
-                  />
-                </div>
-              </label>
-
-              <button
-                type="button"
-                onClick={() =>
-                  void saveCustomSiteIntegrationFee()
-                }
-                disabled={
-                  savingCustomSiteFee
-                }
-                className="mt-auto flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-xs font-semibold text-[#07101c] transition hover:bg-violet-50 disabled:opacity-50"
-              >
-                {savingCustomSiteFee ? (
-                  <Loader2
-                    size={13}
-                    className="animate-spin"
-                  />
-                ) : (
-                  <Save
-                    size={13}
-                  />
-                )}
-
-                {text(
-                  "Salvar taxa",
-                  "Save fee"
-                )}
-              </button>
-            </div>
-          </div>
+          <button type="button" disabled={savingCustomSiteFee}
+            onClick={() => void saveMonthlyPlanPricing()}
+            className="mt-5 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-6 text-xs font-semibold text-[#07101c] disabled:opacity-50">
+            {savingCustomSiteFee ? <Loader2 size={15} className="animate-spin"/> : <Save size={15}/>}
+            {text("Salvar mensalidades", "Save monthly prices")}
+          </button>
         </section>
 
         <div className="mt-6 rounded-2xl border border-cyan-300/[0.08] bg-cyan-300/[0.025] px-5 py-4 text-xs leading-6 text-white/35">

@@ -1,446 +1,65 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowRight,
-  BadgeCheck,
-  Code2,
-  Gauge,
-  Globe2,
-  LayoutTemplate,
-  MonitorSmartphone,
-  Search,
-  ShoppingBag,
-  Sparkles,
-} from "lucide-react";
-import { motion } from "motion/react";
-
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { ArrowRight, Check, Globe2, LayoutTemplate, MessageSquareText, ShieldCheck } from "lucide-react";
+import Header from "@/components/Header";
 import { useLanguage } from "@/i18n/LanguageProvider";
-
-const quoteUrl =
-  "/orcamento";
-
-const features = [
-  {
-    icon: LayoutTemplate,
-    pt: "Design exclusivo",
-    en: "Custom design",
-  },
-  {
-    icon: MonitorSmartphone,
-    pt: "Responsivo e mobile-first",
-    en: "Responsive and mobile-first",
-  },
-  {
-    icon: Gauge,
-    pt: "Carregamento rápido",
-    en: "Fast loading",
-  },
-  {
-    icon: Search,
-    pt: "SEO básico",
-    en: "Basic SEO",
-  },
-  {
-    icon: Globe2,
-    pt: "Domínio personalizado",
-    en: "Custom domain",
-  },
-  {
-    icon: Code2,
-    pt: "Integrações sob medida",
-    en: "Custom integrations",
-  },
-];
+import { useCommercialSettings } from "@/hooks/useCommercialSettings";
 
 export default function StandaloneSitesPage() {
-  const {
-    text,
-  } =
-    useLanguage();
-
+  const { locale, text } = useLanguage();
+  const { standaloneSitePriceUsd, standaloneSiteMonthlyPriceUsd } = useCommercialSettings();
+  const setup = Number(standaloneSitePriceUsd ?? 0);
+  const monthly = Number(standaloneSiteMonthlyPriceUsd ?? 0);
+  const money = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "USD" }).format(n);
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#050914] text-white">
-      <header className="border-b border-white/[0.06]">
-        <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-6 lg:px-12">
-          <Link
-            href="/"
-            className="group flex items-center gap-3 text-sm text-white/50 transition hover:text-white"
-          >
-            <ArrowLeft
-              size={16}
-              className="transition-transform group-hover:-translate-x-1"
-            />
-            Orbitta Space
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher compact />
-
-            <Link
-              href={
-                quoteUrl
-              }
-              className="hidden rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-[#07101c] transition hover:bg-cyan-50 sm:inline-flex"
-            >
-              {text(
-                "Solicitar orçamento",
-                "Request a quote"
-              )}
+    <main className="min-h-screen bg-[#050914] text-white">
+      <Header />
+      <section className="relative overflow-hidden px-6 pb-24 pt-14 lg:px-12 lg:pt-24">
+        <div className="pointer-events-none absolute right-0 top-0 h-96 w-96 rounded-full bg-cyan-300/5 blur-3xl" />
+        <div className="relative mx-auto max-w-[1200px]">
+          <p className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-cyan-200/60"><LayoutTemplate size={16} /> Orbitta Websites</p>
+          <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-tight tracking-[-0.06em] sm:text-7xl">
+            {text("Um site com a sua identidade.", "A website that feels like your brand.")}
+          </h1>
+          <p className="mt-7 max-w-2xl text-lg leading-8 text-white/50">
+            {text("Criamos sites profissionais, responsivos e pensados para seu negócio. Escolha a proposta, realize o pagamento e converse diretamente conosco em um espaço privado.",
+              "We build professional, responsive websites tailored to your business. Purchase online, then collaborate with us in your private project space.")}
+          </p>
+          <div className="mt-10 flex flex-wrap gap-3">
+            <Link href="/site-checkout" className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[#07101c] hover:bg-cyan-100">
+              {text("Contratar meu site", "Order my website")} <ArrowRight size={17} />
+            </Link>
+            <Link href="/#planos" className="inline-flex items-center gap-2 rounded-full border border-white/15 px-7 py-3.5 text-sm text-white/70 hover:text-white">
+              {text("Comparar planos", "Compare plans")}
             </Link>
           </div>
         </div>
-      </header>
-
-      <section className="relative">
-        <div className="orbitta-grid absolute inset-0 opacity-20" />
-
-        <div className="relative mx-auto max-w-[1440px] px-6 pb-24 pt-20 lg:px-12 lg:pb-32 lg:pt-28">
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 24,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              duration: 0.65,
-            }}
-            className="max-w-5xl"
-          >
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/10 bg-cyan-300/[0.04] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200/70">
-              <Sparkles
-                size={13}
-              />
-              {text(
-                "Sites avulsos",
-                "Standalone websites"
-              )}
-            </div>
-
-            <h1 className="mt-7 text-[clamp(3.7rem,8vw,8.5rem)] font-semibold leading-[0.9] tracking-[-0.065em]">
-              {text(
-                "Seu site. Sua marca. Sem depender de um SaaS.",
-                "Your website. Your brand. Without depending on a SaaS."
-              )}
-            </h1>
-
-            <p className="mt-7 max-w-3xl text-lg leading-8 text-white/45">
-              {text(
-                "A Orbitta também cria sites avulsos para restaurantes, lojas, profissionais e empresas que precisam de uma presença digital própria — mesmo sem contratar o PizzaSystem.",
-                "Orbitta also builds standalone websites for restaurants, stores, professionals and companies that need their own digital presence — even without subscribing to PizzaSystem."
-              )}
-            </p>
-          </motion.div>
-
-          <div className="mt-14 grid gap-5 lg:grid-cols-2">
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: 24,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-              }}
-              className="rounded-[32px] border border-white/[0.07] bg-white/[0.02] p-7 sm:p-9"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.03] text-white/55">
-                <Globe2
-                  size={21}
-                />
-              </div>
-
-              <p className="mt-7 text-xs uppercase tracking-[0.2em] text-white/30">
-                {text(
-                  "Site avulso",
-                  "Standalone website"
-                )}
-              </p>
-
-              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
-                {text(
-                  "Projeto independente.",
-                  "Independent project."
-                )}
-              </h2>
-
-              <p className="mt-4 text-sm leading-7 text-white/40">
-                {text(
-                  "Ideal para quem quer um site profissional sem usar o PizzaSystem. O valor depende do número de páginas, conteúdo, integrações e domínio.",
-                  "Ideal for businesses that want a professional website without PizzaSystem. Pricing depends on pages, content, integrations and domain."
-                )}
-              </p>
-
-              <div className="mt-7 rounded-2xl border border-white/[0.06] bg-[#08101d] p-5">
-                <p className="text-xs uppercase tracking-[0.16em] text-white/28">
-                  {text(
-                    "Preço",
-                    "Pricing"
-                  )}
-                </p>
-
-                <p className="mt-2 text-2xl font-semibold">
-                  {text(
-                    "Sob orçamento",
-                    "Custom quote"
-                  )}
-                </p>
-
-                <p className="mt-2 text-xs leading-5 text-white/32">
-                  {text(
-                    "Sem obrigatoriedade de contratar o PizzaSystem.",
-                    "No PizzaSystem subscription required."
-                  )}
-                </p>
-              </div>
-
-              <Link
-                href={
-                  quoteUrl
-                }
-                className="group mt-7 inline-flex items-center gap-3 rounded-full border border-white/[0.1] bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white/75 transition hover:bg-white/[0.08] hover:text-white"
-              >
-                {text(
-                  "Pedir orçamento",
-                  "Request a quote"
-                )}
-                <ArrowRight
-                  size={15}
-                  className="transition-transform group-hover:translate-x-1"
-                />
-              </Link>
-            </motion.div>
-
-            <motion.div
-              initial={{
-                opacity: 0,
-                y: 24,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-              }}
-              viewport={{
-                once: true,
-              }}
-              transition={{
-                delay: 0.08,
-              }}
-              className="relative overflow-hidden rounded-[32px] border border-cyan-300/15 bg-[#08101d] p-7 shadow-[0_35px_100px_rgba(0,0,0,0.3)] sm:p-9"
-            >
-              <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-cyan-400/[0.06] blur-[80px]" />
-
-              <div className="relative">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/12 bg-cyan-300/[0.05] text-cyan-200/80">
-                  <ShoppingBag
-                    size={21}
-                  />
-                </div>
-
-                <p className="mt-7 text-xs uppercase tracking-[0.2em] text-cyan-300/55">
-                  {text(
-                    "Site + PizzaSystem",
-                    "Website + PizzaSystem"
-                  )}
-                </p>
-
-                <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
-                  {text(
-                    "Design exclusivo conectado à operação.",
-                    "Custom design connected to your operation."
-                  )}
-                </h2>
-
-                <p className="mt-4 text-sm leading-7 text-white/45">
-                  {text(
-                    "A Orbitta conecta o site personalizado ao mesmo cardápio, pedidos e pagamentos do PizzaSystem, sem duplicar o backend.",
-                    "Orbitta connects the custom website to the same PizzaSystem menu, orders and payments without duplicating the backend."
-                  )}
-                </p>
-
-                <div className="mt-7 rounded-2xl border border-cyan-300/10 bg-cyan-300/[0.035] p-5">
-                  <p className="text-xs uppercase tracking-[0.16em] text-cyan-200/45">
-                    {text(
-                      "Integração opcional",
-                      "Optional integration"
-                    )}
-                  </p>
-
-                  <p className="mt-3 text-sm leading-6 text-white/45">
-                    {text(
-                      "Se você contratar o PizzaSystem, poderá adicionar o site personalizado durante a compra. O valor da integração aparece somente nessa etapa.",
-                      "If you subscribe to PizzaSystem, you can add the custom website during purchase. The integration price appears only at that step."
-                    )}
-                  </p>
-                </div>
-
-                <div className="mt-5 rounded-2xl border border-white/[0.06] p-5">
-                  <p className="text-xs font-semibold text-white/70">
-                    {text(
-                      "Importante",
-                      "Important"
-                    )}
-                  </p>
-
-                  <p className="mt-2 text-xs leading-5 text-white/35">
-                    {text(
-                      "O site padrão do PizzaSystem continua incluído no plano. O adicional personalizado só é apresentado no momento da compra.",
-                      "The standard PizzaSystem website remains included with the plan. The custom add-on is shown only during purchase."
-                    )}
-                  </p>
-                </div>
-
-                <Link
-                  href="/produtos/pizzasystem#planos"
-                  className="group mt-7 inline-flex items-center gap-3 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
-                >
-                  {text(
-                    "Ver PizzaSystem",
-                    "View PizzaSystem"
-                  )}
-                  <ArrowRight
-                    size={15}
-                    className="transition-transform group-hover:translate-x-1"
-                  />
-                </Link>
-              </div>
-            </motion.div>
-          </div>
-        </div>
       </section>
-
-      <section className="border-y border-white/[0.06]">
-        <div className="mx-auto max-w-[1440px] px-6 py-24 lg:px-12 lg:py-32">
-          <div className="max-w-3xl">
-            <p className="text-xs uppercase tracking-[0.25em] text-cyan-300/55">
-              {text(
-                "Incluído no projeto",
-                "Included"
-              )}
-            </p>
-
-            <h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">
-              {text(
-                "Um site feito para vender melhor sua marca.",
-                "A website built to present and sell your brand better."
-              )}
-            </h2>
-          </div>
-
-          <div className="mt-12 grid gap-px overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.06] sm:grid-cols-2 lg:grid-cols-3">
-            {features.map(
-              (
-                feature
-              ) => {
-                const Icon =
-                  feature.icon;
-
-                return (
-                  <div
-                    key={
-                      feature.pt
-                    }
-                    className="bg-[#050914] p-8"
-                  >
-                    <Icon
-                      size={20}
-                      className="text-cyan-200/65"
-                    />
-
-                    <p className="mt-6 text-lg font-medium">
-                      {text(
-                        feature.pt,
-                        feature.en
-                      )}
-                    </p>
-                  </div>
-                );
-              }
-            )}
-          </div>
-
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {[
-              text(
-                "Site institucional ou landing page",
-                "Business website or landing page"
-              ),
-              text(
-                "WhatsApp, telefone e redes sociais",
-                "WhatsApp, phone and social links"
-              ),
-              text(
-                "Mapa, endereço e horários",
-                "Map, address and opening hours"
-              ),
-              text(
-                "Galeria, serviços, produtos e chamadas para ação",
-                "Gallery, services, products and calls to action"
-              ),
-            ].map(
-              (
-                item
-              ) => (
-                <div
-                  key={
-                    item
-                  }
-                  className="flex items-center gap-3 rounded-2xl border border-white/[0.06] px-4 py-3.5 text-sm text-white/42"
-                >
-                  <BadgeCheck
-                    size={16}
-                    className="shrink-0 text-cyan-200/65"
-                  />
-                  {item}
-                </div>
-              )
-            )}
-          </div>
-        </div>
+      <section className="mx-auto grid max-w-[1200px] gap-5 px-6 pb-24 lg:grid-cols-3 lg:px-12">
+        {[
+          { Icon: Globe2, title: text("Sua presença digital", "Your online presence"), description: text("Visual profissional, páginas responsivas, formulário e contato.", "Professional visuals, responsive pages, contact details and forms.") },
+          { Icon: MessageSquareText, title: text("Conversa direta", "Direct collaboration"), description: text("Após a compra, envie referências e fale com a Orbitta sobre cada etapa.", "After checkout, send your references and message Orbitta about every step.") },
+          { Icon: ShieldCheck, title: text("Entrega organizada", "Organized delivery"), description: text("Acompanhe o projeto e receba o link do seu site na área do cliente.", "Track the project and receive your website URL in your client dashboard.") },
+        ].map(({ Icon, title, description }) => (
+          <article key={title} className="rounded-[26px] border border-white/[0.08] bg-[#0b1321] p-7">
+            <Icon className="text-cyan-200/70" size={26} />
+            <h2 className="mt-6 text-xl font-semibold">{title}</h2>
+            <p className="mt-3 text-sm leading-7 text-white/45">{description}</p>
+          </article>
+        ))}
       </section>
-
-      <section className="mx-auto max-w-[1440px] px-6 py-24 lg:px-12 lg:py-32">
-        <div className="rounded-[34px] border border-white/[0.07] bg-[#08101d] p-8 sm:p-12">
-          <p className="text-xs uppercase tracking-[0.22em] text-white/30">
-            Orbitta Sites
-          </p>
-
-          <h2 className="mt-5 max-w-4xl text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">
-            {text(
-              "Quer só o site? Tudo bem. Quer conectar ao PizzaSystem? Também.",
-              "Need only the website? That's fine. Want PizzaSystem connected too? We can do that."
-            )}
-          </h2>
-
-          <p className="mt-5 max-w-2xl text-base leading-7 text-white/40">
-            {text(
-              "O projeto é montado de acordo com o seu negócio. Você escolhe o site avulso ou a integração completa.",
-              "The project is shaped around your business. Choose a standalone website or the full integration."
-            )}
-          </p>
-
-          <Link
-            href={
-              quoteUrl
-            }
-            className="group mt-8 inline-flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
-          >
-            {text(
-              "Solicitar orçamento",
-              "Request a quote"
-            )}
-            <ArrowRight
-              size={16}
-              className="transition-transform group-hover:translate-x-1"
-            />
+      <section className="border-t border-white/10 px-6 py-24">
+        <div className="mx-auto max-w-3xl rounded-[32px] border border-cyan-300/15 bg-[#0b1423] p-8 sm:p-10">
+          <p className="text-xs uppercase tracking-widest text-cyan-100/60">{text("Valores configurados pela Orbitta", "Pricing managed by Orbitta")}</p>
+          <h2 className="mt-4 text-3xl font-semibold">{text("Escolha o site que seu negócio merece.", "Bring your next website online.")}</h2>
+          <div className="mt-7 space-y-3 text-sm text-white/65">
+            {monthly > 0 && <p className="flex items-center gap-3"><Check size={15} className="text-cyan-200" />{money(monthly)} {text("/ mês", "/ month")}</p>}
+            {setup > 0 && <p className="flex items-center gap-3"><Check size={15} className="text-cyan-200" />{text("Implantação:", "Setup fee:")} {money(setup)}</p>}
+            {!monthly && !setup && <p>{text("Os valores estão sendo configurados.", "Pricing is being configured.")}</p>}
+          </div>
+          <Link href="/site-checkout" className="mt-8 inline-flex items-center gap-2 rounded-full bg-cyan-200 px-7 py-3.5 text-sm font-semibold text-[#07101c]">
+            {text("Ir para o checkout", "Go to checkout")} <ArrowRight size={16} />
           </Link>
         </div>
       </section>

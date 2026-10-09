@@ -692,8 +692,8 @@ export default function AdminRegionalPricingPage() {
 
               <p className="mt-2 max-w-2xl text-xs leading-6 text-white/30">
                 {text(
-                  "Cobrada uma única vez somente quando um site personalizado é integrado ao PizzaSystem. O site padrão do PizzaSystem continua sem essa taxa.",
-                  "Charged once only when a custom website is integrated with PizzaSystem. The standard PizzaSystem website keeps no such fee."
+                  "Taxa inicial aplicada quando um site personalizado é integrado ao PizzaSystem. O preço recorrente do site avulso é configurado separadamente acima.",
+                  "Initial setup charge for integrating a custom website with PizzaSystem. Standalone website monthly pricing is configured separately above."
                 )}
               </p>
             </div>

@@ -25,13 +25,6 @@ type RegionalPrice = {
 type Product = { id: number; slug: string; active: boolean; plans: { id: number; active: boolean; regionalPrices: RegionalPrice[] }[] };
 type Draft = { price: string; regularPrice: string; descriptionPt: string; descriptionEn: string; featuresPt: string; featuresEn: string };
 type ContentKey = Exclude<keyof Settings, "standaloneSiteMonthlyPriceUsd" | "bundleMonthlyPriceUsd" | "siteRegularMonthlyPriceUsd" | "bundleRegularMonthlyPriceUsd">;
-const MARKETS = [
-  { code: "BR", currency: "BRL", pt: "Brasil", en: "Brazil" },
-  { code: "US", currency: "USD", pt: "Estados Unidos", en: "United States" },
-  { code: "GB", currency: "GBP", pt: "Reino Unido", en: "United Kingdom" },
-  { code: "AU", currency: "AUD", pt: "Austrália", en: "Australia" },
-  { code: "EU", currency: "EUR", pt: "Europa", en: "Europe" },
-] as const;
 const DEFAULTS: Record<PlanKey, Omit<Draft, "price" | "regularPrice">> = {
   site: {
     descriptionPt: "Um site profissional criado para representar sua marca.",
@@ -70,7 +63,7 @@ export default function OrbittaFixedPlansAdmin() {
   const { text } = useLanguage();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [region, setRegion] = useState("US");
+  const region = "US"; // US is the canonical number; all markets mirror it.
   const [drafts, setDrafts] = useState<Record<PlanKey, Draft>>({
     site: EMPTY("site"), pizza: EMPTY("pizza"), bundle: EMPTY("bundle"),
   });
@@ -81,7 +74,7 @@ export default function OrbittaFixedPlansAdmin() {
 
   const pizzaPlan = products.find((p) => p.slug === "pizzasystem" && p.active)?.plans.find((p) => p.active);
   const regional = pizzaPlan?.regionalPrices?.find((p) => p.regionCode === region);
-  const market = MARKETS.find((m) => m.code === region) ?? MARKETS[1];
+
 
   const load = useCallback(async () => {
     setLoading(true); setError(""); setSuccess("");
@@ -121,15 +114,6 @@ export default function OrbittaFixedPlansAdmin() {
 
   useEffect(() => { void load(); }, [load]);
 
-  function changeMarket(value: string) {
-    setRegion(value);
-    const plan = products.find(p => p.slug === "pizzasystem" && p.active)?.plans.find(p => p.active);
-    const pricing = plan?.regionalPrices.find(p => p.regionCode === value);
-    setDrafts(current => ({ ...current, pizza: {
-      ...current.pizza, price: inputPrice(pricing?.monthlyPrice),
-      regularPrice: inputPrice(pricing?.regularMonthlyPrice),
-    } }));
-  }
   function edit(key: PlanKey, field: keyof Draft, value: string) {
     setDrafts(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
     setSuccess("");
@@ -213,9 +197,9 @@ export default function OrbittaFixedPlansAdmin() {
   }
 
   const cards = [
-    { key: "site" as PlanKey, name: text("Site", "Website"), desc: text("Site avulso", "Standalone website"), currency: "USD", Icon: LayoutTemplate },
-    { key: "pizza" as PlanKey, name: "PizzaSystem", desc: text("Sistema de pedidos", "Online ordering"), currency: market.currency, Icon: Pizza },
-    { key: "bundle" as PlanKey, name: text("Site + PizzaSystem", "Website + PizzaSystem"), desc: text("Pacote completo", "Complete bundle"), currency: "USD", Icon: Layers3 },
+    { key: "site" as PlanKey, name: text("Site", "Website"), desc: text("Site avulso", "Standalone website"), currency: text("preço global", "global number"), Icon: LayoutTemplate },
+    { key: "pizza" as PlanKey, name: "PizzaSystem", desc: text("Sistema de pedidos", "Online ordering"), currency: text("preço global", "global number"), Icon: Pizza },
+    { key: "bundle" as PlanKey, name: text("Site + PizzaSystem", "Website + PizzaSystem"), desc: text("Pacote completo", "Complete bundle"), currency: text("preço global", "global number"), Icon: Layers3 },
   ];
   return (
     <main className="mx-auto max-w-[1460px] px-6 pb-24 pt-12 text-white lg:px-12">
@@ -250,16 +234,15 @@ export default function OrbittaFixedPlansAdmin() {
                 <p className="mt-2 text-xs text-white/45">{desc}</p>
               </div>
               <div className="space-y-5 p-6">
-                {key === "pizza" && <>
-                  <label className="block text-xs font-semibold text-white/65">{text("Região do preço", "Price region")}</label>
-                  <select value={region} onChange={(event) => changeMarket(event.target.value)}
-                    className="h-11 w-full rounded-xl border border-white/10 bg-[#111c2a] px-3 text-sm text-white">
-                    {MARKETS.map(m => <option key={m.code} value={m.code}>{text(m.pt, m.en)} ({m.currency})</option>)}
-                  </select>
-                  {!pizzaPlan && <p className="flex gap-2 text-xs leading-5 text-amber-100/70"><CircleHelp size={15} className="shrink-0" />
-                    {text("Ative o plano PizzaSystem no catálogo existente para liberar o preço regional.",
-                      "Activate the existing PizzaSystem catalog plan to enable regional pricing.")}</p>}
-                </>}
+                {key === "pizza" && !pizzaPlan && (
+                  <p className="flex gap-2 text-xs leading-5 text-amber-100/70"><CircleHelp size={15} className="shrink-0" />
+                    {text("Ative o plano PizzaSystem no catálogo existente.", "Activate the PizzaSystem plan in the catalog.")}
+                  </p>
+                )}
+                <p className="text-[11px] leading-5 text-cyan-200/70">
+                  {text("O número é igual em todos os países: 99 BRL, 99 USD, 99 GBP, 99 EUR, 99 AUD e 99 CAD. O admin atualiza todas as regiões.",
+                    "The number is identical in all countries: 99 BRL, 99 USD, 99 GBP, 99 EUR, 99 AUD and 99 CAD. The admin updates all regions.")}
+                </p>
                 <label className="block">
                   <span className="text-xs font-medium text-white/65">{text("Mensalidade", "Monthly price")} ({currency})</span>
                   <input inputMode="decimal" value={draft.price} onChange={event => edit(key, "price", event.target.value)}

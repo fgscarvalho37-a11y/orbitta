@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public record UpdateCommercialSettingsRequest(
         BigDecimal customSiteIntegrationFeeUsd,
-        BigDecimal standaloneSitePriceUsd
+        BigDecimal standaloneSitePriceUsd,
+        BigDecimal standaloneSiteMonthlyPriceUsd
 ) {
 }

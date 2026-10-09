@@ -8,6 +8,18 @@ public record CommercialSettingsResponse(
         BigDecimal standaloneSitePriceUsd,
         BigDecimal standaloneSiteMonthlyPriceUsd,
         BigDecimal bundleMonthlyPriceUsd,
+        String siteDescriptionPt,
+        String siteDescriptionEn,
+        String siteFeaturesPt,
+        String siteFeaturesEn,
+        String pizzaDescriptionPt,
+        String pizzaDescriptionEn,
+        String pizzaFeaturesPt,
+        String pizzaFeaturesEn,
+        String bundleDescriptionPt,
+        String bundleDescriptionEn,
+        String bundleFeaturesPt,
+        String bundleFeaturesEn,
         String currency,
         LocalDateTime updatedAt
 ) {

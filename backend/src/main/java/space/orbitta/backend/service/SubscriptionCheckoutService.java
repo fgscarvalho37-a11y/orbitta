@@ -207,7 +207,8 @@ public class SubscriptionCheckoutService {
          * da oferta internacional USD já cadastrada.
          */
         if (
-                ("EUR".equals(requestedDisplayCurrency) ||
+                ("BRL".equals(requestedDisplayCurrency) ||
+                 "EUR".equals(requestedDisplayCurrency) ||
                  "GBP".equals(requestedDisplayCurrency) ||
                  "AUD".equals(requestedDisplayCurrency)) &&
                 "USD".equalsIgnoreCase(currency)

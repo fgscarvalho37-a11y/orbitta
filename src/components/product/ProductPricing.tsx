@@ -322,31 +322,23 @@ export default function ProductPricing({
   ): RegionalPrice | null {
     const prices = plan.regionalPrices ?? [];
 
-    const regional = prices.find(
-      (price) =>
-        price.active &&
-        price.regionCode === market
+    // Price is nominally identical in every market; always use the
+    // active USD base and tell checkout the target currency. Do not
+    // accidentally quote a different amount from a stale regional row.
+    const globalPrice = prices.find(
+      price => price.active && price.regionCode === "US" &&
+        price.currency.toUpperCase() === "USD"
     );
-
-    if (regional) {
-      return regional;
+    if (globalPrice) {
+      return {
+        ...globalPrice,
+        currency: market === "BR" ? "BRL" : market === "GB" ? "GBP" :
+          market === "EU" ? "EUR" : market === "AU" ? "AUD" :
+          market === "CA" ? "CAD" : "USD",
+      };
     }
-
-    if (market === "BR" || market === "GB" || market === "EU" || market === "AU" || market === "CA") {
-      const internationalPrice = prices.find(
-        (price) =>
-          price.active &&
-          price.regionCode === "US" &&
-          price.currency.toUpperCase() === "USD"
-      );
-
-      if (internationalPrice) {
-        return {
-          ...internationalPrice,
-          currency: market === "BR" ? "BRL" : market === "GB" ? "GBP" : market === "EU" ? "EUR" : market === "AU" ? "AUD" : "USD",
-        };
-      }
-    }
+    const regional = prices.find(price => price.active && price.regionCode === market);
+    if (regional) return regional;
 
     if (market === "BR" && prices.length === 0) {
       return {

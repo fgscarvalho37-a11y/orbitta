@@ -400,7 +400,7 @@ export default function ProductPricing({
 
     params.set(
       "billingCycle",
-      billingCycle
+      "MONTHLY"
     );
 
     params.set(
@@ -412,11 +412,6 @@ export default function ProductPricing({
       "displayCurrency",
       price.currency
     );
-
-    if (typeof window !== "undefined" &&
-        new URLSearchParams(window.location.search).get("bundle") === "1") {
-      params.set("customSiteIntegration", "1");
-    }
 
     router.push(
       `/checkout/start?${params.toString()}`

@@ -246,7 +246,7 @@ export default function CheckoutStartPage() {
           );
 
         // A bundled offer arrives with the website integration selected.
-        setCustomSiteIntegration(params.get("customSiteIntegration") === "1");
+        setCustomSiteIntegration(false);
 
         if (
           !Number.isInteger(
@@ -544,9 +544,7 @@ export default function CheckoutStartPage() {
                   purchase.billingCycle,
                 displayCurrency:
                   purchase.displayCurrency,
-                customSiteIntegration:
-                  isPizzaSystem &&
-                  customSiteIntegration,
+                customSiteIntegration: false,
               }),
           }
         );
@@ -772,100 +770,9 @@ export default function CheckoutStartPage() {
             </div>
 
             {isPizzaSystem && (
-              <div className="mt-5">
-                <p className="mb-3 text-[10px] uppercase tracking-[0.18em] text-white/28">
-                  {text(
-                    "Adicional opcional",
-                    "Optional add-on"
-                  )}
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCustomSiteIntegration(
-                      (
-                        current
-                      ) =>
-                        !current
-                    )
-                  }
-                  className={
-                    customSiteIntegration
-                      ? "w-full rounded-[24px] border border-cyan-300/20 bg-cyan-300/[0.055] p-5 text-left transition"
-                      : "w-full rounded-[24px] border border-white/[0.07] bg-white/[0.018] p-5 text-left transition hover:border-white/[0.12]"
-                  }
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={
-                        customSiteIntegration
-                          ? "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-cyan-200 text-[#07101c]"
-                          : "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-white/[0.14]"
-                      }
-                    >
-                      {customSiteIntegration && (
-                        <Check
-                          size={13}
-                        />
-                      )}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <Sparkles
-                              size={14}
-                              className="text-cyan-200/70"
-                            />
-
-                            <span className="text-sm font-semibold text-white/80">
-                              {text(
-                                "Site personalizado integrado",
-                                "Integrated custom website"
-                              )}
-                            </span>
-                          </div>
-
-                          <p className="mt-2 max-w-xl text-xs leading-5 text-white/35">
-                            {text(
-                              "Troca o visual padrão por um projeto personalizado conectado ao mesmo cardápio, pedidos e pagamentos do PizzaSystem.",
-                              "Replace the standard look with a custom website connected to the same PizzaSystem menu, orders and payments."
-                            )}
-                          </p>
-                        </div>
-
-                        <div className="shrink-0 sm:text-right">
-                          <p className="text-lg font-semibold text-white/85">
-                            {integrationFeeLabel}
-                          </p>
-
-                          <p className="mt-1 text-[10px] text-white/25">
-                            {text(
-                              "uma única vez",
-                              "one time"
-                            )}
-                          </p>
-                        </div>
-                      </div>
-
-                      <p className="mt-3 text-[10px] leading-4 text-white/22">
-                        {selectedPrice.currency ===
-                        "USD"
-                          ? text(
-                              "O site padrão continua incluído se você não selecionar este adicional.",
-                              "The standard website remains included if you do not select this add-on."
-                            )
-                          : text(
-                              "A taxa é definida em USD e será convertida para a moeda deste checkout. O site padrão continua incluído sem custo extra.",
-                              "The fee is defined in USD and will be converted to this checkout currency. The standard website remains included at no extra cost."
-                            )}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              </div>
+              <p className="mt-5 text-xs leading-6 text-cyan-100/65">
+                {text("Plano mensal do PizzaSystem sem taxa de implantação. Para ter também um site personalizado, escolha o plano mensal Site + PizzaSystem na página inicial.", "PizzaSystem monthly plan with no setup fee. For a custom website too, choose the Website + PizzaSystem monthly plan on the homepage.")}
+              </p>
             )}
 
             {error && (

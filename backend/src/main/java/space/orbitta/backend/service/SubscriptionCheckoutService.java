@@ -222,31 +222,9 @@ public class SubscriptionCheckoutService {
                 BigDecimal.ZERO;
 
         if (customSiteIntegration) {
-            if ("pizzasystem".equalsIgnoreCase(product.getSlug())) {
-                throw new IllegalArgumentException(
-                    "Para contratar site + PizzaSystem, escolha o plano mensal do pacote na Orbitta."
-                );
-            }
-            if (
-                    product.getSlug() == null ||
-                    !"pizzasystem".equalsIgnoreCase(
-                            product.getSlug()
-                    )
-            ) {
-                throw new IllegalArgumentException(
-                        "A integração de site personalizado está disponível somente para o PizzaSystem."
-                );
-            }
-
-            customSiteIntegrationPrice =
-                    customSiteIntegrationFeeInCurrency(
-                            currency
-                    );
-
-            setupPrice =
-                    setupPrice.add(
-                            customSiteIntegrationPrice
-                    );
+            throw new IllegalArgumentException(
+                    "O plano mensal Site + PizzaSystem possui checkout próprio na Orbitta."
+            );
         }
 
         boolean alreadySubscribed =

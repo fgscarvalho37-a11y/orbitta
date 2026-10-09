@@ -242,7 +242,7 @@ export default function ProductPricing({
   const [loading, setLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
   const [market, setMarket] = useState<MarketCode>("BR");
-  const billingCycle: BillingCycle = "MONTHLY";
+  const [billingCycle] = useState<BillingCycle>("MONTHLY");
   const [expanded, setExpanded] = useState(false);
   const [contractingPlanId, setContractingPlanId] =
     useState<number | null>(null);

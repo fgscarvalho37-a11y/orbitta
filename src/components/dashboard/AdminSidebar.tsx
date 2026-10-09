@@ -11,6 +11,7 @@ import {
   CreditCard,
   FileText,
   Globe2,
+  LayoutTemplate,
   LayoutDashboard,
   Link2,
   LogOut,
@@ -37,6 +38,11 @@ const navigationGroups = [
         name: "Clientes",
         href: "/admin/clientes",
         icon: Users,
+      },
+      {
+        name: "Sites contratados",
+        href: "/admin/sites",
+        icon: LayoutTemplate,
       },
       {
         name: "Suporte",
@@ -104,6 +110,7 @@ const NAV_EN: Record<string, string> = {
   "Pagamentos": "Payments",
   "Links personalizados": "Custom links",
   "Suporte": "Support",
+  "Sites contratados": "Website projects",
   "Orçamentos": "Quote requests",
   "Configurações": "Settings",
   "Operação": "Operations",

@@ -319,6 +319,9 @@ export default function AdminRegionalPricingPage() {
         monthlyPrice:
           current[key]?.monthlyPrice ??
           "",
+        regularMonthlyPrice:
+          current[key]?.regularMonthlyPrice ??
+          "99,90",
         setupPrice:
           current[key]?.setupPrice ??
           "0",

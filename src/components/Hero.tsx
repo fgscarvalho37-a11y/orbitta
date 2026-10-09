@@ -22,7 +22,7 @@ export default function Hero() {
             className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-400/15 bg-cyan-400/[0.06] px-3.5 py-2 text-xs text-cyan-100"
           >
             <Sparkles size={14} />
-            {text("Software pensado para negócios reais", "Software built for real businesses")}
+            {text("Sites e pedidos online para negócios reais", "Websites and online orders built for real businesses")}
           </motion.div>
 
           <motion.h1
@@ -31,11 +31,11 @@ export default function Hero() {
             transition={{ duration: 0.75, delay: 0.08 }}
             className="max-w-4xl text-[clamp(3.5rem,7vw,7.4rem)] font-semibold leading-[0.92] tracking-[-0.065em]"
           >
-            {text("Tecnologia para", "Technology to")}
+            {text("Sites que", "Websites that")}
             <span className="block bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
-              {text("colocar ideias", "put ideas")}
+              {text("vendem mais.", "sell more.")}
             </span>
-            {text(" em órbita.", " into orbit.")}
+            {text(" Pedidos sem complicação.", " Orders made simple.")}
           </motion.h1>
 
           <motion.p
@@ -45,8 +45,8 @@ export default function Hero() {
             className="mt-8 max-w-2xl text-base leading-7 text-white/50 sm:text-lg"
           >
             {text(
-              "Desenvolvemos SaaS, plataformas, sites e aplicativos com foco em experiência, tecnologia e crescimento.",
-              "We build SaaS products, platforms, websites and apps focused on experience, technology and growth."
+              "Criamos sites profissionais com a sua identidade e oferecemos o PizzaSystem para sua pizzaria vender online, organizar pedidos, retirada e entregas — tudo no mesmo lugar.",
+              "We create professional websites that reflect your brand, and PizzaSystem helps pizzerias take online orders, manage pickup and delivery — all in one place."
             )}
           </motion.p>
 
@@ -57,10 +57,10 @@ export default function Hero() {
             className="mt-10 flex flex-wrap gap-4"
           >
             <a
-              href="/produtos/pizzasystem"
+              href="#planos"
               className="group flex items-center gap-3 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#07101c] transition hover:scale-[1.02]"
             >
-              {text("Conhecer o PizzaSystem", "Explore PizzaSystem")}
+              {text("Ver os três planos", "Explore plans")}
               <ArrowRight
                 size={16}
                 className="transition-transform group-hover:translate-x-1"
@@ -68,20 +68,20 @@ export default function Hero() {
             </a>
 
             <a
-              href="/login"
+              href="/sites-avulsos"
               className="group flex items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.04] px-6 py-3.5 text-sm font-medium text-white/65 transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
             >
               <LogIn size={15} />
-              {text("Já sou cliente", "I'm already a client")}
+              {text("Conhecer sites", "Explore websites")}
             </a>
           </motion.div>
 
           <div className="mt-16 flex flex-wrap gap-x-10 gap-y-5 border-t border-white/[0.07] pt-6 text-xs uppercase tracking-[0.16em] text-white/30">
-            <span>SaaS</span>
-            <span>Software</span>
-            <span>Web</span>
-            <span>Mobile</span>
-            <span>{text("Produtos digitais", "Digital products")}</span>
+            <span>{text("Sites profissionais", "Professional websites")}</span>
+            <span>PizzaSystem</span>
+            <span>{text("Cardápio online", "Online menu")}</span>
+            <span>{text("Retirada e entrega", "Pickup & delivery")}</span>
+            
           </div>
         </div>
 

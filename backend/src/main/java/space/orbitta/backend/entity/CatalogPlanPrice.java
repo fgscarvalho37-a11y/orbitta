@@ -61,6 +61,10 @@ public class CatalogPlanPrice {
     )
     private BigDecimal monthlyPrice;
 
+    // Comparison price shown crossed out; it never affects actual billing.
+    @Column(name = "regular_monthly_price", precision = 10, scale = 2)
+    private BigDecimal regularMonthlyPrice;
+
     @Column(
             name = "setup_price",
             nullable = false,
@@ -159,6 +163,14 @@ public class CatalogPlanPrice {
     ) {
         this.monthlyPrice =
                 monthlyPrice;
+    }
+
+    public BigDecimal getRegularMonthlyPrice() {
+        return regularMonthlyPrice;
+    }
+
+    public void setRegularMonthlyPrice(BigDecimal regularMonthlyPrice) {
+        this.regularMonthlyPrice = regularMonthlyPrice;
     }
 
     public BigDecimal getSetupPrice() {

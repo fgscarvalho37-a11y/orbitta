@@ -28,6 +28,7 @@ type RegionalPrice = {
   regionCode: string;
   currency: string;
   monthlyPrice: number;
+  regularMonthlyPrice?: number | null;
   setupPrice: number;
   active: boolean;
   displayOrder: number;
@@ -39,6 +40,7 @@ type CatalogPlan = {
   slug: string;
   description: string | null;
   monthlyPrice: number;
+  regularMonthlyPrice?: number | null;
   setupPrice: number;
   currency: string;
   active: boolean;
@@ -267,6 +269,7 @@ export default function ProductPricing({
             cache: "no-store",
             headers: {
               Accept: "application/json",
+              "X-Orbitta-Market": selectedMarket,
             },
           }
         );
@@ -300,7 +303,7 @@ export default function ProductPricing({
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, selectedMarket]);
 
   const marketMeta = MARKET_META[market];
 
@@ -330,7 +333,7 @@ export default function ProductPricing({
       return regional;
     }
 
-    if (market === "GB") {
+    if (market === "GB" || market === "EU" || market === "AU") {
       const internationalPrice = prices.find(
         (price) =>
           price.active &&
@@ -341,7 +344,7 @@ export default function ProductPricing({
       if (internationalPrice) {
         return {
           ...internationalPrice,
-          currency: "GBP",
+          currency: market === "GB" ? "GBP" : market === "EU" ? "EUR" : "AUD",
         };
       }
     }
@@ -409,6 +412,11 @@ export default function ProductPricing({
       "displayCurrency",
       price.currency
     );
+
+    if (typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).get("bundle") === "1") {
+      params.set("customSiteIntegration", "1");
+    }
 
     router.push(
       `/checkout/start?${params.toString()}`
@@ -541,10 +549,7 @@ export default function ProductPricing({
               billingCycle === "ANNUAL"
                 ? annualValue
                 : monthlyValue;
-            const regularMonthly =
-              price?.currency === "BRL"
-                ? 99
-                : 99;
+            const regularMonthly = Number(price?.regularMonthlyPrice ?? 99.90);
 
             return (
               <article
@@ -585,6 +590,7 @@ export default function ProductPricing({
                   <div className="mt-8">
                     {price ? (
                       <>
+                        {regularMonthly > monthlyValue && (
                         <div className="text-xs text-white/25">
                           <span className="line-through">
                             {formatMoney(
@@ -598,6 +604,7 @@ export default function ProductPricing({
                             {text("preço regular", "regular price")}
                           </span>
                         </div>
+                        )}
 
                         <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1">
                           <span className="text-5xl font-semibold tracking-[-0.055em] text-white">

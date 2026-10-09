@@ -11,6 +11,7 @@ const API_URL =
 type CommercialSettings = {
   customSiteIntegrationFeeUsd:
     number;
+  standaloneSitePriceUsd: number;
   currency:
     string;
   updatedAt:
@@ -25,6 +26,7 @@ export function useCommercialSettings() {
     useState<CommercialSettings>({
       customSiteIntegrationFeeUsd:
         200,
+      standaloneSitePriceUsd: 0,
       currency:
         "USD",
       updatedAt:

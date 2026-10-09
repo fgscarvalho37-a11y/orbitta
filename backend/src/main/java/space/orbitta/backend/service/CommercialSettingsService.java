@@ -39,21 +39,19 @@ public class CommercialSettingsService {
     ) {
         if (
                 request == null ||
-                request.customSiteIntegrationFeeUsd() == null
+                (request.customSiteIntegrationFeeUsd() == null
+                        && request.standaloneSitePriceUsd() == null)
         ) {
             throw new IllegalArgumentException(
                     "Informe a taxa de integração do site."
             );
         }
 
-        BigDecimal fee =
-                request
-                        .customSiteIntegrationFeeUsd();
+        BigDecimal fee = request.customSiteIntegrationFeeUsd();
+        BigDecimal standalone = request.standaloneSitePriceUsd();
 
         if (
-                fee.compareTo(
-                        BigDecimal.ZERO
-                ) < 0
+                fee != null && fee.compareTo(BigDecimal.ZERO) < 0
         ) {
             throw new IllegalArgumentException(
                     "A taxa de integração não pode ser negativa."
@@ -63,9 +61,15 @@ public class CommercialSettingsService {
         CommercialSettings settings =
                 getOrCreate();
 
-        settings.setCustomSiteIntegrationFeeUsd(
-                fee
-        );
+        if (fee != null) {
+            settings.setCustomSiteIntegrationFeeUsd(fee);
+        }
+        if (standalone != null) {
+            if (standalone.compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("Preço do site avulso não pode ser negativo.");
+            }
+            settings.setStandaloneSitePriceUsd(standalone);
+        }
 
         return toResponse(
                 repository.saveAndFlush(
@@ -104,6 +108,7 @@ public class CommercialSettingsService {
     ) {
         return new CommercialSettingsResponse(
                 settings.getCustomSiteIntegrationFeeUsd(),
+                settings.getStandaloneSitePriceUsd(),
                 "USD",
                 settings.getUpdatedAt()
         );

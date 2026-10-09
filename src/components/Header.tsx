@@ -9,7 +9,7 @@ export default function Header() {
 
   return (
     <header className="relative z-20 mx-auto flex w-full max-w-[1440px] items-center justify-between px-6 py-7 lg:px-12">
-      <a href="#" className="group flex items-center gap-3">
+      <a href="/" className="group flex items-center gap-3">
         <div className="relative flex h-10 w-10 items-center justify-center">
           <div className="absolute h-9 w-9 rounded-full border border-violet-500/70 transition duration-300 group-hover:border-violet-400" />
 
@@ -37,23 +37,9 @@ export default function Header() {
 
         <a
           className="transition duration-200 hover:text-white"
-          href="/produtos/pizzasystem#planos"
+          href="/#planos"
         >
           {text("Planos", "Pricing")}
-        </a>
-
-        <a
-          className="transition duration-200 hover:text-white"
-          href="/produtos/condoflow"
-        >
-          CondoFlow
-        </a>
-
-        <a
-          className="transition duration-200 hover:text-white"
-          href="/produtos"
-        >
-          {text("Produtos", "Products")}
         </a>
 
         <a
@@ -63,19 +49,13 @@ export default function Header() {
           {text("Sites avulsos", "Standalone Sites")}
         </a>
 
-        <a
-          className="transition duration-200 hover:text-white"
-          href="/landing-page"
-        >
-          {text("Landing Pages", "Landing Pages")}
-        </a>
       </nav>
 
       <div className="flex items-center gap-3">
         <LanguageSwitcher compact />
 
         <a
-          href="/produtos/pizzasystem#planos"
+          href="/#planos"
           className="hidden rounded-full bg-white px-4 py-2.5 text-xs font-semibold text-[#07101c] transition hover:bg-cyan-50 sm:inline-flex"
         >
           {text("Ver planos", "View pricing")}

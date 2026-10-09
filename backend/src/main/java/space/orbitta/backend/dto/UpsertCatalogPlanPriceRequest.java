@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public record UpsertCatalogPlanPriceRequest(
         BigDecimal monthlyPrice,
+        BigDecimal regularMonthlyPrice,
         BigDecimal setupPrice,
         Boolean active
 ) {

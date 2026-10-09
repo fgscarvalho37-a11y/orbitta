@@ -245,6 +245,9 @@ export default function CheckoutStartPage() {
             "displayCurrency"
           );
 
+        // A bundled offer arrives with the website integration selected.
+        setCustomSiteIntegration(params.get("customSiteIntegration") === "1");
+
         if (
           !Number.isInteger(
             planId

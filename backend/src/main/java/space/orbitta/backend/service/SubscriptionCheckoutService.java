@@ -567,6 +567,22 @@ public class SubscriptionCheckoutService {
             String currency,
             boolean oneTimeOnly
     ) {
+        return createCustomCheckout(user, product, plan, offerTitle,
+                monthlyPrice, setupPrice, currency, oneTimeOnly, false);
+    }
+
+    @Transactional
+    public SubscriptionCheckoutResponse createCustomCheckout(
+            User user,
+            CatalogProduct product,
+            CatalogPlan plan,
+            String offerTitle,
+            BigDecimal monthlyPrice,
+            BigDecimal setupPrice,
+            String currency,
+            boolean oneTimeOnly,
+            boolean includeWebsite
+    ) {
         if (
                 user == null ||
                 product == null ||
@@ -656,6 +672,8 @@ public class SubscriptionCheckoutService {
         checkout.setOneTimeOnly(
                 oneTimeOnly
         );
+        checkout.setCustomSiteIntegration(includeWebsite);
+        checkout.setCustomSiteIntegrationPrice(BigDecimal.ZERO);
 
         BigDecimal totalPrice =
                 normalizedMonthly.add(

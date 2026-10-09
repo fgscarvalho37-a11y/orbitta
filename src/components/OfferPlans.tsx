@@ -31,7 +31,21 @@ function money(amount: number, currency: string, locale: string) {
 
 export default function OfferPlans() {
   const { text, market, locale } = useLanguage();
-  const { standaloneSiteMonthlyPriceUsd, bundleMonthlyPriceUsd } = useCommercialSettings();
+  const commercial = useCommercialSettings();
+  const { standaloneSiteMonthlyPriceUsd, bundleMonthlyPriceUsd } = commercial;
+  const description = (key: "site" | "pizza" | "bundle", pt: string, en: string) => {
+    if (key === "site") return text(commercial.siteDescriptionPt?.trim() || pt, commercial.siteDescriptionEn?.trim() || en);
+    if (key === "pizza") return text(commercial.pizzaDescriptionPt?.trim() || pt, commercial.pizzaDescriptionEn?.trim() || en);
+    return text(commercial.bundleDescriptionPt?.trim() || pt, commercial.bundleDescriptionEn?.trim() || en);
+  };
+  const features = (key: "site" | "pizza" | "bundle", fallback: string[]) => {
+    const value = key === "site"
+      ? text(commercial.siteFeaturesPt?.trim() || "", commercial.siteFeaturesEn?.trim() || "")
+      : key === "pizza"
+        ? text(commercial.pizzaFeaturesPt?.trim() || "", commercial.pizzaFeaturesEn?.trim() || "")
+        : text(commercial.bundleFeaturesPt?.trim() || "", commercial.bundleFeaturesEn?.trim() || "");
+    return value ? value.split(/\r?\n/).map(s => s.trim()).filter(Boolean).slice(0, 12) : fallback;
+  };
   const [planPrice, setPlanPrice] = useState<RegionalPrice | null>(null);
 
   useEffect(() => {
@@ -60,12 +74,12 @@ export default function OfferPlans() {
       key: "site",
       icon: LayoutTemplate,
       title: text("Site avulso", "Standalone website"),
-      subtitle: text("Sua marca, seu endereço e sua presença digital.", "Your brand, your domain, your online presence."),
-      features: [
+      subtitle: description("site", "Sua marca, seu endereço e sua presença digital.", "Your brand, your domain, your online presence."),
+      features: features("site", [
         text("Visual exclusivo para sua empresa", "A custom design for your business"),
         text("Responsivo para celular e computador", "Mobile and desktop ready"),
         text("Formulário, contato e identidade da marca", "Contact forms and brand identity"),
-      ],
+      ]),
       price: siteMonthly > 0 ? money(siteMonthly, "USD", locale)
         : text("Em breve", "Coming soon"),
       suffix: text("por mês · sem taxa inicial", "per month · no setup fee"),
@@ -77,12 +91,12 @@ export default function OfferPlans() {
       key: "pizza",
       icon: ShoppingBag,
       title: "PizzaSystem",
-      subtitle: text("Seu cardápio e pedidos em um só lugar, sem comissão por pedido.", "Your online menu and orders, without per-order commissions."),
-      features: [
+      subtitle: description("pizza", "Seu cardápio e pedidos em um só lugar, sem comissão por pedido.", "Your online menu and orders, without per-order commissions."),
+      features: features("pizza", [
         text("Cardápio, pedidos e cozinha", "Menu, orders and kitchen"),
         text("Entrega ou retirada no balcão", "Delivery or in-store pickup"),
         text("Gestão de pagamentos e relatórios", "Payments and reporting"),
-      ],
+      ]),
       price: planPrice ? money(planPrice.monthlyPrice, planPrice.currency, locale) : text("Consultar planos", "See pricing"),
       suffix: text("por mês · sem taxa inicial", "per month · no setup fee"),
       href: "/produtos/pizzasystem#planos",
@@ -93,12 +107,12 @@ export default function OfferPlans() {
       key: "bundle",
       icon: Sparkles,
       title: text("Site + PizzaSystem", "Website + PizzaSystem"),
-      subtitle: text("A identidade da sua pizzaria conectada ao sistema de pedidos.", "Your pizzeria's website connected to its ordering system."),
-      features: [
+      subtitle: description("bundle", "A identidade da sua pizzaria conectada ao sistema de pedidos.", "Your pizzeria's website connected to its ordering system."),
+      features: features("bundle", [
         text("Tudo do PizzaSystem", "Everything in PizzaSystem"),
         text("Site personalizado integrado", "Integrated custom website"),
         text("Uma operação, sem duplicar cadastros", "One operation, no duplicated setup"),
-      ],
+      ]),
       price: bundleMonthly > 0 ? money(bundleMonthly, "USD", locale) : text("Em breve", "Coming soon"),
       suffix: text("por mês · sem taxa inicial", "per month · no setup fee"),
       href: "/site-checkout?plan=bundle",

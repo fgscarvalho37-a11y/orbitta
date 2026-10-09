@@ -174,6 +174,12 @@ public class CustomStorefrontService {
             .map(s->StorefrontResponse.from(s,false)).toList();
     }
     @Transactional(readOnly=true)
+    public StorefrontResponse adminPreview(String slug) {
+        return StorefrontResponse.from(repository.findBySiteSlug(slug(slug))
+            .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Site não encontrado.")),true);
+    }
+
+    @Transactional(readOnly=true)
     public StorefrontResponse bySlug(String slug) {
         return StorefrontResponse.from(repository.findBySiteSlug(slug(slug))
             .filter(CustomStorefront::isPublished)

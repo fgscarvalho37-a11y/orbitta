@@ -13,6 +13,7 @@ type CommercialSettings = {
     number;
   standaloneSitePriceUsd: number;
   standaloneSiteMonthlyPriceUsd: number;
+  bundleMonthlyPriceUsd: number;
   currency:
     string;
   updatedAt:
@@ -29,6 +30,7 @@ export function useCommercialSettings() {
         200,
       standaloneSitePriceUsd: 0,
       standaloneSiteMonthlyPriceUsd: 0,
+      bundleMonthlyPriceUsd: 0,
       currency:
         "USD",
       updatedAt:

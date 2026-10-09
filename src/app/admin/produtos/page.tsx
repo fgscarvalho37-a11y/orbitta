@@ -1,6 +1,7 @@
 "use client";
 
 import { secureFetch } from "@/lib/secureFetch";
+import Link from "next/link";
 
 import {
   Boxes,
@@ -781,6 +782,15 @@ export default function AdminProductsPage() {
   return (
     <div className="min-h-screen px-5 py-8 sm:px-8 lg:px-10 xl:px-12">
       <div className="mx-auto max-w-[1500px]">
+        <div className="mb-7 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-violet-300/20 bg-violet-300/[0.07] px-5 py-4">
+          <div>
+            <p className="text-sm font-semibold text-violet-100">Os três planos de assinatura estão em uma área própria.</p>
+            <p className="mt-1 text-xs leading-5 text-white/55">Edite Site, PizzaSystem e Site + PizzaSystem: mensalidade, preço riscado, descrição e funcionalidades.</p>
+          </div>
+          <Link href="/admin/planos" className="inline-flex h-10 items-center rounded-xl bg-violet-200 px-5 text-xs font-semibold text-[#07101c] hover:bg-white">
+            Configurar meus 3 planos →
+          </Link>
+        </div>
         <div className="flex flex-col gap-6 border-b border-white/[0.06] pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-violet-200/35">

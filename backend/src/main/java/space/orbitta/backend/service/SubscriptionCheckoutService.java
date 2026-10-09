@@ -180,12 +180,11 @@ public class SubscriptionCheckoutService {
                         : plan.getSetupPrice();
 
         BigDecimal setupPrice =
-                selectedSetupPrice != null
-                        ? requireNonNegativePrice(
-                                selectedSetupPrice,
-                                "Taxa de implantação"
-                        )
-                        : BigDecimal.ZERO;
+                "pizzasystem".equalsIgnoreCase(product.getSlug())
+                        ? BigDecimal.ZERO
+                        : selectedSetupPrice != null
+                            ? requireNonNegativePrice(selectedSetupPrice, "Taxa de implantação")
+                            : BigDecimal.ZERO;
 
         String currency =
                 normalizeCurrency(
@@ -223,6 +222,11 @@ public class SubscriptionCheckoutService {
                 BigDecimal.ZERO;
 
         if (customSiteIntegration) {
+            if ("pizzasystem".equalsIgnoreCase(product.getSlug())) {
+                throw new IllegalArgumentException(
+                    "Para contratar site + PizzaSystem, escolha o plano mensal do pacote na Orbitta."
+                );
+            }
             if (
                     product.getSlug() == null ||
                     !"pizzasystem".equalsIgnoreCase(
@@ -1704,6 +1708,9 @@ public class SubscriptionCheckoutService {
     private boolean shouldUseMercadoPagoOneTime(
             SubscriptionCheckout checkout
     ) {
+        if (isThreePlanMonthlySubscription(checkout)) {
+            return false;
+        }
 
         return checkout != null &&
                 checkout.getSettlementAmount() != null &&
@@ -1731,6 +1738,17 @@ public class SubscriptionCheckoutService {
                                 )
                         )
                 );
+    }
+
+    private boolean isThreePlanMonthlySubscription(SubscriptionCheckout checkout) {
+        if (checkout == null || checkout.isOneTimeOnly()
+            || checkout.getBillingCycle() != BillingCycle.MONTHLY
+            || checkout.getCatalogProduct() == null) {
+            return false;
+        }
+        String slug = checkout.getCatalogProduct().getSlug();
+        return "pizzasystem".equalsIgnoreCase(slug)
+            || "custom-site-service".equalsIgnoreCase(slug);
     }
 
     private boolean shouldUseStripe(

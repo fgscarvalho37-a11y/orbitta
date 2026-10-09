@@ -24,7 +24,7 @@ type RegionalPrice = {
 };
 type Product = { id: number; slug: string; active: boolean; plans: { id: number; active: boolean; regionalPrices: RegionalPrice[] }[] };
 type Draft = { price: string; regularPrice: string; descriptionPt: string; descriptionEn: string; featuresPt: string; featuresEn: string };
-type ContentKey = Exclude<keyof Settings, "standaloneSiteMonthlyPriceUsd" | "bundleMonthlyPriceUsd">;
+type ContentKey = Exclude<keyof Settings, "standaloneSiteMonthlyPriceUsd" | "bundleMonthlyPriceUsd" | "siteRegularMonthlyPriceUsd" | "bundleRegularMonthlyPriceUsd">;
 const MARKETS = [
   { code: "BR", currency: "BRL", pt: "Brasil", en: "Brazil" },
   { code: "US", currency: "USD", pt: "Estados Unidos", en: "United States" },

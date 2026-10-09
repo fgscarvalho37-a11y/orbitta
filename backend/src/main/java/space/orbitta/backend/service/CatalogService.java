@@ -164,12 +164,9 @@ public class CatalogService {
                                 plan.getId()
                         )
                         .stream()
-                        .filter(price ->
-                                price.getRegionCode()
-                                        .equalsIgnoreCase(
-                                                regionCode
-                                        )
-                        )
+                        // Public subscription prices are not private data. Return
+                        // all enabled currencies so every country can use the
+                        // same canonical nominal monthly price.
                         .map(
                                 CatalogPlanPriceResponse::from
                         )

@@ -60,14 +60,9 @@ const navigationGroups = [
     label: "Catálogo",
     items: [
       {
-        name: "Produtos",
-        href: "/admin/produtos",
+        name: "Planos",
+        href: "/admin/planos",
         icon: Boxes,
-      },
-      {
-        name: "Preços regionais",
-        href: "/admin/precos",
-        icon: Globe2,
       },
     ],
   },
@@ -105,6 +100,7 @@ const NAV_EN: Record<string, string> = {
   "Visão geral": "Overview",
   "Clientes": "Clients",
   "Produtos": "Products",
+  "Planos": "Plans",
   "Preços regionais": "Regional pricing",
   "Faturas": "Invoices",
   "Pagamentos": "Payments",

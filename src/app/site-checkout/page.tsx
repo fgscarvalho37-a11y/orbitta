@@ -8,11 +8,15 @@ import { secureFetch } from "@/lib/secureFetch";
 import { useLanguage } from "@/i18n/LanguageProvider";
 import { useCommercialSettings } from "@/hooks/useCommercialSettings";
 
-const money = (amount: number, locale: string) =>
-  new Intl.NumberFormat(locale, { style: "currency", currency: "USD" }).format(amount);
+const currencyForMarket = (market: string) =>
+  market === "BR" ? "BRL" : market === "GB" ? "GBP" :
+  market === "AU" ? "AUD" : market === "EU" ? "EUR" : "USD";
+const money = (amount: number, locale: string, currency: string) =>
+  new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
 
 export default function WebsiteSubscriptionPage() {
-  const { locale, text } = useLanguage();
+  const { locale, text, market } = useLanguage();
+  const currency = currencyForMarket(market);
   const { standaloneSiteMonthlyPriceUsd, bundleMonthlyPriceUsd } = useCommercialSettings();
   const [isBundle, setIsBundle] = useState(false);
   const monthly = Number(isBundle ? bundleMonthlyPriceUsd : standaloneSiteMonthlyPriceUsd) || 0;
@@ -41,7 +45,7 @@ export default function WebsiteSubscriptionPage() {
 
       const checkoutResponse = await secureFetch(
         isBundle ? "/backend/api/bundle-checkouts" : "/backend/api/site-checkouts",
-        { method: "POST", credentials: "include", headers: { Accept: "application/json" } }
+        { method: "POST", credentials: "include", headers: { Accept: "application/json", "Content-Type":"application/json" }, body: JSON.stringify({ market }) }
       );
       if (!checkoutResponse.ok) {
         const detail = await checkoutResponse.json().catch(() => null);
@@ -77,13 +81,13 @@ export default function WebsiteSubscriptionPage() {
             <div className="flex flex-wrap items-baseline justify-between gap-4">
               <span className="text-sm text-white/60">{text("Mensalidade", "Monthly subscription")}</span>
               <strong className="text-3xl font-semibold text-cyan-100">
-                {enabled ? money(monthly, locale) : text("Em configuração", "Not yet available")}
+                {enabled ? money(monthly, locale, currency) : text("Em configuração", "Not yet available")}
                 {enabled && <span className="ml-1 text-sm font-normal text-white/45">{text("/ mês", "/ month")}</span>}
               </strong>
             </div>
             <p className="mt-4 border-t border-white/10 pt-4 text-xs leading-6 text-white/45">
-              {text("Sem implantação e sem pagamento avulso. A assinatura é mensal; o valor mostrado em USD será convertido e confirmado em BRL no checkout Mercado Pago.",
-                "No setup fee or one-time charge. Your plan is monthly. The USD price is converted and confirmed in BRL at Mercado Pago checkout.")}
+              {text("Sem implantação e sem pagamento avulso. O preço mensal é fixado na moeda do país escolhido; a cobrança no Mercado Pago é apresentada em BRL quando aplicável.",
+                "No setup fee or one-time charge. The monthly price uses your selected market currency; Mercado Pago presents settlement in BRL when applicable.")}
             </p>
           </div>
           {!enabled && <p className="mt-5 text-sm text-amber-100/70">

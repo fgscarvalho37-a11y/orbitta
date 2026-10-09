@@ -33,6 +33,7 @@ type CheckoutStatus =
 type SubscriptionCheckout = {
   id: number;
   productId: number;
+  productSlug: string;
   planId: number;
   productName: string;
   planName: string;
@@ -165,6 +166,29 @@ export default function CheckoutPage({
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Once payment is really approved by the backend, launch the paid project brief.
+  useEffect(() => {
+    if (checkout?.productSlug === "custom-site-service" &&
+        checkout.status === "APPROVED") {
+      window.location.replace(`/painel/sites/novo?checkoutId=${checkout.id}`);
+    }
+  }, [checkout?.productSlug, checkout?.status, checkout?.id]);
+
+  useEffect(() => {
+    if (checkout?.productSlug !== "custom-site-service" ||
+        checkout.status === "APPROVED" ||
+        (checkout.status !== "PENDING" && checkout.status !== "PAYMENT_PENDING")) return;
+    const interval = window.setInterval(async () => {
+      try {
+        const response = await fetch(`/backend/api/checkout/subscriptions/${id}`, {
+          credentials: "include", cache: "no-store",
+        });
+        if (response.ok) setCheckout(await response.json());
+      } catch { /* the buyer can refresh or retry */ }
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [checkout?.productSlug, checkout?.status, id]);
 
   const customSiteIntegrationPrice =
     Number(
@@ -477,15 +501,19 @@ export default function CheckoutPage({
                 <div className="flex items-center justify-between rounded-2xl border border-white/[0.05] bg-white/[0.018] px-5 py-4">
                   <div>
                     <div className="text-xs text-white/55">
-                      {isAnnual
-                        ? text("Plano anual", "Annual plan")
-                        : text("Mensalidade", "Monthly price")}
+                      {checkout.oneTimeOnly
+                        ? text("Projeto de site", "Website project")
+                        : isAnnual
+                          ? text("Plano anual", "Annual plan")
+                          : text("Mensalidade", "Monthly price")}
                     </div>
 
                     <div className="mt-1 text-[10px] text-white/20">
-                      {isAnnual
-                        ? text(
-                            "12 meses de acesso pelo valor equivalente a 10 mensalidades.",
+                      {checkout.oneTimeOnly
+                        ? text("Pagamento do valor configurado para o projeto.", "Payment for the configured website project price.")
+                        : isAnnual
+                          ? text(
+                            "12 meses de acesso pelo valor equivalente a 10 mensalidades.
                             "12 months of access for the price of 10 monthly payments."
                           )
                         : isForeignMercadoPagoCheckout
@@ -815,11 +843,14 @@ export default function CheckoutPage({
               </>
             ) : checkout.status === "APPROVED" ? (
               <Link
-                href="/painel/produtos"
+                href={checkout.productSlug === "custom-site-service"
+                  ? `/painel/sites/novo?checkoutId=${checkout.id}` : "/painel/produtos"}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-[#07101c] transition hover:bg-white/90"
               >
                 <Check size={16} />
-                {text("Acessar meus produtos", "Access my products")}
+                {checkout.productSlug === "custom-site-service"
+                  ? text("Preencher dados do meu site", "Complete my website brief")
+                  : text("Acessar meus produtos", "Access my products")}
               </Link>
             ) : (
               <Link

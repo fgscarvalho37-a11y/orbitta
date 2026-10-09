@@ -415,6 +415,9 @@ public class AdminCatalogService {
                                 "Taxa inicial"
                         );
 
+        BigDecimal regularMonthlyPrice = request.regularMonthlyPrice() == null
+                ? null : validateMoney(request.regularMonthlyPrice(), "Preço de comparação");
+
         CatalogPlanPrice price =
                 catalogPlanPriceRepository
                         .findByPlanIdAndRegionCodeIgnoreCase(
@@ -439,6 +442,7 @@ public class AdminCatalogService {
         price.setMonthlyPrice(
                 monthlyPrice
         );
+        price.setRegularMonthlyPrice(regularMonthlyPrice);
         price.setSetupPrice(
                 setupPrice
         );

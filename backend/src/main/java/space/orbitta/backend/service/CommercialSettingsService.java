@@ -41,7 +41,8 @@ public class CommercialSettingsService {
                 request == null ||
                 (request.customSiteIntegrationFeeUsd() == null
                         && request.standaloneSitePriceUsd() == null
-                        && request.standaloneSiteMonthlyPriceUsd() == null)
+                        && request.standaloneSiteMonthlyPriceUsd() == null
+                        && request.bundleMonthlyPriceUsd() == null)
         ) {
             throw new IllegalArgumentException(
                     "Informe a taxa de integração do site."
@@ -51,6 +52,7 @@ public class CommercialSettingsService {
         BigDecimal fee = request.customSiteIntegrationFeeUsd();
         BigDecimal standalone = request.standaloneSitePriceUsd();
         BigDecimal standaloneMonthly = request.standaloneSiteMonthlyPriceUsd();
+        BigDecimal bundleMonthly = request.bundleMonthlyPriceUsd();
 
         if (
                 fee != null && fee.compareTo(BigDecimal.ZERO) < 0
@@ -78,6 +80,13 @@ public class CommercialSettingsService {
                 throw new IllegalArgumentException("Mensalidade do site não pode ser negativa.");
             }
             settings.setStandaloneSiteMonthlyPriceUsd(standaloneMonthly);
+        }
+
+        if (bundleMonthly != null) {
+            if (bundleMonthly.compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("Mensalidade do pacote não pode ser negativa.");
+            }
+            settings.setBundleMonthlyPriceUsd(bundleMonthly);
         }
 
         return toResponse(
@@ -119,6 +128,7 @@ public class CommercialSettingsService {
                 settings.getCustomSiteIntegrationFeeUsd(),
                 settings.getStandaloneSitePriceUsd(),
                 settings.getStandaloneSiteMonthlyPriceUsd(),
+                settings.getBundleMonthlyPriceUsd(),
                 "USD",
                 settings.getUpdatedAt()
         );

@@ -43,6 +43,8 @@ public class CommercialSettingsService {
                         && request.standaloneSitePriceUsd() == null
                         && request.standaloneSiteMonthlyPriceUsd() == null
                         && request.bundleMonthlyPriceUsd() == null
+                        && request.siteRegularMonthlyPriceUsd() == null
+                        && request.bundleRegularMonthlyPriceUsd() == null
                         && request.siteDescriptionPt() == null
                         && request.siteDescriptionEn() == null
                         && request.siteFeaturesPt() == null
@@ -65,6 +67,8 @@ public class CommercialSettingsService {
         BigDecimal standalone = request.standaloneSitePriceUsd();
         BigDecimal standaloneMonthly = request.standaloneSiteMonthlyPriceUsd();
         BigDecimal bundleMonthly = request.bundleMonthlyPriceUsd();
+        BigDecimal siteRegular = request.siteRegularMonthlyPriceUsd();
+        BigDecimal bundleRegular = request.bundleRegularMonthlyPriceUsd();
 
         if (
                 fee != null && fee.compareTo(BigDecimal.ZERO) < 0
@@ -94,6 +98,14 @@ public class CommercialSettingsService {
             settings.setStandaloneSiteMonthlyPriceUsd(standaloneMonthly);
         }
 
+        if (siteRegular != null) {
+            if (siteRegular.signum() < 0) throw new IllegalArgumentException("Preço riscado do site inválido.");
+            settings.setSiteRegularMonthlyPriceUsd(siteRegular);
+        }
+        if (bundleRegular != null) {
+            if (bundleRegular.signum() < 0) throw new IllegalArgumentException("Preço riscado do pacote inválido.");
+            settings.setBundleRegularMonthlyPriceUsd(bundleRegular);
+        }
         if (bundleMonthly != null) {
             if (bundleMonthly.compareTo(BigDecimal.ZERO) < 0) {
                 throw new IllegalArgumentException("Mensalidade do pacote não pode ser negativa.");
@@ -237,6 +249,8 @@ public class CommercialSettingsService {
                 settings.getStandaloneSitePriceUsd(),
                 settings.getStandaloneSiteMonthlyPriceUsd(),
                 settings.getBundleMonthlyPriceUsd(),
+                settings.getSiteRegularMonthlyPriceUsd(),
+                settings.getBundleRegularMonthlyPriceUsd(),
                 settings.getSiteDescriptionPt(),
                 settings.getSiteDescriptionEn(),
                 settings.getSiteFeaturesPt(),

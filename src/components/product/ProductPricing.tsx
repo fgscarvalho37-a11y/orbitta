@@ -332,7 +332,7 @@ export default function ProductPricing({
       return regional;
     }
 
-    if (market === "GB" || market === "EU" || market === "AU") {
+    if (market === "BR" || market === "GB" || market === "EU" || market === "AU" || market === "CA") {
       const internationalPrice = prices.find(
         (price) =>
           price.active &&
@@ -343,7 +343,7 @@ export default function ProductPricing({
       if (internationalPrice) {
         return {
           ...internationalPrice,
-          currency: market === "GB" ? "GBP" : market === "EU" ? "EUR" : "AUD",
+          currency: market === "BR" ? "BRL" : market === "GB" ? "GBP" : market === "EU" ? "EUR" : market === "AU" ? "AUD" : "USD",
         };
       }
     }

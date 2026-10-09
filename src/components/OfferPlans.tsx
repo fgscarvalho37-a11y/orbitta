@@ -60,8 +60,9 @@ export default function OfferPlans() {
         const plan = product.plans?.[0];
         const regional = plan?.regionalPrices?.find((price) => price.regionCode === market)
           ?? plan?.regionalPrices?.find((price) => price.regionCode === "US");
-        const fallbackCurrency = market === "GB" ? "GBP" : market === "AU" ? "AUD" : market === "EU" ? "EUR" : null;
-        const selected = regional ? { ...regional, currency: fallbackCurrency && regional.regionCode === "US" ? fallbackCurrency : regional.currency } : null;
+        const fallbackCurrency = market === "BR" ? "BRL" : market === "GB" ? "GBP" :
+          market === "AU" ? "AUD" : market === "EU" ? "EUR" : null;
+        const selected = regional ? { ...regional, currency: fallbackCurrency && regional.regionCode !== market ? fallbackCurrency : regional.currency } : null;
         if (alive) setPlanPrice(selected);
       })
       .catch(() => { if (alive) setPlanPrice(null); });
@@ -70,6 +71,8 @@ export default function OfferPlans() {
 
   const siteMonthly = Number(standaloneSiteMonthlyPriceUsd ?? 0);
   const bundleMonthly = Number(bundleMonthlyPriceUsd ?? 0);
+  const localCurrency = market === "BR" ? "BRL" : market === "GB" ? "GBP" :
+    market === "AU" ? "AUD" : market === "EU" ? "EUR" : "USD";
   const cards = [
     {
       key: "site",
@@ -83,8 +86,8 @@ export default function OfferPlans() {
       ]),
       regularPrice: Number(siteRegularMonthlyPriceUsd ?? 0),
       currentPrice: siteMonthly,
-      displayCurrency: "USD",
-      price: siteMonthly > 0 ? money(siteMonthly, "USD", locale)
+      displayCurrency: localCurrency,
+      price: siteMonthly > 0 ? money(siteMonthly, localCurrency, locale)
         : text("Em breve", "Coming soon"),
       suffix: text("por mês · sem taxa inicial", "per month · no setup fee"),
       href: "/site-checkout",
@@ -122,8 +125,8 @@ export default function OfferPlans() {
       ]),
       regularPrice: Number(bundleRegularMonthlyPriceUsd ?? 0),
       currentPrice: bundleMonthly,
-      displayCurrency: "USD",
-      price: bundleMonthly > 0 ? money(bundleMonthly, "USD", locale) : text("Em breve", "Coming soon"),
+      displayCurrency: localCurrency,
+      price: bundleMonthly > 0 ? money(bundleMonthly, localCurrency, locale) : text("Em breve", "Coming soon"),
       suffix: text("por mês · sem taxa inicial", "per month · no setup fee"),
       href: "/site-checkout?plan=bundle",
       cta: text("Escolher o pacote", "Choose the bundle"),

@@ -45,6 +45,11 @@ const navigationGroups = [
         icon: LayoutTemplate,
       },
       {
+        name: "Cardápios personalizados",
+        href: "/admin/cardapios-personalizados",
+        icon: Globe2,
+      },
+      {
         name: "Suporte",
         href: "/admin/suporte",
         icon: CircleHelp,
@@ -107,6 +112,7 @@ const NAV_EN: Record<string, string> = {
   "Links personalizados": "Custom links",
   "Suporte": "Support",
   "Sites contratados": "Website projects",
+  "Cardápios personalizados": "Custom storefronts",
   "Orçamentos": "Quote requests",
   "Configurações": "Settings",
   "Operação": "Operations",

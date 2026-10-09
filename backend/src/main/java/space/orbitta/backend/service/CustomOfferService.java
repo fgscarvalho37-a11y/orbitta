@@ -36,13 +36,15 @@ public class CustomOfferService {
     private final CatalogPlanRepository catalogPlanRepository;
     private final CatalogProductRepository catalogProductRepository;
     private final SubscriptionCheckoutService subscriptionCheckoutService;
+    private final CommercialSettingsService commercialSettingsService;
 
     public CustomOfferService(
             CustomOfferRepository customOfferRepository,
             UserRepository userRepository,
             CatalogPlanRepository catalogPlanRepository,
             CatalogProductRepository catalogProductRepository,
-            SubscriptionCheckoutService subscriptionCheckoutService
+            SubscriptionCheckoutService subscriptionCheckoutService,
+            CommercialSettingsService commercialSettingsService
     ) {
         this.customOfferRepository =
                 customOfferRepository;
@@ -54,6 +56,7 @@ public class CustomOfferService {
                 catalogProductRepository;
         this.subscriptionCheckoutService =
                 subscriptionCheckoutService;
+        this.commercialSettingsService = commercialSettingsService;
     }
 
     @Transactional(readOnly = true)
@@ -420,6 +423,46 @@ public class CustomOfferService {
         );
 
         return checkout;
+    }
+
+    /**
+     * Public standalone-website storefront checkout.
+     * Prices are exclusively loaded on the server from admin settings.
+     * A user cannot supply or alter the price, currency, or billing cadence.
+     */
+    @Transactional
+    public SubscriptionCheckoutResponse createStandaloneSiteCheckout(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Entre na sua conta para contratar o site.");
+        }
+        User buyer = userRepository.findByEmailIgnoreCase(
+                email.trim().toLowerCase(Locale.ROOT)
+        ).orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado."));
+        if (buyer.getRole() != User.Role.CLIENT || !buyer.isActive()) {
+            throw new IllegalArgumentException("É necessário utilizar uma conta de cliente ativa.");
+        }
+
+        var settings = commercialSettingsService.get();
+        BigDecimal setup = settings.standaloneSitePriceUsd();
+        BigDecimal monthly = settings.standaloneSiteMonthlyPriceUsd();
+        if (setup == null) setup = BigDecimal.ZERO;
+        if (monthly == null) monthly = BigDecimal.ZERO;
+        if (setup.signum() < 0 || monthly.signum() < 0
+                || (setup.signum() == 0 && monthly.signum() == 0)) {
+            throw new IllegalArgumentException("A contratação de sites está indisponível até o administrador configurar os preços.");
+        }
+
+        CatalogPlan plan = ensureInternalSitePlan();
+        return subscriptionCheckoutService.createCustomCheckout(
+                buyer,
+                plan.getProduct(),
+                plan,
+                "Site personalizado Orbitta",
+                monthly,
+                setup,
+                "USD",
+                monthly.signum() == 0
+        );
     }
 
     private CustomOffer findByToken(

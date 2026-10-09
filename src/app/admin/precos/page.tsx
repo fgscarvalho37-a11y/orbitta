@@ -351,10 +351,8 @@ export default function AdminRegionalPricingPage() {
     const regularMonthlyPrice = draft?.regularMonthlyPrice?.trim()
       ? parseMoney(draft.regularMonthlyPrice) : null;
 
-    const setupPrice =
-      parseMoney(
-        draft?.setupPrice || "0"
-      );
+    // All public PizzaSystem offers are monthly, without setup charges.
+    const setupPrice = 0;
 
     if (
       Number.isNaN(monthlyPrice) ||
@@ -364,19 +362,6 @@ export default function AdminRegionalPricingPage() {
         text(
           "Informe uma mensalidade válida.",
           "Enter a valid monthly price."
-        )
-      );
-      return;
-    }
-
-    if (
-      Number.isNaN(setupPrice) ||
-      setupPrice < 0
-    ) {
-      setError(
-        text(
-          "Informe uma taxa inicial válida.",
-          "Enter a valid setup fee."
         )
       );
       return;
@@ -663,7 +648,7 @@ export default function AdminRegionalPricingPage() {
                           key={
                             market.code
                           }
-                          className="grid gap-4 px-6 py-5 xl:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_0.8fr_auto] xl:items-end"
+                          className="grid gap-4 px-6 py-5 xl:grid-cols-[1.25fr_0.8fr_0.8fr_0.8fr_auto] xl:items-end"
                         >
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
@@ -714,37 +699,6 @@ export default function AdminRegionalPricingPage() {
                                   market.code,
                                   {
                                     monthlyPrice:
-                                      event.target
-                                        .value,
-                                  }
-                                )
-                              }
-                              placeholder="0,00"
-                              className="mt-2 h-11 w-full rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 text-sm text-white outline-none focus:border-violet-300/25"
-                            />
-                          </label>
-
-                          <label>
-                            <span className="text-[9px] uppercase tracking-[0.13em] text-white/20">
-                              {text(
-                                "Taxa inicial",
-                                "Setup fee"
-                              )}
-                            </span>
-
-                            <input
-                              inputMode="decimal"
-                              value={
-                                draft.setupPrice
-                              }
-                              onChange={(
-                                event
-                              ) =>
-                                updateDraft(
-                                  plan.id,
-                                  market.code,
-                                  {
-                                    setupPrice:
                                       event.target
                                         .value,
                                   }

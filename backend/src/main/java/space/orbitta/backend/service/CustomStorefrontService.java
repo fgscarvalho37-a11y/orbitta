@@ -58,7 +58,8 @@ public class CustomStorefrontService {
 
     private void verifyStore(String storeSlug) {
         try {
-            String base=pizzaSystemApiUrl.replaceAll("/+$","");
+            String base=(pizzaSystemApiUrl==null || pizzaSystemApiUrl.isBlank()
+                    ? "https://pizzasystem-api.onrender.com" : pizzaSystemApiUrl).replaceAll("/+$","");
             URI target=URI.create(base+"/api/store/profile?store="+storeSlug);
             if (!"https".equalsIgnoreCase(target.getScheme()) && !"http".equalsIgnoreCase(target.getScheme())) {
                 throw new IllegalStateException("PizzaSystem URL is invalid");

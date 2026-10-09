@@ -111,8 +111,12 @@ export default function BrandedMenuPage() {
     }
     void (async () => {
       try {
-        const res = await fetch(`/backend/api/public/custom-storefronts/${encodeURIComponent(siteSlug)}`,
-          { cache: "no-store" });
+        // ?preview=1 is private: backend only authorizes Orbitta ADMIN.
+        const preview = new URLSearchParams(window.location.search).get("preview") === "1";
+        const url = preview
+          ? `/backend/api/admin/custom-storefronts/preview/${encodeURIComponent(siteSlug)}`
+          : `/backend/api/public/custom-storefronts/${encodeURIComponent(siteSlug)}`;
+        const res = await fetch(url, { cache: "no-store", credentials: "include" });
         if (!res.ok) throw Error("Este site ainda não foi publicado.");
         const data: Storefront = await res.json();
         const catalogRes = await fetch(`/api/custom-storefront/catalog?store=${encodeURIComponent(data.storeSlug)}`,

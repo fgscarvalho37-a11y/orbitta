@@ -169,14 +169,16 @@ export default function CheckoutPage({
 
   // Once payment is really approved by the backend, launch the paid project brief.
   useEffect(() => {
-    if (checkout?.productSlug === "custom-site-service" &&
+    if ((checkout?.productSlug === "custom-site-service" ||
+      (checkout?.productSlug === "pizzasystem" && checkout?.customSiteIntegration)) &&
         checkout.status === "APPROVED") {
       window.location.replace(`/painel/sites/novo?checkoutId=${checkout.id}`);
     }
-  }, [checkout?.productSlug, checkout?.status, checkout?.id]);
+  }, [checkout?.productSlug, checkout?.customSiteIntegration, checkout?.status, checkout?.id]);
 
   useEffect(() => {
-    if (checkout?.productSlug !== "custom-site-service" ||
+    if ((checkout?.productSlug !== "custom-site-service" &&
+         !(checkout?.productSlug === "pizzasystem" && checkout?.customSiteIntegration)) ||
         checkout.status === "APPROVED" ||
         (checkout.status !== "PENDING" && checkout.status !== "PAYMENT_PENDING")) return;
     const interval = window.setInterval(async () => {
@@ -188,7 +190,7 @@ export default function CheckoutPage({
       } catch { /* the buyer can refresh or retry */ }
     }, 5000);
     return () => window.clearInterval(interval);
-  }, [checkout?.productSlug, checkout?.status, id]);
+  }, [checkout?.productSlug, checkout?.customSiteIntegration, checkout?.status, id]);
 
   const customSiteIntegrationPrice =
     Number(
@@ -518,8 +520,8 @@ export default function CheckoutPage({
                           )
                         : isForeignMercadoPagoCheckout
                           ? text(
-                              "Primeiro mês pago uma vez; renovação recorrente será ativada depois.",
-                              "First month is a one-time payment; recurring renewal will be activated later."
+                              "Assinatura mensal, cobrada em BRL após a conversão do valor exibido.",
+                              "Monthly subscription charged in BRL after converting the displayed price."
                             )
                           : text(
                               "Cobrança recorrente mensal",
@@ -806,8 +808,8 @@ export default function CheckoutPage({
                         )
                       : isForeignMercadoPagoCheckout
                         ? text(
-                            "Estou ciente de que o primeiro mês será pago uma única vez pelo Mercado Pago em BRL, após conversão do valor exibido.",
-                            "I understand that the first month will be paid once through Mercado Pago in BRL after converting the displayed amount."
+                            "Estou ciente da cobrança recorrente mensal em BRL pelo Mercado Pago, a partir do valor convertido neste checkout.",
+                            "I understand the recurring monthly charge in BRL through Mercado Pago, based on the converted checkout price."
                           )
                         : text(
                             "Estou ciente da cobrança recorrente mensal e da taxa inicial indicada neste checkout.",
@@ -848,12 +850,14 @@ export default function CheckoutPage({
               </>
             ) : checkout.status === "APPROVED" ? (
               <Link
-                href={checkout.productSlug === "custom-site-service"
+                href={checkout.productSlug === "custom-site-service" ||
+                  (checkout.productSlug === "pizzasystem" && checkout.customSiteIntegration)
                   ? `/painel/sites/novo?checkoutId=${checkout.id}` : "/painel/produtos"}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-[#07101c] transition hover:bg-white/90"
               >
                 <Check size={16} />
-                {checkout.productSlug === "custom-site-service"
+                {checkout.productSlug === "custom-site-service" ||
+                  (checkout.productSlug === "pizzasystem" && checkout.customSiteIntegration)
                   ? text("Preencher dados do meu site", "Complete my website brief")
                   : text("Acessar meus produtos", "Access my products")}
               </Link>

@@ -9,6 +9,7 @@ public record CatalogPlanPriceResponse(
         String regionCode,
         String currency,
         BigDecimal monthlyPrice,
+        BigDecimal regularMonthlyPrice,
         BigDecimal setupPrice,
         boolean active,
         int displayOrder
@@ -22,6 +23,7 @@ public record CatalogPlanPriceResponse(
                 price.getRegionCode(),
                 price.getCurrency(),
                 price.getMonthlyPrice(),
+                price.getRegularMonthlyPrice(),
                 price.getSetupPrice(),
                 price.isActive(),
                 price.getDisplayOrder()

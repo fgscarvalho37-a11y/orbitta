@@ -60,12 +60,14 @@ function buildUpstreamHeaders(
       "x-vercel-ip-country"
     );
 
-  headers.set(
-    "x-orbitta-market",
-    country?.toUpperCase() === "BR"
-      ? "BR"
-      : "US"
-  );
+  // The public regional catalog respects the visitor's explicit market.
+  // Other backend actions do not inherit an untrusted client market header.
+  const requestedMarket = request.headers.get("x-orbitta-market")?.toUpperCase();
+  const isPublicCatalog = request.nextUrl.pathname.startsWith("/backend/api/catalog/");
+  const market = isPublicCatalog && requestedMarket &&
+    ["BR", "US", "GB", "AU", "EU", "CA"].includes(requestedMarket)
+      ? requestedMarket : (country?.toUpperCase() === "BR" ? "BR" : "US");
+  headers.set("x-orbitta-market", market);
 
   const forwardedFor =
     request.headers.get("x-forwarded-for") ??

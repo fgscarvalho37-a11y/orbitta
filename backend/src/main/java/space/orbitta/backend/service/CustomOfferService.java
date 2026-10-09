@@ -443,12 +443,8 @@ public class CustomOfferService {
         }
 
         var settings = commercialSettingsService.get();
-        BigDecimal setup = settings.standaloneSitePriceUsd();
         BigDecimal monthly = settings.standaloneSiteMonthlyPriceUsd();
-        if (setup == null) setup = BigDecimal.ZERO;
-        if (monthly == null) monthly = BigDecimal.ZERO;
-        if (setup.signum() < 0 || monthly.signum() < 0
-                || (setup.signum() == 0 && monthly.signum() == 0)) {
+        if (monthly == null || monthly.signum() <= 0) {
             throw new IllegalArgumentException("A contratação de sites está indisponível até o administrador configurar os preços.");
         }
 
@@ -459,9 +455,44 @@ public class CustomOfferService {
                 plan,
                 "Site personalizado Orbitta",
                 monthly,
-                setup,
+                BigDecimal.ZERO,
                 "USD",
-                monthly.signum() == 0
+                false
+        );
+    }
+
+    /**
+     * The combined offer has its own price, not PizzaSystem plus a setup fee.
+     * Both product access and the site-project brief are tied to this checkout.
+     */
+    @Transactional
+    public SubscriptionCheckoutResponse createBundleCheckout(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Entre na sua conta para contratar o pacote.");
+        }
+        User buyer = userRepository.findByEmailIgnoreCase(
+            email.trim().toLowerCase(Locale.ROOT)
+        ).orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado."));
+        if (buyer.getRole() != User.Role.CLIENT || !buyer.isActive()) {
+            throw new IllegalArgumentException("É necessário utilizar uma conta de cliente ativa.");
+        }
+
+        BigDecimal monthly = commercialSettingsService.get().bundleMonthlyPriceUsd();
+        if (monthly == null || monthly.signum() <= 0) {
+            throw new IllegalArgumentException("A mensalidade do pacote ainda não foi configurada.");
+        }
+
+        CatalogProduct product = catalogProductRepository.findBySlug("pizzasystem")
+            .filter(CatalogProduct::isActive)
+            .orElseThrow(() -> new IllegalArgumentException("PizzaSystem indisponível."));
+        CatalogPlan plan = catalogPlanRepository
+            .findByProductIdAndActiveTrueOrderByDisplayOrderAscMonthlyPriceAsc(product.getId())
+            .stream().findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Nenhum plano ativo do PizzaSystem foi encontrado."));
+
+        return subscriptionCheckoutService.createCustomCheckout(
+            buyer, product, plan, "Site + PizzaSystem",
+            monthly, BigDecimal.ZERO, "USD", false, true
         );
     }
 

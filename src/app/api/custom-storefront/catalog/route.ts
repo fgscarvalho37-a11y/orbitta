@@ -32,7 +32,21 @@ export async function GET(request: NextRequest) {
     if (!Array.isArray(products) || !Array.isArray(crusts)) {
       return NextResponse.json({ error: "Invalid store response" }, { status: 502 });
     }
-    return NextResponse.json({ storeSlug: store, products, crusts, status, profile },
+    // PizzaSystem returns some images as relative /uploads paths.
+    // Resolve them against the trusted PizzaSystem frontend, not orbitta.space.
+    const image = (value: unknown) => {
+      if (typeof value !== "string" || !value) return null;
+      if (value.startsWith("/uploads/")) return "https://pizzasystem.orbitta.space" + value;
+      if (/^https:\/\//i.test(value)) return value;
+      return null;
+    };
+    const liveProducts = products.map((p: Record<string, unknown>) => ({
+      ...p, imageUrl: image(p.imageUrl),
+    }));
+    const liveProfile = profile && typeof profile === "object" ? {
+      ...profile, logoUrl: image(profile.logoUrl), coverImageUrl: image(profile.coverImageUrl),
+    } : profile;
+    return NextResponse.json({ storeSlug: store, products: liveProducts, crusts, status, profile: liveProfile },
       { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "PizzaSystem temporariamente indisponível" }, { status: 503 });

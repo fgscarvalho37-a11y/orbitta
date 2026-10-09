@@ -27,6 +27,11 @@ public class CustomStorefrontController {
                                                     @RequestBody Map<String,Boolean> request){
         return sites.toggle(id,Boolean.TRUE.equals(request.get("published")));
     }
+    @GetMapping("/api/admin/custom-storefronts/preview/{slug}")
+    public CustomStorefrontService.StorefrontResponse preview(@PathVariable String slug){
+        return sites.adminPreview(slug);
+    }
+
     @GetMapping("/api/public/custom-storefronts/{slug}")
     public CustomStorefrontService.StorefrontResponse storefront(@PathVariable String slug){
         return sites.bySlug(slug);

@@ -25,6 +25,7 @@ type RegionalPrice = {
   regionCode: string;
   currency: string;
   monthlyPrice: number;
+  regularMonthlyPrice?: number | null;
   setupPrice: number;
   active: boolean;
   displayOrder: number;
@@ -36,6 +37,7 @@ type CatalogPlan = {
   slug: string;
   description: string | null;
   monthlyPrice: number;
+  regularMonthlyPrice?: number | null;
   setupPrice: number;
   currency: string;
   active: boolean;
@@ -53,12 +55,14 @@ type CatalogProduct = {
 
 type PriceDraft = {
   monthlyPrice: string;
+  regularMonthlyPrice: string;
   setupPrice: string;
   active: boolean;
 };
 
 type CommercialSettings = {
   customSiteIntegrationFeeUsd: number;
+  standaloneSitePriceUsd: number;
   currency: string;
   updatedAt: string | null;
 };
@@ -153,6 +157,8 @@ export default function AdminRegionalPricingPage() {
   ] =
     useState("200");
 
+  const [standaloneSitePrice, setStandaloneSitePrice] = useState("0");
+
   const [
     savingCustomSiteFee,
     setSavingCustomSiteFee,
@@ -222,11 +228,8 @@ export default function AdminRegionalPricingPage() {
             CommercialSettings =
             await commercialSettingsResponse.json();
 
-          setCustomSiteIntegrationFee(
-            moneyInput(
-              commercialSettings.customSiteIntegrationFeeUsd
-            )
-          );
+          setCustomSiteIntegrationFee(moneyInput(commercialSettings.customSiteIntegrationFeeUsd));
+          setStandaloneSitePrice(moneyInput(commercialSettings.standaloneSitePriceUsd ?? 0));
         }
 
         const nextDrafts:
@@ -249,9 +252,9 @@ export default function AdminRegionalPricingPage() {
                 )
               ] = {
                 monthlyPrice:
-                  moneyInput(
-                    price?.monthlyPrice
-                  ),
+                  moneyInput(price?.monthlyPrice),
+                regularMonthlyPrice:
+                  moneyInput(price?.regularMonthlyPrice ?? 99.90),
                 setupPrice:
                   moneyInput(
                     price?.setupPrice ?? 0
@@ -345,6 +348,9 @@ export default function AdminRegionalPricingPage() {
         draft?.monthlyPrice ?? ""
       );
 
+    const regularMonthlyPrice = draft?.regularMonthlyPrice?.trim()
+      ? parseMoney(draft.regularMonthlyPrice) : null;
+
     const setupPrice =
       parseMoney(
         draft?.setupPrice || "0"
@@ -376,6 +382,11 @@ export default function AdminRegionalPricingPage() {
       return;
     }
 
+    if (regularMonthlyPrice !== null && (!Number.isFinite(regularMonthlyPrice) || regularMonthlyPrice < 0)) {
+      setError(text("Informe um preço original válido.", "Enter a valid regular price."));
+      return;
+    }
+
     try {
       setSavingKey(key);
       setError(null);
@@ -393,6 +404,7 @@ export default function AdminRegionalPricingPage() {
           },
           body: JSON.stringify({
             monthlyPrice,
+            regularMonthlyPrice,
             setupPrice,
             active:
               draft?.active ?? true,
@@ -464,6 +476,12 @@ export default function AdminRegionalPricingPage() {
       return;
     }
 
+    const siteValue = parseMoney(standaloneSitePrice);
+    if (!Number.isFinite(siteValue) || siteValue < 0) {
+      setError(text("Informe um preço válido para o site avulso.", "Enter a valid standalone website price."));
+      return;
+    }
+
     try {
       setSavingCustomSiteFee(
         true
@@ -488,6 +506,7 @@ export default function AdminRegionalPricingPage() {
               JSON.stringify({
                 customSiteIntegrationFeeUsd:
                   value,
+                standaloneSitePriceUsd: siteValue,
               }),
           }
         );
@@ -519,11 +538,8 @@ export default function AdminRegionalPricingPage() {
         CommercialSettings =
         await response.json();
 
-      setCustomSiteIntegrationFee(
-        moneyInput(
-          updated.customSiteIntegrationFeeUsd
-        )
-      );
+      setCustomSiteIntegrationFee(moneyInput(updated.customSiteIntegrationFeeUsd));
+      setStandaloneSitePrice(moneyInput(updated.standaloneSitePriceUsd ?? 0));
 
       setSuccess(
         text(
@@ -612,6 +628,21 @@ export default function AdminRegionalPricingPage() {
         </header>
 
         <section className="mt-6 rounded-[28px] border border-violet-300/[0.1] bg-[#08101d] p-6">
+          <div className="mb-5 rounded-xl border border-white/[0.06] bg-white/[0.025] p-4">
+            <label className="block text-xs text-white/65">
+              {text("Site avulso — preço inicial em USD (0 = sob orçamento)", "Standalone website — starting price in USD (0 = custom quote)")}
+            </label>
+            <input
+              inputMode="decimal"
+              aria-label={text("Preço do site avulso", "Standalone website price")}
+              value={standaloneSitePrice}
+              onChange={(event) => setStandaloneSitePrice(event.target.value)}
+              className="mt-2 h-11 w-full max-w-xs rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 text-sm text-white outline-none"
+            />
+            <p className="mt-2 text-xs text-white/40">
+              {text("Valor inicial de referência; o orçamento final depende do projeto.", "Starting price only; the final quote depends on the project.")}
+            </p>
+          </div>
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-violet-200/45">
@@ -762,6 +793,7 @@ export default function AdminRegionalPricingPage() {
                         drafts[key] ?? {
                           monthlyPrice:
                             "",
+                          regularMonthlyPrice: "99,90",
                           setupPrice:
                             "0",
                           active:
@@ -776,7 +808,7 @@ export default function AdminRegionalPricingPage() {
                           key={
                             market.code
                           }
-                          className="grid gap-4 px-6 py-5 xl:grid-cols-[1.35fr_0.8fr_0.8fr_0.8fr_auto] xl:items-end"
+                          className="grid gap-4 px-6 py-5 xl:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_0.8fr_auto] xl:items-end"
                         >
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
@@ -868,6 +900,20 @@ export default function AdminRegionalPricingPage() {
                             />
                           </label>
 
+                          <label>
+                            <span className="text-[9px] uppercase tracking-[0.13em] text-white/20">
+                              {text("Preço riscado (opcional)", "Regular price (optional)")}
+                            </span>
+                            <input
+                              inputMode="decimal"
+                              value={draft.regularMonthlyPrice}
+                              onChange={(event) => updateDraft(plan.id, market.code, {
+                                regularMonthlyPrice: event.target.value,
+                              })}
+                              placeholder="99,90"
+                              className="mt-2 h-11 w-full rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 text-sm text-white outline-none"
+                            />
+                          </label>
                           <label className="flex h-11 items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.025] px-4">
                             <input
                               type="checkbox"

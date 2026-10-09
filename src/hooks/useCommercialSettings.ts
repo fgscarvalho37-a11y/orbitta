@@ -14,6 +14,18 @@ type CommercialSettings = {
   standaloneSitePriceUsd: number;
   standaloneSiteMonthlyPriceUsd: number;
   bundleMonthlyPriceUsd: number;
+  siteDescriptionPt: string | null;
+  siteDescriptionEn: string | null;
+  siteFeaturesPt: string | null;
+  siteFeaturesEn: string | null;
+  pizzaDescriptionPt: string | null;
+  pizzaDescriptionEn: string | null;
+  pizzaFeaturesPt: string | null;
+  pizzaFeaturesEn: string | null;
+  bundleDescriptionPt: string | null;
+  bundleDescriptionEn: string | null;
+  bundleFeaturesPt: string | null;
+  bundleFeaturesEn: string | null;
   currency:
     string;
   updatedAt:
@@ -31,6 +43,18 @@ export function useCommercialSettings() {
       standaloneSitePriceUsd: 0,
       standaloneSiteMonthlyPriceUsd: 0,
       bundleMonthlyPriceUsd: 0,
+      siteDescriptionPt: null,
+      siteDescriptionEn: null,
+      siteFeaturesPt: null,
+      siteFeaturesEn: null,
+      pizzaDescriptionPt: null,
+      pizzaDescriptionEn: null,
+      pizzaFeaturesPt: null,
+      pizzaFeaturesEn: null,
+      bundleDescriptionPt: null,
+      bundleDescriptionEn: null,
+      bundleFeaturesPt: null,
+      bundleFeaturesEn: null,
       currency:
         "USD",
       updatedAt:

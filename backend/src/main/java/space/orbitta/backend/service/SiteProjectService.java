@@ -48,7 +48,8 @@ public class SiteProjectService {
         SubscriptionCheckout checkout = checkouts.findByIdAndUserId(checkoutId, client.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Compra não encontrada."));
         if (checkout.getCatalogProduct() == null
-            || !SITE_PRODUCT_SLUG.equals(checkout.getCatalogProduct().getSlug())) {
+            || (!SITE_PRODUCT_SLUG.equals(checkout.getCatalogProduct().getSlug())
+                && !checkout.isCustomSiteIntegration())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Este checkout não é de um site avulso.");
         }
         if (checkout.getStatus() != SubscriptionCheckoutStatus.APPROVED) {

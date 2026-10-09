@@ -541,6 +541,7 @@ export default function CheckoutPage({
                   </div>
                 </div>
 
+                {baseSetupPrice > 0 && (
                 <div className="flex items-center justify-between rounded-2xl border border-white/[0.05] bg-white/[0.018] px-5 py-4">
                   <div>
                     <div className="text-xs text-white/55">
@@ -556,17 +557,12 @@ export default function CheckoutPage({
                   </div>
 
                   <div className="text-sm font-medium text-white/75">
-                    {baseSetupPrice > 0
-                      ? formatCurrency(
-                          baseSetupPrice,
-                          checkout.currency,
-                          locale
-                        )
-                      : text("Grátis", "Free")}
+                    {formatCurrency(baseSetupPrice, checkout.currency, locale)}
                   </div>
                 </div>
+                )}
 
-                {checkout.customSiteIntegration && (
+                {checkout.customSiteIntegration && customSiteIntegrationPrice > 0 && (
                   <div className="flex items-center justify-between rounded-2xl border border-cyan-300/[0.09] bg-cyan-300/[0.025] px-5 py-4">
                     <div>
                       <div className="text-xs text-cyan-100/70">
@@ -707,6 +703,7 @@ export default function CheckoutPage({
                 </span>
               </div>
 
+              {baseSetupPrice > 0 && (
               <div className="flex justify-between gap-4 text-xs">
                 <span className="text-white/30">
                   {text(
@@ -723,8 +720,9 @@ export default function CheckoutPage({
                   )}
                 </span>
               </div>
+              )}
 
-              {checkout.customSiteIntegration && (
+              {checkout.customSiteIntegration && customSiteIntegrationPrice > 0 && (
                 <div className="flex justify-between gap-4 text-xs">
                   <span className="text-cyan-100/55">
                     {text(

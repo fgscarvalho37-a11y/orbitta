@@ -14,6 +14,8 @@ type CommercialSettings = {
   standaloneSitePriceUsd: number;
   standaloneSiteMonthlyPriceUsd: number;
   bundleMonthlyPriceUsd: number;
+  siteRegularMonthlyPriceUsd: number;
+  bundleRegularMonthlyPriceUsd: number;
   siteDescriptionPt: string | null;
   siteDescriptionEn: string | null;
   siteFeaturesPt: string | null;
@@ -43,6 +45,8 @@ export function useCommercialSettings() {
       standaloneSitePriceUsd: 0,
       standaloneSiteMonthlyPriceUsd: 0,
       bundleMonthlyPriceUsd: 0,
+      siteRegularMonthlyPriceUsd: 0,
+      bundleRegularMonthlyPriceUsd: 0,
       siteDescriptionPt: null,
       siteDescriptionEn: null,
       siteFeaturesPt: null,

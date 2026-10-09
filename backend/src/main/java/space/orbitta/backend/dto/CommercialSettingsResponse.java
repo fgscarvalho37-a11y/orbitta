@@ -8,6 +8,8 @@ public record CommercialSettingsResponse(
         BigDecimal standaloneSitePriceUsd,
         BigDecimal standaloneSiteMonthlyPriceUsd,
         BigDecimal bundleMonthlyPriceUsd,
+        BigDecimal siteRegularMonthlyPriceUsd,
+        BigDecimal bundleRegularMonthlyPriceUsd,
         String siteDescriptionPt,
         String siteDescriptionEn,
         String siteFeaturesPt,

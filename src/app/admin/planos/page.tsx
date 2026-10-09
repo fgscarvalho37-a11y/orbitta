@@ -9,6 +9,8 @@ type PlanKey = "site" | "pizza" | "bundle";
 type Settings = {
   standaloneSiteMonthlyPriceUsd: number;
   bundleMonthlyPriceUsd: number;
+  siteRegularMonthlyPriceUsd: number;
+  bundleRegularMonthlyPriceUsd: number;
   siteDescriptionPt: string | null; siteDescriptionEn: string | null;
   siteFeaturesPt: string | null; siteFeaturesEn: string | null;
   pizzaDescriptionPt: string | null; pizzaDescriptionEn: string | null;
@@ -21,8 +23,8 @@ type RegionalPrice = {
   regularMonthlyPrice: number | null; setupPrice: number; active: boolean;
 };
 type Product = { id: number; slug: string; active: boolean; plans: { id: number; active: boolean; regionalPrices: RegionalPrice[] }[] };
-type Draft = { price: string; descriptionPt: string; descriptionEn: string; featuresPt: string; featuresEn: string };
-type ContentKey = Exclude<keyof Settings, "standaloneSiteMonthlyPriceUsd" | "bundleMonthlyPriceUsd">;
+type Draft = { price: string; regularPrice: string; descriptionPt: string; descriptionEn: string; featuresPt: string; featuresEn: string };
+type ContentKey = Exclude<keyof Settings, "standaloneSiteMonthlyPriceUsd" | "bundleMonthlyPriceUsd" | "siteRegularMonthlyPriceUsd" | "bundleRegularMonthlyPriceUsd">;
 const MARKETS = [
   { code: "BR", currency: "BRL", pt: "Brasil", en: "Brazil" },
   { code: "US", currency: "USD", pt: "Estados Unidos", en: "United States" },
@@ -30,7 +32,7 @@ const MARKETS = [
   { code: "AU", currency: "AUD", pt: "Austrália", en: "Australia" },
   { code: "EU", currency: "EUR", pt: "Europa", en: "Europe" },
 ] as const;
-const DEFAULTS: Record<PlanKey, Omit<Draft, "price">> = {
+const DEFAULTS: Record<PlanKey, Omit<Draft, "price" | "regularPrice">> = {
   site: {
     descriptionPt: "Um site profissional criado para representar sua marca.",
     descriptionEn: "A professional website designed for your brand.",
@@ -50,7 +52,7 @@ const DEFAULTS: Record<PlanKey, Omit<Draft, "price">> = {
     featuresEn: "Everything in PizzaSystem\nIntegrated custom website\nPrivate project chat and delivery",
   },
 };
-const EMPTY = (key: PlanKey): Draft => ({ price: "", ...DEFAULTS[key] });
+const EMPTY = (key: PlanKey): Draft => ({ price: "", regularPrice: "", ...DEFAULTS[key] });
 function decimal(value: string) {
   const num = Number(value.trim().replace(/\s/g, "").replace(",", "."));
   return Number.isFinite(num) ? num : NaN;
@@ -61,7 +63,7 @@ function inputPrice(value: number | null | undefined) {
 function getCopy(settings: Settings, key: PlanKey, name: "DescriptionPt" | "DescriptionEn" | "FeaturesPt" | "FeaturesEn") {
   const prop = `${key}${name}` as ContentKey;
   const raw = settings[prop];
-  return raw === null || raw === undefined ? DEFAULTS[key][(name.charAt(0).toLowerCase() + name.slice(1)) as keyof Omit<Draft,"price">] : raw;
+  return raw === null || raw === undefined ? DEFAULTS[key][(name.charAt(0).toLowerCase() + name.slice(1)) as keyof Omit<Draft,"price" | "regularPrice">] : raw;
 }
 
 export default function OrbittaFixedPlansAdmin() {
@@ -99,15 +101,15 @@ export default function OrbittaFixedPlansAdmin() {
       const mainPlan = catalog.find(p => p.slug === "pizzasystem" && p.active)?.plans.find(p => p.active);
       const us = mainPlan?.regionalPrices.find(p => p.regionCode === "US");
       setDrafts({
-        site: { price: inputPrice(incoming.standaloneSiteMonthlyPriceUsd), ...{
+        site: { price: inputPrice(incoming.standaloneSiteMonthlyPriceUsd), regularPrice: inputPrice(incoming.siteRegularMonthlyPriceUsd), ...{
           descriptionPt: getCopy(incoming, "site", "DescriptionPt"), descriptionEn: getCopy(incoming, "site", "DescriptionEn"),
           featuresPt: getCopy(incoming, "site", "FeaturesPt"), featuresEn: getCopy(incoming, "site", "FeaturesEn"),
         }},
-        pizza: { price: inputPrice(us?.monthlyPrice), ...{
+        pizza: { price: inputPrice(us?.monthlyPrice), regularPrice: inputPrice(us?.regularMonthlyPrice), ...{
           descriptionPt: getCopy(incoming, "pizza", "DescriptionPt"), descriptionEn: getCopy(incoming, "pizza", "DescriptionEn"),
           featuresPt: getCopy(incoming, "pizza", "FeaturesPt"), featuresEn: getCopy(incoming, "pizza", "FeaturesEn"),
         }},
-        bundle: { price: inputPrice(incoming.bundleMonthlyPriceUsd), ...{
+        bundle: { price: inputPrice(incoming.bundleMonthlyPriceUsd), regularPrice: inputPrice(incoming.bundleRegularMonthlyPriceUsd), ...{
           descriptionPt: getCopy(incoming, "bundle", "DescriptionPt"), descriptionEn: getCopy(incoming, "bundle", "DescriptionEn"),
           featuresPt: getCopy(incoming, "bundle", "FeaturesPt"), featuresEn: getCopy(incoming, "bundle", "FeaturesEn"),
         }},
@@ -122,8 +124,11 @@ export default function OrbittaFixedPlansAdmin() {
   function changeMarket(value: string) {
     setRegion(value);
     const plan = products.find(p => p.slug === "pizzasystem" && p.active)?.plans.find(p => p.active);
-    const price = plan?.regionalPrices.find(p => p.regionCode === value)?.monthlyPrice;
-    setDrafts(current => ({ ...current, pizza: { ...current.pizza, price: inputPrice(price) } }));
+    const pricing = plan?.regionalPrices.find(p => p.regionCode === value);
+    setDrafts(current => ({ ...current, pizza: {
+      ...current.pizza, price: inputPrice(pricing?.monthlyPrice),
+      regularPrice: inputPrice(pricing?.regularMonthlyPrice),
+    } }));
   }
   function edit(key: PlanKey, field: keyof Draft, value: string) {
     setDrafts(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
@@ -134,6 +139,10 @@ export default function OrbittaFixedPlansAdmin() {
     if (!settings || saving) return;
     const draft = drafts[key];
     const price = decimal(draft.price);
+    const regularPrice = draft.regularPrice.trim() ? decimal(draft.regularPrice) : 0;
+    if (!Number.isFinite(regularPrice) || regularPrice < 0) {
+      setError(text("Informe um preço riscado válido.", "Enter a valid crossed-out price.")); return;
+    }
     if (!Number.isFinite(price) || price <= 0) {
       setError(text("Informe uma mensalidade maior que zero.", "Enter a monthly price above zero.")); return;
     }
@@ -157,8 +166,14 @@ export default function OrbittaFixedPlansAdmin() {
         [`${key}FeaturesEn`]: draft.featuresEn,
       };
       const payload: Record<string, string | number> = { ...descriptions };
-      if (key === "site") payload.standaloneSiteMonthlyPriceUsd = price;
-      if (key === "bundle") payload.bundleMonthlyPriceUsd = price;
+      if (key === "site") {
+        payload.standaloneSiteMonthlyPriceUsd = price;
+        payload.siteRegularMonthlyPriceUsd = regularPrice;
+      }
+      if (key === "bundle") {
+        payload.bundleMonthlyPriceUsd = price;
+        payload.bundleRegularMonthlyPriceUsd = regularPrice;
+      }
       if (key === "pizza") {
         const pricing = await secureFetch(
           `/backend/api/admin/catalog/plans/${pizzaPlan!.id}/prices/${region}`, {
@@ -166,7 +181,7 @@ export default function OrbittaFixedPlansAdmin() {
             headers: { "Content-Type": "application/json", Accept: "application/json" },
             body: JSON.stringify({
               monthlyPrice: price,
-              regularMonthlyPrice: regional?.regularMonthlyPrice ?? null,
+              regularMonthlyPrice: regularPrice > 0 ? regularPrice : null,
               setupPrice: 0, active: true,
             }),
           }
@@ -250,6 +265,12 @@ export default function OrbittaFixedPlansAdmin() {
                   <input inputMode="decimal" value={draft.price} onChange={event => edit(key, "price", event.target.value)}
                     placeholder="79,90" className="mt-2 h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 text-lg font-semibold outline-none focus:border-violet-200/40" />
                   <span className="mt-2 block text-[11px] text-white/35">{text("Cobrança mensal. Sem implantação.", "Monthly billing. No setup fee.")}</span>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium text-white/65">{text("Preço riscado (opcional)", "Regular price (optional)")} ({currency})</span>
+                  <input inputMode="decimal" value={draft.regularPrice} onChange={event => edit(key, "regularPrice", event.target.value)}
+                    placeholder="99,90" className="mt-2 h-11 w-full rounded-xl border border-white/10 bg-white/[0.035] px-4 text-sm outline-none focus:border-violet-200/40" />
+                  <span className="mt-2 block text-[11px] text-white/35">{text("Só aparece se for maior que a mensalidade. Deixe vazio para ocultar.", "Only shown when above the monthly price. Leave empty to hide.")}</span>
                 </label>
                 {(["Pt", "En"] as const).map(lang => {
                   const description = `description${lang}` as keyof Draft;

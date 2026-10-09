@@ -32,7 +32,8 @@ function money(amount: number, currency: string, locale: string) {
 export default function OfferPlans() {
   const { text, market, locale } = useLanguage();
   const commercial = useCommercialSettings();
-  const { standaloneSiteMonthlyPriceUsd, bundleMonthlyPriceUsd } = commercial;
+  const { standaloneSiteMonthlyPriceUsd, bundleMonthlyPriceUsd,
+    siteRegularMonthlyPriceUsd, bundleRegularMonthlyPriceUsd } = commercial;
   const description = (key: "site" | "pizza" | "bundle", pt: string, en: string) => {
     if (key === "site") return text(commercial.siteDescriptionPt?.trim() || pt, commercial.siteDescriptionEn?.trim() || en);
     if (key === "pizza") return text(commercial.pizzaDescriptionPt?.trim() || pt, commercial.pizzaDescriptionEn?.trim() || en);
@@ -80,6 +81,9 @@ export default function OfferPlans() {
         text("Responsivo para celular e computador", "Mobile and desktop ready"),
         text("Formulário, contato e identidade da marca", "Contact forms and brand identity"),
       ]),
+      regularPrice: Number(siteRegularMonthlyPriceUsd ?? 0),
+      currentPrice: siteMonthly,
+      displayCurrency: "USD",
       price: siteMonthly > 0 ? money(siteMonthly, "USD", locale)
         : text("Em breve", "Coming soon"),
       suffix: text("por mês · sem taxa inicial", "per month · no setup fee"),
@@ -97,6 +101,9 @@ export default function OfferPlans() {
         text("Entrega ou retirada no balcão", "Delivery or in-store pickup"),
         text("Gestão de pagamentos e relatórios", "Payments and reporting"),
       ]),
+      regularPrice: Number(planPrice?.regularMonthlyPrice ?? 0),
+      currentPrice: Number(planPrice?.monthlyPrice ?? 0),
+      displayCurrency: planPrice?.currency ?? "USD",
       price: planPrice ? money(planPrice.monthlyPrice, planPrice.currency, locale) : text("Consultar planos", "See pricing"),
       suffix: text("por mês · sem taxa inicial", "per month · no setup fee"),
       href: "/produtos/pizzasystem#planos",
@@ -113,6 +120,9 @@ export default function OfferPlans() {
         text("Site personalizado integrado", "Integrated custom website"),
         text("Uma operação, sem duplicar cadastros", "One operation, no duplicated setup"),
       ]),
+      regularPrice: Number(bundleRegularMonthlyPriceUsd ?? 0),
+      currentPrice: bundleMonthly,
+      displayCurrency: "USD",
       price: bundleMonthly > 0 ? money(bundleMonthly, "USD", locale) : text("Em breve", "Coming soon"),
       suffix: text("por mês · sem taxa inicial", "per month · no setup fee"),
       href: "/site-checkout?plan=bundle",
@@ -149,8 +159,8 @@ export default function OfferPlans() {
               <h3 className="mt-8 text-2xl font-semibold tracking-tight">{card.title}</h3>
               <p className="mt-3 min-h-14 text-sm leading-6 text-white/55">{card.subtitle}</p>
               <div className="mt-8 min-h-24 border-t border-white/[0.08] pt-6">
-                {card.key === "pizza" && planPrice && Number(planPrice.regularMonthlyPrice ?? 99.90) > planPrice.monthlyPrice && (
-                  <div className="mb-1 text-sm text-white/35 line-through">{money(Number(planPrice.regularMonthlyPrice ?? 99.90), planPrice.currency, locale)}</div>
+                {card.regularPrice > card.currentPrice && card.currentPrice > 0 && (
+                  <div className="mb-1 text-sm text-white/35 line-through">{money(card.regularPrice, card.displayCurrency, locale)}</div>
                 )}
                 <div className="text-3xl font-semibold tracking-tight sm:text-4xl">{card.price}</div>
                 <p className="mt-2 text-xs leading-5 text-white/45">{card.suffix}</p>

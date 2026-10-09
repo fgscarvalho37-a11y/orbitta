@@ -28,6 +28,7 @@ type RegionalPrice = {
   regionCode: string;
   currency: string;
   monthlyPrice: number;
+  regularMonthlyPrice?: number | null;
   setupPrice: number;
   active: boolean;
   displayOrder: number;
@@ -39,6 +40,7 @@ type CatalogPlan = {
   slug: string;
   description: string | null;
   monthlyPrice: number;
+  regularMonthlyPrice?: number | null;
   setupPrice: number;
   currency: string;
   active: boolean;
@@ -541,10 +543,7 @@ export default function ProductPricing({
               billingCycle === "ANNUAL"
                 ? annualValue
                 : monthlyValue;
-            const regularMonthly =
-              price?.currency === "BRL"
-                ? 99
-                : 99;
+            const regularMonthly = Number(price?.regularMonthlyPrice ?? 99.90);
 
             return (
               <article
@@ -585,6 +584,7 @@ export default function ProductPricing({
                   <div className="mt-8">
                     {price ? (
                       <>
+                        {regularMonthly > monthlyValue && (
                         <div className="text-xs text-white/25">
                           <span className="line-through">
                             {formatMoney(
@@ -598,6 +598,7 @@ export default function ProductPricing({
                             {text("preço regular", "regular price")}
                           </span>
                         </div>
+                        )}
 
                         <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1">
                           <span className="text-5xl font-semibold tracking-[-0.055em] text-white">

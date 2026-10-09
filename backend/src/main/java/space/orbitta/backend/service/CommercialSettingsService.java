@@ -42,7 +42,19 @@ public class CommercialSettingsService {
                 (request.customSiteIntegrationFeeUsd() == null
                         && request.standaloneSitePriceUsd() == null
                         && request.standaloneSiteMonthlyPriceUsd() == null
-                        && request.bundleMonthlyPriceUsd() == null)
+                        && request.bundleMonthlyPriceUsd() == null
+                        && request.siteDescriptionPt() == null
+                        && request.siteDescriptionEn() == null
+                        && request.siteFeaturesPt() == null
+                        && request.siteFeaturesEn() == null
+                        && request.pizzaDescriptionPt() == null
+                        && request.pizzaDescriptionEn() == null
+                        && request.pizzaFeaturesPt() == null
+                        && request.pizzaFeaturesEn() == null
+                        && request.bundleDescriptionPt() == null
+                        && request.bundleDescriptionEn() == null
+                        && request.bundleFeaturesPt() == null
+                        && request.bundleFeaturesEn() == null)
         ) {
             throw new IllegalArgumentException(
                     "Informe a taxa de integração do site."
@@ -89,6 +101,102 @@ public class CommercialSettingsService {
             settings.setBundleMonthlyPriceUsd(bundleMonthly);
         }
 
+        if (request.siteDescriptionPt() != null) {
+            String value = request.siteDescriptionPt().trim();
+            if (value.length() > 600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: siteDescriptionPt.");
+            }
+            settings.setSiteDescriptionPt(value);
+        }
+
+        if (request.siteDescriptionEn() != null) {
+            String value = request.siteDescriptionEn().trim();
+            if (value.length() > 600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: siteDescriptionEn.");
+            }
+            settings.setSiteDescriptionEn(value);
+        }
+
+        if (request.siteFeaturesPt() != null) {
+            String value = request.siteFeaturesPt().trim();
+            if (value.length() > 1600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: siteFeaturesPt.");
+            }
+            settings.setSiteFeaturesPt(value);
+        }
+
+        if (request.siteFeaturesEn() != null) {
+            String value = request.siteFeaturesEn().trim();
+            if (value.length() > 1600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: siteFeaturesEn.");
+            }
+            settings.setSiteFeaturesEn(value);
+        }
+
+        if (request.pizzaDescriptionPt() != null) {
+            String value = request.pizzaDescriptionPt().trim();
+            if (value.length() > 600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: pizzaDescriptionPt.");
+            }
+            settings.setPizzaDescriptionPt(value);
+        }
+
+        if (request.pizzaDescriptionEn() != null) {
+            String value = request.pizzaDescriptionEn().trim();
+            if (value.length() > 600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: pizzaDescriptionEn.");
+            }
+            settings.setPizzaDescriptionEn(value);
+        }
+
+        if (request.pizzaFeaturesPt() != null) {
+            String value = request.pizzaFeaturesPt().trim();
+            if (value.length() > 1600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: pizzaFeaturesPt.");
+            }
+            settings.setPizzaFeaturesPt(value);
+        }
+
+        if (request.pizzaFeaturesEn() != null) {
+            String value = request.pizzaFeaturesEn().trim();
+            if (value.length() > 1600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: pizzaFeaturesEn.");
+            }
+            settings.setPizzaFeaturesEn(value);
+        }
+
+        if (request.bundleDescriptionPt() != null) {
+            String value = request.bundleDescriptionPt().trim();
+            if (value.length() > 600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: bundleDescriptionPt.");
+            }
+            settings.setBundleDescriptionPt(value);
+        }
+
+        if (request.bundleDescriptionEn() != null) {
+            String value = request.bundleDescriptionEn().trim();
+            if (value.length() > 600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: bundleDescriptionEn.");
+            }
+            settings.setBundleDescriptionEn(value);
+        }
+
+        if (request.bundleFeaturesPt() != null) {
+            String value = request.bundleFeaturesPt().trim();
+            if (value.length() > 1600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: bundleFeaturesPt.");
+            }
+            settings.setBundleFeaturesPt(value);
+        }
+
+        if (request.bundleFeaturesEn() != null) {
+            String value = request.bundleFeaturesEn().trim();
+            if (value.length() > 1600) {
+                throw new IllegalArgumentException("Texto do plano muito longo: bundleFeaturesEn.");
+            }
+            settings.setBundleFeaturesEn(value);
+        }
+
         return toResponse(
                 repository.saveAndFlush(
                         settings
@@ -129,6 +237,18 @@ public class CommercialSettingsService {
                 settings.getStandaloneSitePriceUsd(),
                 settings.getStandaloneSiteMonthlyPriceUsd(),
                 settings.getBundleMonthlyPriceUsd(),
+                settings.getSiteDescriptionPt(),
+                settings.getSiteDescriptionEn(),
+                settings.getSiteFeaturesPt(),
+                settings.getSiteFeaturesEn(),
+                settings.getPizzaDescriptionPt(),
+                settings.getPizzaDescriptionEn(),
+                settings.getPizzaFeaturesPt(),
+                settings.getPizzaFeaturesEn(),
+                settings.getBundleDescriptionPt(),
+                settings.getBundleDescriptionEn(),
+                settings.getBundleFeaturesPt(),
+                settings.getBundleFeaturesEn(),
                 "USD",
                 settings.getUpdatedAt()
         );

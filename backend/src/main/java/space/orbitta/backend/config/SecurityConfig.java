@@ -154,7 +154,8 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/public/custom-storefronts/**"
+                                "/api/public/custom-storefronts/**",
+                                "/api/public/site-previews/**"
                         )
                         .permitAll()
 

@@ -10,6 +10,7 @@ import {
   CircleHelp,
   CreditCard,
   FileText,
+  Eye,
   Globe2,
   LayoutTemplate,
   LayoutDashboard,
@@ -43,6 +44,11 @@ const navigationGroups = [
         name: "Sites contratados",
         href: "/admin/sites",
         icon: LayoutTemplate,
+      },
+      {
+        name: "Prévias para clientes",
+        href: "/admin/previas",
+        icon: Eye,
       },
       {
         name: "Cardápios personalizados",
@@ -113,6 +119,7 @@ const NAV_EN: Record<string, string> = {
   "Suporte": "Support",
   "Sites contratados": "Website projects",
   "Cardápios personalizados": "Custom storefronts",
+  "Prévias para clientes": "Customer previews",
   "Orçamentos": "Quote requests",
   "Configurações": "Settings",
   "Operação": "Operations",

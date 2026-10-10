@@ -29,7 +29,7 @@ function srcDoc(preview: Preview) {
   return `<!DOCTYPE html><html lang="pt-BR"><head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; connect-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; img-src https: data:; media-src https: data:; font-src https: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; navigate-to 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; connect-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; img-src https: data:; media-src https: data:; font-src https: data:; style-src 'unsafe-inline' https:; script-src 'unsafe-inline'; navigate-to 'none'">
     ${inlineStyles}
     <style>${safeCss}</style>
     </head><body>${cleanedBody}<script>${safeJs}</script></body></html>`;

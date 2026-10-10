@@ -70,6 +70,31 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      // Customer preview ZIPs may reference public HTTPS photos and fonts.
+      // This exception applies only to demos, not authenticated dashboards.
+      // External scripts and network requests remain disallowed by the
+      // iframe's own sandbox and meta CSP.
+      {
+        source: "/preview/:path*",
+        headers: [{
+          key: "Content-Security-Policy",
+          value: [
+            "default-src 'self'",
+            "base-uri 'self'",
+            "object-src 'none'",
+            "frame-ancestors 'self'",
+            "form-action 'self'",
+            "img-src 'self' data: blob: https:",
+            "font-src 'self' data: https:",
+            "style-src 'self' 'unsafe-inline' https:",
+            "script-src 'self' 'unsafe-inline'",
+            "connect-src 'self'",
+            "frame-src 'self'",
+            "worker-src 'self' blob:",
+            "upgrade-insecure-requests",
+          ].join("; "),
+        }],
+      },
       {
         source: "/backend/:path*",
         headers: [
